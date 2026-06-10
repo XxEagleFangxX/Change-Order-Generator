@@ -39,6 +39,8 @@
   input:focus, textarea:focus { outline: 3px solid #f97316; outline-offset: 1px; }
   button:focus-visible { outline: 3px solid #93c5fd; outline-offset: 2px; }
   ::placeholder { color: #64748b; opacity: 1; }
+  /* Hide the raw file input; we trigger it from a styled button */
+  #logoFile { display: none; }
 </style>
 </head>
 <body class="font-sans text-slate-100 min-h-screen pb-40">
@@ -47,7 +49,7 @@
   <header class="sticky top-0 z-40 bg-ink/95 backdrop-blur border-b-2 border-safety">
     <div class="max-w-3xl mx-auto px-4 py-3 flex items-center justify-between gap-3">
       <div class="min-w-0">
-        <p class="text-[11px] font-bold tracking-[0.2em] text-blueprintsoft uppercase">Digital Foreman Suite</p>
+        <p id="headerBrand" class="text-[11px] font-bold tracking-[0.2em] text-blueprintsoft uppercase">Digital Foreman Suite</p>
         <h1 class="text-lg sm:text-xl font-extrabold text-white leading-tight truncate">Change Order <span id="coNumber" class="text-safety"></span></h1>
         <p id="coDate" class="text-xs text-slate-400 font-semibold"></p>
       </div>
@@ -57,20 +59,68 @@
 
   <main class="max-w-3xl mx-auto px-4 pt-5 space-y-5">
 
-    <!-- ============ SECTION 1: PROJECT & PARTIES ============ -->
+    <!-- ============ SECTION 1: BUSINESS SETTINGS (saved on this device) ============ -->
+    <section class="bg-slatecard rounded-2xl border-2 border-blueprint p-4 sm:p-5">
+      <button type="button" id="settingsToggle" class="w-full flex items-center justify-between gap-3">
+        <span class="text-sm font-extrabold tracking-[0.15em] text-blueprintsoft uppercase text-left">⚙ Business Settings <span class="text-slate-400 normal-case tracking-normal font-semibold">— set once, used on every CO</span></span>
+        <span id="settingsChevron" class="text-blueprintsoft text-2xl font-extrabold leading-none select-none">▾</span>
+      </button>
+
+      <div id="settingsBody" class="mt-4">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label for="setCompany" class="block text-sm font-bold text-slate-300 mb-1.5">Company Name</label>
+            <input id="setCompany" type="text" placeholder="e.g., Ridgeline Builders LLC"
+              class="w-full h-14 px-4 text-lg font-semibold rounded-xl bg-ink border-2 border-slateline text-white" />
+          </div>
+          <div>
+            <label for="setPhone" class="block text-sm font-bold text-slate-300 mb-1.5">Business Phone</label>
+            <input id="setPhone" type="tel" inputmode="tel" placeholder="(501) 555-0100"
+              class="w-full h-14 px-4 text-lg font-semibold rounded-xl bg-ink border-2 border-slateline text-white" />
+          </div>
+          <div>
+            <label for="setEmail" class="block text-sm font-bold text-slate-300 mb-1.5">Business Email</label>
+            <input id="setEmail" type="email" inputmode="email" placeholder="office@yourcompany.com"
+              class="w-full h-14 px-4 text-lg font-semibold rounded-xl bg-ink border-2 border-slateline text-white" />
+          </div>
+          <div>
+            <label for="setTax" class="block text-sm font-bold text-slate-300 mb-1.5">Local Tax Rate %</label>
+            <input id="setTax" type="number" inputmode="decimal" step="0.001" min="0" max="100" placeholder="e.g., 8.625"
+              class="w-full h-14 px-4 text-lg font-extrabold rounded-xl bg-ink border-2 border-slateline text-white" />
+          </div>
+        </div>
+
+        <!-- Logo upload -->
+        <div class="mt-4">
+          <span class="block text-sm font-bold text-slate-300 mb-1.5">Company Logo <span class="text-slate-500 font-semibold">(PNG or JPG — prints on every PDF)</span></span>
+          <input id="logoFile" type="file" accept="image/png,image/jpeg,image/webp" />
+          <div class="flex items-center gap-3 flex-wrap">
+            <button type="button" id="logoPickBtn"
+              class="h-14 px-5 rounded-xl bg-ink border-2 border-blueprint text-blueprintsoft font-extrabold text-sm tracking-wide active:bg-blueprint active:text-white">
+              UPLOAD LOGO
+            </button>
+            <button type="button" id="logoRemoveBtn"
+              class="hidden h-14 px-5 rounded-xl bg-ink border-2 border-slateline text-slate-300 font-bold text-sm active:border-red-500 active:text-red-400">
+              Remove
+            </button>
+            <div id="logoPreviewWrap" class="hidden items-center gap-2 bg-white rounded-xl p-2">
+              <img id="logoPreview" alt="Company logo preview" class="h-12 max-w-[180px] object-contain" />
+            </div>
+          </div>
+        </div>
+
+        <button type="button" id="saveSettingsBtn"
+          class="mt-5 w-full h-14 rounded-xl bg-blueprint text-white text-lg font-extrabold tracking-wide active:bg-blue-700">
+          SAVE BUSINESS SETTINGS
+        </button>
+        <p id="settingsStatus" class="text-sm font-bold text-slate-400 mt-3 text-center">Saved settings load automatically every time you open the app on this device.</p>
+      </div>
+    </section>
+
+    <!-- ============ SECTION 2: PROJECT & PARTIES ============ -->
     <section class="bg-slatecard rounded-2xl border border-slateline p-4 sm:p-5">
-      <h2 class="text-sm font-extrabold tracking-[0.15em] text-blueprintsoft uppercase mb-4">1 · Project &amp; Parties</h2>
+      <h2 class="text-sm font-extrabold tracking-[0.15em] text-blueprintsoft uppercase mb-4">1 · Client &amp; Job Site</h2>
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div>
-          <label for="contractorName" class="block text-sm font-bold text-slate-300 mb-1.5">Contractor / Company</label>
-          <input id="contractorName" type="text" placeholder="e.g., Ridgeline Builders LLC"
-            class="w-full h-14 px-4 text-lg font-semibold rounded-xl bg-ink border-2 border-slateline text-white" />
-        </div>
-        <div>
-          <label for="contractorPhone" class="block text-sm font-bold text-slate-300 mb-1.5">Contractor Phone</label>
-          <input id="contractorPhone" type="tel" inputmode="tel" placeholder="(501) 555-0100"
-            class="w-full h-14 px-4 text-lg font-semibold rounded-xl bg-ink border-2 border-slateline text-white" />
-        </div>
         <div>
           <label for="clientName" class="block text-sm font-bold text-slate-300 mb-1.5">Client Name</label>
           <input id="clientName" type="text" placeholder="e.g., Sarah Donnelly"
@@ -82,9 +132,10 @@
             class="w-full h-14 px-4 text-lg font-semibold rounded-xl bg-ink border-2 border-slateline text-white" />
         </div>
       </div>
+      <p class="text-xs text-slate-400 font-semibold mt-3">Your company info and logo come from Business Settings above — no retyping.</p>
     </section>
 
-    <!-- ============ SECTION 2: CHANGE DESCRIPTION ============ -->
+    <!-- ============ SECTION 3: CHANGE DESCRIPTION ============ -->
     <section class="bg-slatecard rounded-2xl border border-slateline p-4 sm:p-5">
       <h2 class="text-sm font-extrabold tracking-[0.15em] text-blueprintsoft uppercase mb-4">2 · Change Description</h2>
       <label for="changeDesc" class="block text-sm font-bold text-slate-300 mb-1.5">Describe the change in plain language</label>
@@ -100,7 +151,7 @@
       </div>
     </section>
 
-    <!-- ============ SECTION 3: LINE ITEMS & PRICING ============ -->
+    <!-- ============ SECTION 4: LINE ITEMS & PRICING ============ -->
     <section class="bg-slatecard rounded-2xl border border-slateline p-4 sm:p-5">
       <h2 class="text-sm font-extrabold tracking-[0.15em] text-blueprintsoft uppercase mb-4">3 · Line Items &amp; Pricing</h2>
 
@@ -133,7 +184,7 @@
         </div>
 
         <div class="flex items-center justify-between gap-3">
-          <span class="text-base font-bold text-slate-300">Tax</span>
+          <span class="text-base font-bold text-slate-300">Tax <span class="text-xs text-slate-500 font-semibold">(from Settings)</span></span>
           <div class="flex items-center gap-2">
             <button type="button" id="taxMinus" class="h-12 w-12 rounded-xl bg-ink border-2 border-slateline text-2xl font-extrabold text-blueprintsoft active:border-blueprint">−</button>
             <div class="relative">
@@ -153,7 +204,7 @@
       </div>
     </section>
 
-    <!-- ============ SECTION 4: SCHEDULE IMPACT ============ -->
+    <!-- ============ SECTION 5: SCHEDULE IMPACT ============ -->
     <section class="bg-slatecard rounded-2xl border border-slateline p-4 sm:p-5">
       <h2 class="text-sm font-extrabold tracking-[0.15em] text-blueprintsoft uppercase mb-4">4 · Schedule Impact</h2>
       <div class="flex items-center justify-between gap-4">
@@ -167,7 +218,7 @@
       <p class="text-sm text-slate-400 font-medium mt-3">Substantial completion date shifts by this many calendar days upon approval.</p>
     </section>
 
-    <!-- ============ SECTION 5: APPROVAL & SIGNATURES ============ -->
+    <!-- ============ SECTION 6: APPROVAL & SIGNATURES ============ -->
     <section class="bg-slatecard rounded-2xl border border-slateline p-4 sm:p-5">
       <h2 class="text-sm font-extrabold tracking-[0.15em] text-blueprintsoft uppercase mb-4">5 · Approval &amp; Signatures</h2>
       <p class="text-sm text-slate-300 font-medium leading-relaxed bg-ink border border-slateline rounded-xl p-4 mb-5">
@@ -194,7 +245,7 @@
 
   </main>
 
-  <!-- ============ SECTION 6: STICKY EXPORT BAR ============ -->
+  <!-- ============ SECTION 7: STICKY EXPORT BAR ============ -->
   <footer class="fixed bottom-0 inset-x-0 z-40 bg-ink/95 backdrop-blur border-t-2 border-slateline">
     <div class="max-w-3xl mx-auto px-4 py-3 flex gap-3">
       <button type="button" id="resetBtn"
@@ -213,9 +264,189 @@
   'use strict';
 
   /* =====================================================
-     CO NUMBER, DATE, STATUS PILL
+     SAFE LOCALSTORAGE WRAPPER
+     - Some embedded webviews / privacy modes throw on
+       localStorage access; the app must never crash for it.
   ===================================================== */
-  var coCounter = 1;
+  var SETTINGS_KEY = 'dfs.businessSettings.v1';
+  var COUNTER_KEY = 'dfs.coCounter.v1';
+
+  function storageGet(key) {
+    try { return window.localStorage.getItem(key); } catch (e) { return null; }
+  }
+  function storageSet(key, value) {
+    try { window.localStorage.setItem(key, value); return true; } catch (e) { return false; }
+  }
+
+  /* =====================================================
+     BUSINESS SETTINGS (multi-user customization)
+     settings = {
+       companyName, phone, email, taxRate,
+       logo: { dataUrl, w, h } | null
+     }
+  ===================================================== */
+  var settings = {
+    companyName: '',
+    phone: '',
+    email: '',
+    taxRate: 0,
+    logo: null
+  };
+
+  function loadSettings() {
+    var raw = storageGet(SETTINGS_KEY);
+    if (!raw) return false;
+    try {
+      var parsed = JSON.parse(raw);
+      settings.companyName = typeof parsed.companyName === 'string' ? parsed.companyName : '';
+      settings.phone = typeof parsed.phone === 'string' ? parsed.phone : '';
+      settings.email = typeof parsed.email === 'string' ? parsed.email : '';
+      settings.taxRate = isFinite(parseFloat(parsed.taxRate)) ? parseFloat(parsed.taxRate) : 0;
+      settings.logo = (parsed.logo && typeof parsed.logo.dataUrl === 'string') ? parsed.logo : null;
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  function persistSettings() {
+    return storageSet(SETTINGS_KEY, JSON.stringify(settings));
+  }
+
+  /* ---- Settings DOM ---- */
+  var setCompany = document.getElementById('setCompany');
+  var setPhone = document.getElementById('setPhone');
+  var setEmail = document.getElementById('setEmail');
+  var setTax = document.getElementById('setTax');
+  var settingsStatus = document.getElementById('settingsStatus');
+  var headerBrand = document.getElementById('headerBrand');
+  var logoFileInput = document.getElementById('logoFile');
+  var logoPickBtn = document.getElementById('logoPickBtn');
+  var logoRemoveBtn = document.getElementById('logoRemoveBtn');
+  var logoPreviewWrap = document.getElementById('logoPreviewWrap');
+  var logoPreview = document.getElementById('logoPreview');
+
+  function settingsToForm() {
+    setCompany.value = settings.companyName;
+    setPhone.value = settings.phone;
+    setEmail.value = settings.email;
+    setTax.value = settings.taxRate || '';
+    renderLogoPreview();
+    renderBrand();
+  }
+
+  function formToSettings() {
+    settings.companyName = setCompany.value.trim();
+    settings.phone = setPhone.value.trim();
+    settings.email = setEmail.value.trim();
+    var tr = parseFloat(setTax.value);
+    settings.taxRate = (isFinite(tr) && tr >= 0) ? Math.min(100, tr) : 0;
+  }
+
+  function renderBrand() {
+    headerBrand.textContent = settings.companyName
+      ? settings.companyName
+      : 'Digital Foreman Suite';
+  }
+
+  function renderLogoPreview() {
+    if (settings.logo && settings.logo.dataUrl) {
+      logoPreview.src = settings.logo.dataUrl;
+      logoPreviewWrap.classList.remove('hidden');
+      logoPreviewWrap.classList.add('flex');
+      logoRemoveBtn.classList.remove('hidden');
+      logoPickBtn.textContent = 'REPLACE LOGO';
+    } else {
+      logoPreview.removeAttribute('src');
+      logoPreviewWrap.classList.add('hidden');
+      logoPreviewWrap.classList.remove('flex');
+      logoRemoveBtn.classList.add('hidden');
+      logoPickBtn.textContent = 'UPLOAD LOGO';
+    }
+  }
+
+  function flashSettingsStatus(msg, ok) {
+    settingsStatus.textContent = msg;
+    settingsStatus.className = 'text-sm font-bold mt-3 text-center ' + (ok ? 'text-green-400' : 'text-red-400');
+  }
+
+  /* ---- Logo upload: downscale to keep localStorage small ---- */
+  logoPickBtn.addEventListener('click', function () { logoFileInput.click(); });
+
+  logoFileInput.addEventListener('change', function () {
+    var file = logoFileInput.files && logoFileInput.files[0];
+    if (!file) return;
+    if (!/^image\/(png|jpeg|webp)$/.test(file.type)) {
+      flashSettingsStatus('Please choose a PNG, JPG, or WebP image.', false);
+      return;
+    }
+    var reader = new FileReader();
+    reader.onload = function () {
+      var img = new Image();
+      img.onload = function () {
+        // Downscale to a print-friendly size that stays well under storage limits
+        var MAX_W = 600, MAX_H = 300;
+        var scale = Math.min(1, MAX_W / img.naturalWidth, MAX_H / img.naturalHeight);
+        var w = Math.max(1, Math.round(img.naturalWidth * scale));
+        var h = Math.max(1, Math.round(img.naturalHeight * scale));
+        var c = document.createElement('canvas');
+        c.width = w; c.height = h;
+        var cx = c.getContext('2d');
+        // White backing so transparent logos print cleanly on the PDF header chip
+        cx.fillStyle = '#ffffff';
+        cx.fillRect(0, 0, w, h);
+        cx.drawImage(img, 0, 0, w, h);
+        settings.logo = { dataUrl: c.toDataURL('image/png'), w: w, h: h };
+        renderLogoPreview();
+        flashSettingsStatus('Logo loaded — tap SAVE BUSINESS SETTINGS to keep it.', true);
+      };
+      img.onerror = function () { flashSettingsStatus('Could not read that image file.', false); };
+      img.src = reader.result;
+    };
+    reader.onerror = function () { flashSettingsStatus('Could not read that file.', false); };
+    reader.readAsDataURL(file);
+    logoFileInput.value = ''; // allow re-selecting the same file later
+  });
+
+  logoRemoveBtn.addEventListener('click', function () {
+    settings.logo = null;
+    renderLogoPreview();
+    flashSettingsStatus('Logo removed — tap SAVE BUSINESS SETTINGS to confirm.', true);
+  });
+
+  /* ---- Save button ---- */
+  document.getElementById('saveSettingsBtn').addEventListener('click', function () {
+    formToSettings();
+    var ok = persistSettings();
+    renderBrand();
+    // Apply the saved tax rate to the current CO immediately
+    taxInput.value = settings.taxRate;
+    recalc();
+    if (ok) {
+      flashSettingsStatus('✓ Saved. Your info and logo now load automatically on this device.', true);
+    } else {
+      flashSettingsStatus('Saved for this session only — storage is blocked in this browser mode (e.g., private browsing).', false);
+    }
+  });
+
+  /* ---- Collapsible panel ---- */
+  var settingsBody = document.getElementById('settingsBody');
+  var settingsChevron = document.getElementById('settingsChevron');
+  document.getElementById('settingsToggle').addEventListener('click', function () {
+    var hidden = settingsBody.classList.toggle('hidden');
+    settingsChevron.textContent = hidden ? '▸' : '▾';
+  });
+
+  /* =====================================================
+     CO NUMBER, DATE, STATUS PILL
+     - Counter persists across sessions so CO numbers
+       stay sequential on this device.
+  ===================================================== */
+  var coCounter = (function () {
+    var saved = parseInt(storageGet(COUNTER_KEY), 10);
+    return (isFinite(saved) && saved > 0) ? saved : 1;
+  })();
+
   var coNumberEl = document.getElementById('coNumber');
   var coDateEl = document.getElementById('coDate');
   var statusPill = document.getElementById('statusPill');
@@ -237,7 +468,6 @@
     coNumberEl.textContent = currentCONumber();
     coDateEl.textContent = todayPretty();
   }
-  refreshHeader();
 
   function setStatus(signed) {
     if (signed) {
@@ -265,10 +495,8 @@
      LINE ITEMS
   ===================================================== */
   var lineItemsEl = document.getElementById('lineItems');
-  var rowSeq = 0;
 
   function addLineItem(desc, qty, cost) {
-    rowSeq++;
     var row = document.createElement('div');
     row.className = 'lineItem bg-ink rounded-xl border-2 border-slateline p-3';
     row.innerHTML =
@@ -404,16 +632,11 @@
 
   /* =====================================================
      SIGNATURE PADS
-     - Pointer Events + setPointerCapture for unified
-       mouse / touch / stylus handling on iOS & Android.
-     - touch-action:none (CSS) blocks page scroll while signing.
-     - Strokes stored as normalized data so signatures
-       survive resizes and can be re-inked dark for the PDF.
   ===================================================== */
   function SignaturePad(canvas, onChange) {
     this.canvas = canvas;
     this.ctx = canvas.getContext('2d');
-    this.strokes = [];       // array of arrays of {x, y} in CSS pixels
+    this.strokes = [];
     this.current = null;
     this.onChange = onChange || function () {};
     this.drawing = false;
@@ -471,7 +694,7 @@
       if (self.isEmpty()) return null;
       var rect = canvas.getBoundingClientRect();
       var off = document.createElement('canvas');
-      var scale = 3; // crisp at print resolution
+      var scale = 3;
       off.width = Math.max(1, Math.round(rect.width * scale));
       off.height = Math.max(1, Math.round(rect.height * scale));
       var octx = off.getContext('2d');
@@ -513,7 +736,6 @@
     canvas.addEventListener('pointermove', function (e) {
       if (!self.drawing) return;
       e.preventDefault();
-      // Use coalesced events when available for smoother ink on fast strokes
       var events = (typeof e.getCoalescedEvents === 'function') ? e.getCoalescedEvents() : [e];
       if (events.length === 0) events = [e];
       for (var i = 0; i < events.length; i++) {
@@ -558,6 +780,7 @@
 
   /* =====================================================
      PDF ENGINE (jsPDF, hand-drawn corporate layout)
+     - All company branding pulls from Business Settings.
   ===================================================== */
   document.getElementById('pdfBtn').addEventListener('click', function () {
     var jsPDFCtor = (window.jspdf && window.jspdf.jsPDF) ? window.jspdf.jsPDF : null;
@@ -565,6 +788,9 @@
       alert('PDF library failed to load. Check your internet connection and reload the page.');
       return;
     }
+
+    // Pull the freshest settings values (covers "typed but forgot to save")
+    formToSettings();
 
     var t = computeTotals();
     var doc = new jsPDFCtor({ unit: 'pt', format: 'letter' });
@@ -574,15 +800,16 @@
     var contentW = pageW - margin * 2;
     var y = 0;
 
-    var INK = [15, 23, 42];        // slate-900
-    var GRAY = [100, 116, 139];    // slate-500
-    var LIGHT = [241, 245, 249];   // slate-100
-    var BLUE = [30, 58, 138];      // blue-900
-    var ORANGE = [234, 88, 12];    // orange-600
-    var LINE = [203, 213, 225];    // slate-300
+    var INK = [15, 23, 42];
+    var GRAY = [100, 116, 139];
+    var LIGHT = [241, 245, 249];
+    var BLUE = [30, 58, 138];
+    var ORANGE = [234, 88, 12];
+    var LINE = [203, 213, 225];
 
-    var contractorName = document.getElementById('contractorName').value.trim() || 'Contractor';
-    var contractorPhone = document.getElementById('contractorPhone').value.trim();
+    var companyName = settings.companyName || 'Contractor';
+    var companyPhone = settings.phone;
+    var companyEmail = settings.email;
     var clientName = document.getElementById('clientName').value.trim() || 'Client';
     var jobAddress = document.getElementById('jobAddress').value.trim();
     var description = descBox.value.trim();
@@ -601,34 +828,57 @@
       doc.line(margin, y, pageW - margin, y);
     }
 
-    /* ---- Header band ---- */
+    /* ---- Header band (with optional logo chip) ---- */
     doc.setFillColor(INK[0], INK[1], INK[2]);
     doc.rect(0, 0, pageW, 96, 'F');
     doc.setFillColor(ORANGE[0], ORANGE[1], ORANGE[2]);
     doc.rect(0, 96, pageW, 4, 'F');
 
+    var textX = margin;
+    if (settings.logo && settings.logo.dataUrl) {
+      var maxLogoH = 56, maxLogoW = 120;
+      var ratio = settings.logo.w / settings.logo.h;
+      var lh = maxLogoH, lw = lh * ratio;
+      if (lw > maxLogoW) { lw = maxLogoW; lh = lw / ratio; }
+      var chipPad = 6;
+      // White chip behind the logo so it reads on the dark band
+      doc.setFillColor(255, 255, 255);
+      if (typeof doc.roundedRect === 'function') {
+        doc.roundedRect(margin, 48 - lh / 2 - chipPad + 0, lw + chipPad * 2, lh + chipPad * 2, 6, 6, 'F');
+      } else {
+        doc.rect(margin, 48 - lh / 2 - chipPad, lw + chipPad * 2, lh + chipPad * 2, 'F');
+      }
+      try {
+        doc.addImage(settings.logo.dataUrl, 'PNG', margin + chipPad, 48 - lh / 2, lw, lh);
+      } catch (imgErr) { /* skip logo if image data is unreadable */ }
+      textX = margin + lw + chipPad * 2 + 16;
+    }
+
     doc.setTextColor(255, 255, 255);
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(22);
-    doc.text('CHANGE ORDER', margin, 44);
+    doc.text('CHANGE ORDER', textX, 40);
     doc.setFontSize(10);
     doc.setTextColor(147, 197, 253);
-    doc.text(contractorName.toUpperCase(), margin, 64);
-    if (contractorPhone) {
+    doc.text(companyName.toUpperCase(), textX, 58);
+    var contactBits = [];
+    if (companyPhone) contactBits.push(companyPhone);
+    if (companyEmail) contactBits.push(companyEmail);
+    if (contactBits.length) {
       doc.setTextColor(203, 213, 225);
       doc.setFont('helvetica', 'normal');
-      doc.text(contractorPhone, margin, 78);
+      doc.text(contactBits.join('   ·   '), textX, 73);
     }
 
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(13);
     doc.setTextColor(249, 115, 22);
-    doc.text(currentCONumber(), pageW - margin, 44, { align: 'right' });
+    doc.text(currentCONumber(), pageW - margin, 40, { align: 'right' });
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(10);
     doc.setTextColor(203, 213, 225);
-    doc.text(todayPretty(), pageW - margin, 60, { align: 'right' });
-    doc.text('Status: ' + (signedByClient ? 'SIGNED' : 'DRAFT'), pageW - margin, 74, { align: 'right' });
+    doc.text(todayPretty(), pageW - margin, 56, { align: 'right' });
+    doc.text('Status: ' + (signedByClient ? 'SIGNED' : 'DRAFT'), pageW - margin, 70, { align: 'right' });
 
     y = 124;
 
@@ -673,9 +923,8 @@
     var colDescW = contentW * 0.50;
     var colQtyW = contentW * 0.12;
     var colCostW = contentW * 0.18;
-    var colTotW = contentW * 0.20;
     var xDesc = margin + 8;
-    var xQty = margin + colDescW + colQtyW;          // right edge of qty col
+    var xQty = margin + colDescW + colQtyW;
     var xCost = margin + colDescW + colQtyW + colCostW;
     var xTot = margin + contentW - 8;
 
@@ -816,7 +1065,7 @@
     }
 
     placeSignature(clientPad, margin, 'CLIENT SIGNATURE', clientName);
-    placeSignature(contractorPad, margin + sigW + 32, 'CONTRACTOR SIGNATURE', contractorName);
+    placeSignature(contractorPad, margin + sigW + 32, 'CONTRACTOR SIGNATURE', companyName);
     y += sigH + 44;
 
     /* ---- Draft watermark (only when client has not signed) ---- */
@@ -831,14 +1080,15 @@
       }
     }
 
-    /* ---- Footer page numbers ---- */
+    /* ---- Footer page numbers (branded with company name) ---- */
     var totalPages = doc.internal.getNumberOfPages();
+    var footerBrand = settings.companyName ? settings.companyName : 'Digital Foreman Suite';
     for (var pg = 1; pg <= totalPages; pg++) {
       doc.setPage(pg);
       doc.setFont('helvetica', 'normal');
       doc.setFontSize(8);
       doc.setTextColor(GRAY[0], GRAY[1], GRAY[2]);
-      doc.text(currentCONumber() + '  ·  Generated by Digital Foreman Suite', margin, pageH - 24);
+      doc.text(currentCONumber() + '  ·  ' + footerBrand, margin, pageH - 24);
       doc.text('Page ' + pg + ' of ' + totalPages, pageW - margin, pageH - 24, { align: 'right' });
     }
 
@@ -847,28 +1097,41 @@
 
   /* =====================================================
      RESET / NEW CO (with confirm guard)
+     - Business Settings are intentionally NOT cleared.
   ===================================================== */
   document.getElementById('resetBtn').addEventListener('click', function () {
-    var ok = window.confirm('Start a new Change Order? All current entries and signatures will be cleared.');
+    var ok = window.confirm('Start a new Change Order? Client info, line items, and signatures will be cleared. Your Business Settings are kept.');
     if (!ok) return;
     document.getElementById('clientName').value = '';
     document.getElementById('jobAddress').value = '';
     descBox.value = '';
     lineItemsEl.innerHTML = '';
     markupInput.value = 15;
-    taxInput.value = 0;
+    taxInput.value = settings.taxRate || 0;
     days = 0;
     renderDays();
     clientPad.clear();
     contractorPad.clear();
     coCounter++;
+    storageSet(COUNTER_KEY, String(coCounter));
     refreshHeader();
     addLineItem();
     recalc();
     window.scrollTo({ top: 0, behavior: 'smooth' });
   });
 
-  /* ---- Boot with one empty line item ---- */
+  /* =====================================================
+     BOOT
+  ===================================================== */
+  var hasSavedSettings = loadSettings();
+  settingsToForm();
+  if (hasSavedSettings) {
+    // Returning user: collapse the settings panel, apply saved tax rate
+    settingsBody.classList.add('hidden');
+    settingsChevron.textContent = '▸';
+    taxInput.value = settings.taxRate || 0;
+  }
+  refreshHeader();
   addLineItem();
   recalc();
   setStatus(false);
