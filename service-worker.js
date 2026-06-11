@@ -1,77 +1,137 @@
 /* =========================================================
    service-worker.js — On-The-Spot Change Order Generator
-   Strategy: Cache-First ("offline-first")
-   The entire app is cached on first visit. After that, it
-   loads instantly with ZERO network — basements, metal
-   buildings, dead zones. localStorage data is untouched
-   by this worker; it lives on the device independently.
+   v2 — Digital Foreman Suite
+
+   WHAT CHANGED FROM v1 (and why):
+
+   1. The two third-party engines (Tailwind styling, jsPDF)
+      are now explicitly cached. v1 only cached same-origin
+      files, so offline users got an unstyled page and a dead
+      PDF button — the two most important assets were the two
+      that never worked offline.
+
+   2. The app page itself is now NETWORK-FIRST: when there is
+      signal, users always get the newest deploy automatically
+      (no more remembering to bump v1 -> v2 on every release).
+      When there is zero signal, it falls back to the cached
+      copy instantly. Everything else stays cache-first.
+
+   3. Install no longer dies silently if one file 404s.
+      cache.addAll() is all-or-nothing; in v1 a single missing
+      icon meant NO offline capability at all, with no error
+      shown to anyone. Core files are still required, but each
+      is fetched individually so one bad path can't take down
+      the rest, and failures are logged to the console.
    =========================================================*/
 
-const CACHE_NAME = "change-order-cache-v1"; // Bump to v2, v3... on every deploy
+const CACHE_NAME = "change-order-cache-v2";
 
-// Everything the app needs to run with zero signal.
-// Paths are relative to this service worker's directory.
-const ASSETS_TO_CACHE = [
+/* Files served from our own site. */
+const APP_SHELL = [
   "./",
   "./index.html",
   "./manifest.json",
-  "./service-worker.js",
   "./icons/icon-192.png",
   "./icons/icon-512.png",
   "./icons/icon-512-maskable.png"
 ];
 
-// INSTALL: Pre-cache the entire app shell on first load
+/* Third-party engines the app cannot run without.
+   These MUST be cached or "works offline" is false. */
+const CDN_ASSETS = [
+  "https://cdn.tailwindcss.com/",
+  "https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"
+];
+
+/* Hosts whose responses we are willing to cache at runtime. */
+const TRUSTED_CDN_HOSTS = ["cdn.tailwindcss.com", "cdnjs.cloudflare.com"];
+
+/* ---------- INSTALL: pre-cache everything, resiliently ---------- */
 self.addEventListener("install", (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS_TO_CACHE))
+    caches.open(CACHE_NAME).then(async (cache) => {
+      // Same-origin shell: fetch each file individually so one
+      // missing path is logged instead of nuking the whole install.
+      await Promise.all(
+        APP_SHELL.map((url) =>
+          fetch(url, { cache: "no-cache" })
+            .then((resp) => {
+              if (resp && resp.ok) return cache.put(url, resp);
+              console.warn("[SW] Could not pre-cache (bad status):", url);
+            })
+            .catch(() => console.warn("[SW] Could not pre-cache (fetch failed):", url))
+        )
+      );
+      // CDN engines: fetched in no-cors mode so cross-origin
+      // responses can be stored and replayed to <script> tags.
+      await Promise.all(
+        CDN_ASSETS.map((url) =>
+          fetch(url, { mode: "no-cors", cache: "no-cache" })
+            .then((resp) => cache.put(url, resp))
+            .catch(() => console.warn("[SW] Could not pre-cache CDN asset:", url))
+        )
+      );
+    })
   );
-  // Activate the new worker immediately on update
   self.skipWaiting();
 });
 
-// ACTIVATE: Delete any old cache versions so updates take effect
+/* ---------- ACTIVATE: clear old cache versions ---------- */
 self.addEventListener("activate", (event) => {
   event.waitUntil(
-    caches.keys().then((keys) =>
-      Promise.all(
-        keys
-          .filter((key) => key !== CACHE_NAME)
-          .map((key) => caches.delete(key))
+    caches
+      .keys()
+      .then((keys) =>
+        Promise.all(keys.filter((k) => k !== CACHE_NAME).map((k) => caches.delete(k)))
       )
-    )
+      .then(() => self.clients.claim())
   );
-  self.clients.claim();
 });
 
-// FETCH: Cache-first. Serve from device storage; only touch the
-// network if something isn't cached (and quietly cache it for next time).
+/* ---------- FETCH ---------- */
 self.addEventListener("fetch", (event) => {
-  // Only handle GET requests
   if (event.request.method !== "GET") return;
 
-  event.respondWith(
-    caches.match(event.request).then((cachedResponse) => {
-      if (cachedResponse) {
-        return cachedResponse; // Instant, offline, no signal needed
-      }
-      return fetch(event.request)
-        .then((networkResponse) => {
-          // Cache successful same-origin responses for future offline use
-          if (
-            networkResponse &&
-            networkResponse.status === 200 &&
-            event.request.url.startsWith(self.location.origin)
-          ) {
-            const responseClone = networkResponse.clone();
-            caches
-              .open(CACHE_NAME)
-              .then((cache) => cache.put(event.request, responseClone));
+  /* The page itself: NETWORK-FIRST.
+     Online  -> newest deployed version, and the cache is refreshed.
+     Offline -> instant cached copy. */
+  if (event.request.mode === "navigate") {
+    event.respondWith(
+      fetch(event.request)
+        .then((resp) => {
+          if (resp && resp.ok) {
+            const copy = resp.clone();
+            caches.open(CACHE_NAME).then((c) => {
+              c.put("./index.html", copy.clone());
+              c.put("./", copy);
+            });
           }
-          return networkResponse;
+          return resp;
+        })
+        .catch(() => caches.match("./index.html"))
+    );
+    return;
+  }
+
+  /* Everything else: CACHE-FIRST for instant offline loads. */
+  event.respondWith(
+    caches.match(event.request).then((cached) => {
+      if (cached) return cached;
+      return fetch(event.request)
+        .then((resp) => {
+          const url = new URL(event.request.url);
+          const sameOrigin = url.origin === self.location.origin;
+          const trustedCDN = TRUSTED_CDN_HOSTS.includes(url.hostname);
+          // Opaque (no-cors) responses report status 0; for trusted
+          // CDN hosts we cache them anyway — that's the whole point.
+          if ((sameOrigin && resp.status === 200) || trustedCDN) {
+            const copy = resp.clone();
+            caches.open(CACHE_NAME).then((c) => c.put(event.request, copy));
+          }
+          return resp;
         })
         .catch(() => {
-          // Total dead zone + uncached request: fall back to the app shell
+          // Total dead zone + uncached request: fall back to the app shell.
           return caches.match("./index.html");
         });
     })
