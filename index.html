@@ -93,7 +93,7 @@
         <!-- Logo upload -->
         <div class="mt-4">
           <span class="block text-sm font-bold text-slate-300 mb-1.5">Company Logo <span class="text-slate-500 font-semibold">(PNG or JPG — prints on every PDF)</span></span>
-          <input id="logoFile" type="file" accept="image/png,image/jpeg,image/webp" />
+          <input id="logoFile" type="file" accept="image/*, .svg" />
           <div class="flex items-center gap-3 flex-wrap">
             <button type="button" id="logoPickBtn"
               class="h-14 px-5 rounded-xl bg-ink border-2 border-blueprint text-blueprintsoft font-extrabold text-sm tracking-wide active:bg-blueprint active:text-white">
@@ -376,8 +376,8 @@
   logoFileInput.addEventListener('change', function () {
     var file = logoFileInput.files && logoFileInput.files[0];
     if (!file) return;
-    if (!/^image\/(png|jpeg|webp)$/.test(file.type)) {
-      flashSettingsStatus('Please choose a PNG, JPG, or WebP image.', false);
+    if (!/^image\/(png|jpeg|webp|svg\+xml)$/.test(file.type)) {
+      flashSettingsStatus('Please choose a PNG, JPG, WebP, or SVG image.', false);
       return;
     }
     var reader = new FileReader();
