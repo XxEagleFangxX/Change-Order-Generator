@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Digital Foreman Suite logo">
+  <!-- Hexagon badge: industrial charcoal -->
+  <polygon points="496,256 376,464 136,464 16,256 136,48 376,48" fill="#22252a"/>
+
+  <!-- Inner safety-stripe outline: high-vis orange -->
+  <polygon points="472,256 364,443 148,443 40,256 148,69 364,69"
+           fill="none" stroke="#FF6B00" stroke-width="6" stroke-linejoin="miter"/>
+
+  <!-- "D" — built from chamfered steel-plate geometry -->
+  <path d="M140,136 H210 L250,176 V288 L210,328 H140 Z
+           M180,176 H192 L212,196 V268 L192,288 H180 Z"
+        fill="#FF6B00" fill-rule="evenodd"/>
+
+  <!-- "F" — stem and flanges, like a beam profile -->
+  <path d="M272,136 H372 V176 H312 V216 H356 V252 H312 V328 H272 Z"
+        fill="#FF6B00"/>
+
+  <!-- Structural steel beam (side view) with bolt holes -->
+  <path d="M140,360 H372 L380,368 V380 L372,388 H140 L132,380 V368 Z"
+        fill="#FF6B00"/>
+  <circle cx="172" cy="374" r="7" fill="#22252a"/>
+  <circle cx="256" cy="374" r="7" fill="#22252a"/>
+  <circle cx="340" cy="374" r="7" fill="#22252a"/>
+</svg>
