@@ -10,14 +10,15 @@
 const CACHE_NAME = "change-order-cache-v1"; // Bump to v2, v3... on every deploy
 
 // Everything the app needs to run with zero signal.
-// Add any other local files (CSS, JS, fonts) you split out later.
+// Paths are relative to this service worker's directory.
 const ASSETS_TO_CACHE = [
-  "/",
-  "/index.html",
-  "/manifest.json",
-  "/icons/icon-192.png",
-  "/icons/icon-512.png",
-  "/icons/icon-512-maskable.png"
+  "./",
+  "./index.html",
+  "./manifest.json",
+  "./service-worker.js",
+  "./icons/icon-192.png",
+  "./icons/icon-512.png",
+  "./icons/icon-512-maskable.png"
 ];
 
 // INSTALL: Pre-cache the entire app shell on first load
@@ -71,7 +72,7 @@ self.addEventListener("fetch", (event) => {
         })
         .catch(() => {
           // Total dead zone + uncached request: fall back to the app shell
-          return caches.match("/index.html");
+          return caches.match("./index.html");
         });
     })
   );
