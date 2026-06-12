@@ -286,9 +286,68 @@
       </div>
     </section>
 
+    <!-- ============ SECTION 8: HELP & FAQ ============ -->
+    <section class="bg-slatecard rounded-2xl border border-slateline p-4 sm:p-5">
+      <button type="button" id="helpToggle" class="w-full flex items-center justify-between gap-3">
+        <span class="text-sm font-extrabold tracking-[0.15em] text-blueprintsoft uppercase text-left">❓ Help &amp; How-To</span>
+        <span id="helpChevron" class="text-blueprintsoft text-2xl font-extrabold leading-none select-none">▾</span>
+      </button>
+      <div id="helpBody" class="mt-4 space-y-5">
+
+        <!-- FAQ item template: orange number + bold Q + slate A -->
+        <div class="bg-ink rounded-xl border border-slateline p-4">
+          <p class="text-xs font-extrabold text-safety uppercase tracking-widest mb-1">01 · Most Important</p>
+          <p class="text-sm font-extrabold text-white mb-1">Why does my CO log only show one entry even after multiple jobs?</p>
+          <p class="text-sm text-slate-300 font-medium leading-relaxed">Every change order gets its own unique number. You must tap <span class="text-safety font-extrabold">RESET / NEW CO</span> between jobs — that increments the number from -001 to -002 and so on. If you skip RESET and fill in a new job over the old one, both COs share the same number and the log updates the first entry instead of adding a new one. Think of RESET as "tearing off the old form."</p>
+        </div>
+
+        <div class="bg-ink rounded-xl border border-slateline p-4">
+          <p class="text-xs font-extrabold text-safety uppercase tracking-widest mb-1">02 · Workflow</p>
+          <p class="text-sm font-extrabold text-white mb-1">What's the difference between REOPEN and DUPLICATE?</p>
+          <p class="text-sm text-slate-300 font-medium leading-relaxed"><span class="text-blueprintsoft font-extrabold">REOPEN</span> loads the exact CO back — same number, same date, same signatures — so you can add the client signature later and regenerate a SIGNED version. <span class="text-safety font-extrabold">DUPLICATE</span> copies all the line items and description into a brand-new CO number with blank signatures. Use it for repeat work at the same property or for a similar job with a different client.</p>
+        </div>
+
+        <div class="bg-ink rounded-xl border border-slateline p-4">
+          <p class="text-xs font-extrabold text-safety uppercase tracking-widest mb-1">03 · Signatures</p>
+          <p class="text-sm font-extrabold text-white mb-1">My client wasn't on site. How do I get their signature later?</p>
+          <p class="text-sm text-slate-300 font-medium leading-relaxed">Generate the PDF now — it saves as a DRAFT with a watermark. Send it to the client however you like. When they're ready to sign in person, scroll down to the Change Order Log, tap <span class="text-blueprintsoft font-extrabold">REOPEN</span> on that CO, have them sign the Client Signature pad, then tap <span class="text-safety font-extrabold">GENERATE PDF</span> again. The new PDF will say SIGNED, the watermark disappears, and the log entry updates automatically.</p>
+        </div>
+
+        <div class="bg-ink rounded-xl border border-slateline p-4">
+          <p class="text-xs font-extrabold text-safety uppercase tracking-widest mb-1">04 · Saved Items</p>
+          <p class="text-sm font-extrabold text-white mb-1">How do I save a line item for reuse?</p>
+          <p class="text-sm text-slate-300 font-medium leading-relaxed">Fill in the item description and unit cost, then tap the <span class="text-safety font-extrabold">☆</span> star button on that row. It saves instantly and appears as an orange chip below the ADD LINE ITEM button. On any future CO, tap the chip and it drops into a new line item with qty 1. Tap <span class="text-blueprintsoft font-extrabold">Edit</span> next to "Saved items" to delete any you no longer need.</p>
+        </div>
+
+        <div class="bg-ink rounded-xl border border-slateline p-4">
+          <p class="text-xs font-extrabold text-safety uppercase tracking-widest mb-1">05 · Your Data</p>
+          <p class="text-sm font-extrabold text-white mb-1">Is my data safe if I get a new phone?</p>
+          <p class="text-sm text-slate-300 font-medium leading-relaxed">Everything — settings, logo, saved items, and your full CO history — lives only on your device. To move it to a new phone, open Business Settings, tap <span class="text-blueprintsoft font-extrabold">DOWNLOAD BACKUP</span>, and save the file to your cloud storage or email it to yourself. On the new phone, open the app, go to Business Settings, tap <span class="text-blueprintsoft font-extrabold">RESTORE BACKUP</span>, and select that file. Done. Nothing ever passes through any server.</p>
+        </div>
+
+        <div class="bg-ink rounded-xl border border-slateline p-4">
+          <p class="text-xs font-extrabold text-safety uppercase tracking-widest mb-1">06 · Offline Use</p>
+          <p class="text-sm font-extrabold text-white mb-1">Does this work with no cell service?</p>
+          <p class="text-sm text-slate-300 font-medium leading-relaxed">Yes — 100%. Once the app has loaded on your device, it works in concrete basements, metal buildings, and dead zones. All calculations, PDF generation, and saving happen entirely on your phone. No internet connection is ever required to use the app.</p>
+        </div>
+
+        <!-- Bug report button -->
+        <div class="border-t-2 border-slateline pt-4">
+          <p class="text-sm font-extrabold text-white mb-1">Found a bug or have a feature request?</p>
+          <p class="text-sm text-slate-400 font-medium mb-3">Tap below to send an email with your device info pre-filled. The more detail the better — screenshots help a lot.</p>
+          <button type="button" id="bugReportBtn"
+            class="w-full h-14 rounded-xl bg-ink border-2 border-blueprint text-blueprintsoft font-extrabold text-sm tracking-wide active:bg-blueprint active:text-white">
+            ✉ REPORT A BUG / REQUEST A FEATURE
+          </button>
+          <p class="text-xs text-slate-500 font-semibold mt-2 text-center">Opens your email app · digitalforemansuite@gmail.com</p>
+        </div>
+
+      </div>
+    </section>
+
   </main>
 
-  <!-- ============ SECTION 8: STICKY EXPORT BAR ============ -->
+  <!-- ============ SECTION 9: STICKY EXPORT BAR ============ -->
   <footer class="fixed bottom-0 inset-x-0 z-40 bg-ink/95 backdrop-blur border-t-2 border-slateline">
     <div class="max-w-3xl mx-auto px-4 py-3 flex gap-3">
       <button type="button" id="resetBtn"
@@ -1276,6 +1335,29 @@
     // Pull the freshest settings values (covers "typed but forgot to save")
     formToSettings();
 
+    /* ---- Reopened-CO mismatch guard ----
+       If the user loaded a CO from the log (coOverride is set) but has
+       since changed the client name, warn them. This catches the common
+       mistake of filling in a new job over a reopened old one without
+       hitting RESET first, which would silently overwrite the log entry. */
+    if (coOverride) {
+      var loggedRec = null;
+      for (var li = 0; li < coLog.length; li++) {
+        if (coLog[li].coNumber === coOverride.number) { loggedRec = coLog[li]; break; }
+      }
+      if (loggedRec) {
+        var currentClient = document.getElementById('clientName').value.trim();
+        if (currentClient && loggedRec.client && currentClient !== loggedRec.client) {
+          var proceed = window.confirm(
+            'Heads up: this CO is logged under "' + loggedRec.client + '" but the client name now reads "' + currentClient + '".\n\n' +
+            'If this is a NEW job, tap Cancel and hit RESET / NEW CO first — that gives it its own number.\n\n' +
+            'Tap OK only if you intentionally changed the client name on this same CO.'
+          );
+          if (!proceed) return;
+        }
+      }
+    }
+
     var t = computeTotals();
     var doc = new jsPDFCtor({ unit: 'pt', format: 'letter' });
     var pageW = doc.internal.pageSize.getWidth();   // 612
@@ -1546,7 +1628,7 @@
         var w = sigW;
         var h = w / exp.ratio;
         if (h > sigH) { h = sigH; w = h * exp.ratio; }
-        doc.addImage(exp.dataUrl, 'PNG', x, y + (sigH - h), w, h);
+        doc.addImage(exp.dataUrl, 'JPEG', x, y + (sigH - h), w, h);
       }
       doc.setDrawColor(INK[0], INK[1], INK[2]);
       doc.setLineWidth(0.75);
@@ -1592,6 +1674,45 @@
 
     // Auto-save this CO to the log (new entries on top; same CO number updates in place)
     saveToLog(snapshotCO());
+  });
+
+  /* =====================================================
+     HELP & FAQ PANEL
+  ===================================================== */
+  var helpChevron = document.getElementById('helpChevron');
+  var helpBody = document.getElementById('helpBody');
+  // Collapsed by default — it's reference material, not a primary workflow
+  helpBody.classList.add('hidden');
+  helpChevron.textContent = '▸';
+
+  document.getElementById('helpToggle').addEventListener('click', function () {
+    var hidden = helpBody.classList.toggle('hidden');
+    helpChevron.textContent = hidden ? '▸' : '▾';
+  });
+
+  /* ---- Bug report: pre-fill email with device + app context ---- */
+  document.getElementById('bugReportBtn').addEventListener('click', function () {
+    var ua = navigator.userAgent || 'unknown';
+    var coNum = currentCONumber();
+    var logLen = coLog.length;
+    var body = [
+      'Hi Digital Foreman Suite team,',
+      '',
+      'I found an issue / have a request:',
+      '',
+      '[DESCRIBE YOUR ISSUE OR REQUEST HERE]',
+      '',
+      '--- App info (auto-filled) ---',
+      'CO currently open: ' + coNum,
+      'COs in log: ' + logLen,
+      'Device: ' + ua,
+      'App URL: ' + window.location.href
+    ].join('\n');
+
+    var subject = 'DFS Bug Report / Feature Request — ' + coNum;
+    window.location.href = 'mailto:digitalforemansuite@gmail.com'
+      + '?subject=' + encodeURIComponent(subject)
+      + '&body=' + encodeURIComponent(body);
   });
 
   /* =====================================================
