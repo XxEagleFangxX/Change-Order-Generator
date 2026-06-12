@@ -42,8 +42,8 @@
   input:focus, textarea:focus { outline: 3px solid #f97316; outline-offset: 1px; }
   button:focus-visible { outline: 3px solid #93c5fd; outline-offset: 2px; }
   ::placeholder { color: #64748b; opacity: 1; }
-  /* Hide the raw file input; we trigger it from a styled button */
-  #logoFile { display: none; }
+  /* Hide the raw file inputs; we trigger them from styled buttons */
+  #logoFile, #backupFile { display: none; }
 </style>
 </head>
 <body class="font-sans text-slate-100 min-h-screen pb-40">
@@ -117,6 +117,23 @@
           SAVE BUSINESS SETTINGS
         </button>
         <p id="settingsStatus" class="text-sm font-bold text-slate-400 mt-3 text-center">Saved settings load automatically every time you open the app on this device.</p>
+
+        <!-- Backup & Restore -->
+        <div class="mt-5 border-t-2 border-slateline pt-4">
+          <p class="text-sm font-bold text-slate-300 mb-2">Backup &amp; Restore <span class="text-slate-500 font-semibold">(settings, logo, saved items, CO log)</span></p>
+          <input id="backupFile" type="file" accept=".json,application/json" />
+          <div class="flex gap-3">
+            <button type="button" id="backupBtn"
+              class="flex-1 h-14 rounded-xl bg-ink border-2 border-blueprint text-blueprintsoft font-extrabold text-sm tracking-wide active:bg-blueprint active:text-white">
+              DOWNLOAD BACKUP
+            </button>
+            <button type="button" id="restoreBtn"
+              class="flex-1 h-14 rounded-xl bg-ink border-2 border-slateline text-slate-300 font-extrabold text-sm tracking-wide active:border-safety active:text-safety">
+              RESTORE BACKUP
+            </button>
+          </div>
+          <p class="text-xs text-slate-400 font-semibold mt-2">Save the backup file anywhere you trust. A new phone restores everything in one tap — nothing ever leaves your device otherwise.</p>
+        </div>
       </div>
     </section>
 
@@ -164,6 +181,17 @@
         class="mt-4 w-full h-14 rounded-xl bg-safety text-ink text-lg font-extrabold tracking-wide active:bg-safetydeep">
         + ADD LINE ITEM
       </button>
+
+      <!-- Saved items (favorites) -->
+      <div id="favWrap" class="hidden mt-4">
+        <div class="flex items-center justify-between mb-2">
+          <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">Saved items — tap to add</p>
+          <button type="button" id="favEditBtn"
+            class="h-10 px-4 rounded-lg border-2 border-slateline text-slate-300 text-sm font-bold active:border-red-500 active:text-red-400">Edit</button>
+        </div>
+        <div id="favChips" class="flex flex-wrap gap-2"></div>
+        <p class="text-xs text-slate-400 font-semibold mt-2">Tap ☆ on any line item to save it here for one-tap reuse on future COs.</p>
+      </div>
 
       <!-- Totals stack -->
       <div class="mt-6 space-y-3 border-t-2 border-slateline pt-5">
@@ -246,9 +274,21 @@
       <p class="text-xs text-slate-400 font-semibold mt-3">Sign with a finger or stylus. The page will not scroll while signing.</p>
     </section>
 
+    <!-- ============ SECTION 7: CHANGE ORDER LOG (saved on this device) ============ -->
+    <section class="bg-slatecard rounded-2xl border border-slateline p-4 sm:p-5">
+      <button type="button" id="logToggle" class="w-full flex items-center justify-between gap-3">
+        <span class="text-sm font-extrabold tracking-[0.15em] text-blueprintsoft uppercase text-left">📋 Change Order Log <span id="logCount" class="text-slate-400 normal-case tracking-normal font-semibold"></span></span>
+        <span id="logChevron" class="text-blueprintsoft text-2xl font-extrabold leading-none select-none">▾</span>
+      </button>
+      <div id="logBody" class="mt-4">
+        <p id="logEmpty" class="text-sm text-slate-400 font-semibold">No change orders saved yet. Every CO is logged here automatically the moment you generate its PDF.</p>
+        <div id="logList" class="space-y-3"></div>
+      </div>
+    </section>
+
   </main>
 
-  <!-- ============ SECTION 7: STICKY EXPORT BAR ============ -->
+  <!-- ============ SECTION 8: STICKY EXPORT BAR ============ -->
   <footer class="fixed bottom-0 inset-x-0 z-40 bg-ink/95 backdrop-blur border-t-2 border-slateline">
     <div class="max-w-3xl mx-auto px-4 py-3 flex gap-3">
       <button type="button" id="resetBtn"
@@ -273,6 +313,9 @@
   ===================================================== */
   var SETTINGS_KEY = 'dfs.businessSettings.v1';
   var COUNTER_KEY = 'dfs.coCounter.v1';
+  var FAV_KEY = 'dfs.favorites.v1';
+  var LOG_KEY = 'dfs.coLog.v1';
+  var LOG_CAP = 30; // newest 30 COs kept; oldest rolls off
 
   function storageGet(key) {
     try { return window.localStorage.getItem(key); } catch (e) { return null; }
@@ -301,15 +344,19 @@
     if (!raw) return false;
     try {
       var parsed = JSON.parse(raw);
-      settings.companyName = typeof parsed.companyName === 'string' ? parsed.companyName : '';
-      settings.phone = typeof parsed.phone === 'string' ? parsed.phone : '';
-      settings.email = typeof parsed.email === 'string' ? parsed.email : '';
-      settings.taxRate = isFinite(parseFloat(parsed.taxRate)) ? parseFloat(parsed.taxRate) : 0;
-      settings.logo = (parsed.logo && typeof parsed.logo.dataUrl === 'string') ? parsed.logo : null;
+      applySettingsObject(parsed);
       return true;
     } catch (e) {
       return false;
     }
+  }
+
+  function applySettingsObject(parsed) {
+    settings.companyName = typeof parsed.companyName === 'string' ? parsed.companyName : '';
+    settings.phone = typeof parsed.phone === 'string' ? parsed.phone : '';
+    settings.email = typeof parsed.email === 'string' ? parsed.email : '';
+    settings.taxRate = isFinite(parseFloat(parsed.taxRate)) ? parseFloat(parsed.taxRate) : 0;
+    settings.logo = (parsed.logo && typeof parsed.logo.dataUrl === 'string') ? parsed.logo : null;
   }
 
   function persistSettings() {
@@ -444,11 +491,15 @@
      CO NUMBER, DATE, STATUS PILL
      - Counter persists across sessions so CO numbers
        stay sequential on this device.
+     - coOverride is set when an existing CO is reopened
+       from the log, so updates keep the original number.
   ===================================================== */
   var coCounter = (function () {
     var saved = parseInt(storageGet(COUNTER_KEY), 10);
     return (isFinite(saved) && saved > 0) ? saved : 1;
   })();
+
+  var coOverride = null; // { number, datePretty } when editing a logged CO
 
   var coNumberEl = document.getElementById('coNumber');
   var coDateEl = document.getElementById('coDate');
@@ -465,11 +516,16 @@
     return new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
   }
   function currentCONumber() {
+    if (coOverride) return coOverride.number;
     return 'CO-' + todayStamp() + '-' + String(coCounter).padStart(3, '0');
+  }
+  function currentCODatePretty() {
+    if (coOverride) return coOverride.datePretty;
+    return todayPretty();
   }
   function refreshHeader() {
     coNumberEl.textContent = currentCONumber();
-    coDateEl.textContent = todayPretty();
+    coDateEl.textContent = currentCODatePretty();
   }
 
   function setStatus(signed) {
@@ -506,6 +562,8 @@
       '<div class="flex gap-2 items-start">' +
         '<input type="text" data-field="desc" placeholder="Item description (e.g., 2x10 LVL header, 8 ft)" ' +
           'class="flex-1 h-14 px-3 text-base font-semibold rounded-lg bg-slatecard border-2 border-slateline text-white min-w-0" />' +
+        '<button type="button" data-action="fav" aria-label="Save item for reuse" title="Save this item for reuse" ' +
+          'class="h-14 w-14 shrink-0 rounded-lg border-2 border-slateline text-safety text-2xl font-extrabold active:border-safety">☆</button>' +
         '<button type="button" data-action="delete" aria-label="Delete line item" ' +
           'class="h-14 w-14 shrink-0 rounded-lg border-2 border-slateline text-slate-400 text-2xl font-extrabold active:border-red-500 active:text-red-400">✕</button>' +
       '</div>' +
@@ -540,14 +598,105 @@
   });
 
   lineItemsEl.addEventListener('click', function (e) {
-    var btn = e.target.closest('[data-action="delete"]');
-    if (btn) {
-      btn.closest('.lineItem').remove();
+    var del = e.target.closest('[data-action="delete"]');
+    if (del) {
+      del.closest('.lineItem').remove();
       recalc();
+      return;
+    }
+    var fav = e.target.closest('[data-action="fav"]');
+    if (fav) {
+      var row = fav.closest('.lineItem');
+      saveFavoriteFromRow(row, fav);
     }
   });
 
   lineItemsEl.addEventListener('input', recalc);
+
+  /* =====================================================
+     SAVED ITEMS (FAVORITES)
+     favorites = [{ desc, cost }]
+  ===================================================== */
+  var favorites = [];
+  var favWrap = document.getElementById('favWrap');
+  var favChips = document.getElementById('favChips');
+  var favEditBtn = document.getElementById('favEditBtn');
+  var favEditMode = false;
+
+  function loadFavorites() {
+    var raw = storageGet(FAV_KEY);
+    if (!raw) return;
+    try {
+      var parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) {
+        favorites = parsed.filter(function (f) {
+          return f && typeof f.desc === 'string' && f.desc.length > 0;
+        }).map(function (f) {
+          return { desc: f.desc, cost: num(f.cost) };
+        });
+      }
+    } catch (e) { favorites = []; }
+  }
+
+  function persistFavorites() {
+    storageSet(FAV_KEY, JSON.stringify(favorites));
+  }
+
+  function renderFavorites() {
+    favChips.innerHTML = '';
+    if (favorites.length === 0) {
+      favWrap.classList.add('hidden');
+      favEditMode = false;
+      favEditBtn.textContent = 'Edit';
+      return;
+    }
+    favWrap.classList.remove('hidden');
+    favorites.forEach(function (f, i) {
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.className = favEditMode
+        ? 'h-12 px-4 rounded-xl bg-ink border-2 border-red-500 text-red-400 font-bold text-sm'
+        : 'h-12 px-4 rounded-xl bg-ink border-2 border-safety text-safety font-bold text-sm active:bg-safety active:text-ink';
+      b.textContent = (favEditMode ? '✕ ' : '+ ') + f.desc + '  ·  ' + fmt(f.cost);
+      b.addEventListener('click', function () {
+        if (favEditMode) {
+          favorites.splice(i, 1);
+          persistFavorites();
+          renderFavorites();
+        } else {
+          addLineItem(f.desc, 1, f.cost || undefined);
+        }
+      });
+      favChips.appendChild(b);
+    });
+  }
+
+  favEditBtn.addEventListener('click', function () {
+    favEditMode = !favEditMode;
+    favEditBtn.textContent = favEditMode ? 'Done' : 'Edit';
+    renderFavorites();
+  });
+
+  function saveFavoriteFromRow(row, btn) {
+    var desc = row.querySelector('[data-field="desc"]').value.trim();
+    var cost = num(row.querySelector('[data-field="cost"]').value);
+    if (!desc) {
+      btn.textContent = '!';
+      setTimeout(function () { btn.textContent = '☆'; }, 900);
+      return;
+    }
+    var exists = favorites.some(function (f) {
+      return f.desc === desc && f.cost === cost;
+    });
+    if (!exists) {
+      favorites.unshift({ desc: desc, cost: cost });
+      if (favorites.length > 50) favorites.pop();
+      persistFavorites();
+      renderFavorites();
+    }
+    btn.textContent = '★';
+    setTimeout(function () { btn.textContent = '☆'; }, 1200);
+  }
 
   /* =====================================================
      LIVE CALCULATION ENGINE
@@ -692,6 +841,22 @@
       self.onChange();
     };
 
+    // Load saved strokes (used when reopening a CO from the log)
+    this.loadStrokes = function (strokes) {
+      self.strokes = Array.isArray(strokes) ? strokes : [];
+      self.redraw();
+      self.onChange();
+    };
+
+    // Compact copy of strokes for storage (coords rounded to 0.1px)
+    this.exportStrokes = function () {
+      return self.strokes.map(function (stroke) {
+        return stroke.map(function (p) {
+          return { x: Math.round(p.x * 10) / 10, y: Math.round(p.y * 10) / 10 };
+        });
+      });
+    };
+
     // Export strokes re-inked in dark blue on white for the PDF
     this.exportForPDF = function () {
       if (self.isEmpty()) return null;
@@ -782,8 +947,297 @@
   });
 
   /* =====================================================
+     CHANGE ORDER LOG
+     coLog = [{ coNumber, datePretty, savedAt, client,
+                jobAddress, description, items, markupPct,
+                taxPct, days, grand, signed,
+                sigClient, sigContractor }]
+     - Saved/updated automatically on PDF generation.
+     - Newest first; capped at LOG_CAP entries.
+  ===================================================== */
+  var coLog = [];
+  var logBody = document.getElementById('logBody');
+  var logChevron = document.getElementById('logChevron');
+  var logList = document.getElementById('logList');
+  var logEmpty = document.getElementById('logEmpty');
+  var logCount = document.getElementById('logCount');
+
+  document.getElementById('logToggle').addEventListener('click', function () {
+    var hidden = logBody.classList.toggle('hidden');
+    logChevron.textContent = hidden ? '▸' : '▾';
+  });
+
+  function loadLog() {
+    var raw = storageGet(LOG_KEY);
+    if (!raw) return;
+    try {
+      var parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) coLog = parsed;
+    } catch (e) { coLog = []; }
+  }
+
+  function persistLog() {
+    var ok = storageSet(LOG_KEY, JSON.stringify(coLog));
+    if (!ok && coLog.length > 1) {
+      // Storage full (likely big signatures) — drop oldest entries and retry
+      while (!ok && coLog.length > 1) {
+        coLog.pop();
+        ok = storageSet(LOG_KEY, JSON.stringify(coLog));
+      }
+    }
+    return ok;
+  }
+
+  function snapshotCO() {
+    var t = computeTotals();
+    return {
+      coNumber: currentCONumber(),
+      datePretty: currentCODatePretty(),
+      savedAt: new Date().toISOString(),
+      client: document.getElementById('clientName').value.trim(),
+      jobAddress: document.getElementById('jobAddress').value.trim(),
+      description: descBox.value,
+      items: t.items.map(function (it) {
+        return { desc: it.desc, qty: it.qty, cost: it.cost };
+      }),
+      markupPct: t.markupPct,
+      taxPct: t.taxPct,
+      days: days,
+      grand: t.grand,
+      signed: !clientPad.isEmpty(),
+      sigClient: clientPad.exportStrokes(),
+      sigContractor: contractorPad.exportStrokes()
+    };
+  }
+
+  function saveToLog(rec) {
+    var idx = -1;
+    for (var i = 0; i < coLog.length; i++) {
+      if (coLog[i].coNumber === rec.coNumber) { idx = i; break; }
+    }
+    if (idx >= 0) {
+      coLog.splice(idx, 1);
+    }
+    coLog.unshift(rec);
+    while (coLog.length > LOG_CAP) coLog.pop();
+    persistLog();
+    renderLog();
+  }
+
+  function renderLog() {
+    logList.innerHTML = '';
+    logCount.textContent = coLog.length ? '— ' + coLog.length + ' saved' : '';
+    if (coLog.length === 0) {
+      logEmpty.classList.remove('hidden');
+      return;
+    }
+    logEmpty.classList.add('hidden');
+
+    coLog.forEach(function (rec, i) {
+      var card = document.createElement('div');
+      card.className = 'bg-ink rounded-xl border-2 border-slateline p-3';
+
+      var top = document.createElement('div');
+      top.className = 'flex items-start justify-between gap-2';
+
+      var info = document.createElement('div');
+      info.className = 'min-w-0';
+      var l1 = document.createElement('p');
+      l1.className = 'text-sm font-extrabold text-white truncate';
+      l1.textContent = rec.coNumber + (rec.client ? '  ·  ' + rec.client : '');
+      var l2 = document.createElement('p');
+      l2.className = 'text-xs text-slate-400 font-semibold truncate';
+      l2.textContent = (rec.datePretty || '') + (rec.jobAddress ? '  ·  ' + rec.jobAddress : '');
+      info.appendChild(l1);
+      info.appendChild(l2);
+
+      var right = document.createElement('div');
+      right.className = 'text-right shrink-0';
+      var amt = document.createElement('p');
+      amt.className = 'text-lg font-black text-safety leading-tight tabular-nums';
+      amt.textContent = fmt(rec.grand || 0);
+      var st = document.createElement('p');
+      st.className = rec.signed
+        ? 'text-[11px] font-extrabold text-green-400 tracking-wide'
+        : 'text-[11px] font-extrabold text-safety tracking-wide';
+      st.textContent = rec.signed ? 'SIGNED' : 'DRAFT';
+      right.appendChild(amt);
+      right.appendChild(st);
+
+      top.appendChild(info);
+      top.appendChild(right);
+
+      var actions = document.createElement('div');
+      actions.className = 'flex gap-2 mt-3';
+
+      function actionBtn(label, cls, fn) {
+        var b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'h-12 px-4 rounded-lg border-2 font-extrabold text-xs tracking-wide ' + cls;
+        b.textContent = label;
+        b.addEventListener('click', fn);
+        return b;
+      }
+
+      actions.appendChild(actionBtn('REOPEN', 'flex-1 border-blueprint text-blueprintsoft active:bg-blueprint active:text-white', function () {
+        if (!confirmDiscardCurrent()) return;
+        loadFromLog(rec, false);
+      }));
+      actions.appendChild(actionBtn('DUPLICATE', 'flex-1 border-safety text-safety active:bg-safety active:text-ink', function () {
+        if (!confirmDiscardCurrent()) return;
+        loadFromLog(rec, true);
+      }));
+      actions.appendChild(actionBtn('DELETE', 'border-slateline text-slate-400 active:border-red-500 active:text-red-400', function () {
+        var ok = window.confirm('Delete ' + rec.coNumber + ' from the log? The PDF you already downloaded is not affected.');
+        if (!ok) return;
+        coLog.splice(i, 1);
+        persistLog();
+        renderLog();
+      }));
+
+      card.appendChild(top);
+      card.appendChild(actions);
+      logList.appendChild(card);
+    });
+  }
+
+  function currentCOHasWork() {
+    var hasClient = document.getElementById('clientName').value.trim().length > 0;
+    var hasDesc = descBox.value.trim().length > 0;
+    var hasItems = computeTotals().subtotal > 0;
+    var hasSig = !clientPad.isEmpty() || !contractorPad.isEmpty();
+    return hasClient || hasDesc || hasItems || hasSig;
+  }
+
+  function confirmDiscardCurrent() {
+    if (!currentCOHasWork()) return true;
+    return window.confirm('Load this CO from the log? Anything on the current screen that has not been saved as a PDF will be replaced.');
+  }
+
+  function loadFromLog(rec, asDuplicate) {
+    document.getElementById('clientName').value = rec.client || '';
+    document.getElementById('jobAddress').value = rec.jobAddress || '';
+    descBox.value = rec.description || '';
+
+    lineItemsEl.innerHTML = '';
+    var items = Array.isArray(rec.items) ? rec.items : [];
+    if (items.length === 0) {
+      addLineItem();
+    } else {
+      items.forEach(function (it) {
+        addLineItem(it.desc || '', it.qty, it.cost);
+      });
+    }
+
+    markupInput.value = isFinite(rec.markupPct) ? rec.markupPct : 15;
+    taxInput.value = isFinite(rec.taxPct) ? rec.taxPct : (settings.taxRate || 0);
+    days = isFinite(rec.days) ? rec.days : 0;
+    renderDays();
+
+    if (asDuplicate) {
+      // Fresh CO: new number, today's date, no signatures
+      coOverride = null;
+      clientPad.clear();
+      contractorPad.clear();
+    } else {
+      // Same CO: keep its number, date, and signatures
+      coOverride = { number: rec.coNumber, datePretty: rec.datePretty || todayPretty() };
+      clientPad.loadStrokes(rec.sigClient || []);
+      contractorPad.loadStrokes(rec.sigContractor || []);
+    }
+
+    refreshHeader();
+    syncStatus();
+    recalc();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  /* =====================================================
+     BACKUP & RESTORE
+     - One JSON file containing everything this app stores.
+  ===================================================== */
+  var backupFileInput = document.getElementById('backupFile');
+
+  document.getElementById('backupBtn').addEventListener('click', function () {
+    formToSettings();
+    var payload = {
+      kind: 'dfs-change-order-backup',
+      version: 1,
+      exportedAt: new Date().toISOString(),
+      settings: settings,
+      coCounter: coCounter,
+      favorites: favorites,
+      coLog: coLog
+    };
+    var blob = new Blob([JSON.stringify(payload)], { type: 'application/json' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = 'DFS-Backup-' + todayStamp() + '.json';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(function () { URL.revokeObjectURL(url); }, 2000);
+    flashSettingsStatus('✓ Backup downloaded. Keep it somewhere safe — it restores everything on a new device.', true);
+  });
+
+  document.getElementById('restoreBtn').addEventListener('click', function () {
+    backupFileInput.click();
+  });
+
+  backupFileInput.addEventListener('change', function () {
+    var file = backupFileInput.files && backupFileInput.files[0];
+    backupFileInput.value = '';
+    if (!file) return;
+    var reader = new FileReader();
+    reader.onload = function () {
+      var data;
+      try {
+        data = JSON.parse(reader.result);
+      } catch (e) {
+        flashSettingsStatus('That file is not a valid DFS backup.', false);
+        return;
+      }
+      if (!data || data.kind !== 'dfs-change-order-backup') {
+        flashSettingsStatus('That file is not a valid DFS backup.', false);
+        return;
+      }
+      var ok = window.confirm('Restore this backup? It will replace the settings, saved items, and CO log currently on this device.');
+      if (!ok) return;
+
+      if (data.settings) applySettingsObject(data.settings);
+      persistSettings();
+      settingsToForm();
+      taxInput.value = settings.taxRate || 0;
+
+      var c = parseInt(data.coCounter, 10);
+      if (isFinite(c) && c > 0) {
+        coCounter = Math.max(coCounter, c); // never reuse a lower number
+        storageSet(COUNTER_KEY, String(coCounter));
+      }
+
+      favorites = Array.isArray(data.favorites) ? data.favorites : [];
+      persistFavorites();
+      renderFavorites();
+
+      coLog = Array.isArray(data.coLog) ? data.coLog.slice(0, LOG_CAP) : [];
+      persistLog();
+      renderLog();
+
+      refreshHeader();
+      recalc();
+      flashSettingsStatus('✓ Backup restored. Settings, saved items, and CO log are back.', true);
+    };
+    reader.onerror = function () {
+      flashSettingsStatus('Could not read that file.', false);
+    };
+    reader.readAsText(file);
+  });
+
+  /* =====================================================
      PDF ENGINE (jsPDF, hand-drawn corporate layout)
      - All company branding pulls from Business Settings.
+     - Every generated PDF is also saved to the CO Log.
   ===================================================== */
   document.getElementById('pdfBtn').addEventListener('click', function () {
     var jsPDFCtor = (window.jspdf && window.jspdf.jsPDF) ? window.jspdf.jsPDF : null;
@@ -880,7 +1334,7 @@
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(10);
     doc.setTextColor(203, 213, 225);
-    doc.text(todayPretty(), pageW - margin, 56, { align: 'right' });
+    doc.text(currentCODatePretty(), pageW - margin, 56, { align: 'right' });
     doc.text('Status: ' + (signedByClient ? 'SIGNED' : 'DRAFT'), pageW - margin, 70, { align: 'right' });
 
     y = 124;
@@ -1096,6 +1550,9 @@
     }
 
     doc.save(currentCONumber() + '.pdf');
+
+    // Auto-save this CO to the log (new entries on top; same CO number updates in place)
+    saveToLog(snapshotCO());
   });
 
   /* =====================================================
@@ -1115,6 +1572,7 @@
     renderDays();
     clientPad.clear();
     contractorPad.clear();
+    coOverride = null;
     coCounter++;
     storageSet(COUNTER_KEY, String(coCounter));
     refreshHeader();
@@ -1134,6 +1592,10 @@
     settingsChevron.textContent = '▸';
     taxInput.value = settings.taxRate || 0;
   }
+  loadFavorites();
+  renderFavorites();
+  loadLog();
+  renderLog();
   refreshHeader();
   addLineItem();
   recalc();
