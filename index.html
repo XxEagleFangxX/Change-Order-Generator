@@ -107,7 +107,7 @@
         </div>
 
         <div class="mt-4">
-          <span class="block text-sm font-bold text-slate-300 mb-1.5">Company Logo <span class="text-slate-500 font-semibold">(PNG or JPG — prints on every PDF)</span></span>
+          <span class="block text-sm font-bold text-slate-300 mb-1.5">Company Logo <span class="text-slate-500 font-semibold">(PNG or JPG · prints on PDF)</span> <span id="logoProBadge" class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-safety/20 text-safety border border-safety">PRO</span></span>
           <input id="logoFile" type="file" accept=".svg,.png,.jpg,.jpeg" />
           <div class="flex items-center gap-3 flex-wrap">
             <button type="button" id="logoPickBtn"
@@ -145,6 +145,12 @@
           </div>
           <p class="text-xs text-slate-400 font-semibold mt-2">Save the backup file anywhere you trust. A new phone restores everything in one tap — nothing ever leaves your device otherwise.</p>
         </div>
+
+        <!-- PRO LICENSE SECTION -->
+        <div class="mt-5 border-t-2 border-slateline pt-4" id="proSection">
+          <!-- populated by JS based on isPro() -->
+        </div>
+
       </div>
     </section>
 
@@ -377,12 +383,19 @@
   var FAV_KEY      = 'dfs.favorites.v1';
   var LOG_KEY      = 'dfs.coLog.v1';
   var LOG_CAP      = 30;
+  var PRO_KEY      = 'dfs.pro.v1';
 
   function storageGet(key) {
     try { return window.localStorage.getItem(key); } catch (e) { return null; }
   }
   function storageSet(key, value) {
     try { window.localStorage.setItem(key, value); return true; } catch (e) { return false; }
+  }
+  function isPro() {
+    try { var p = JSON.parse(storageGet(PRO_KEY) || 'null'); return !!(p && p.verified === true); } catch(e) { return false; }
+  }
+  function activatePro(key) {
+    storageSet(PRO_KEY, JSON.stringify({ key: key, verified: true, activatedAt: new Date().toISOString() }));
   }
 
   /* ── SETTINGS ── */
@@ -1067,7 +1080,7 @@
     doc.setFillColor(ORANGE[0],ORANGE[1],ORANGE[2]); doc.rect(0, 96, pageW, 4, 'F');
 
     var textX = margin;
-    if (settings.logo && settings.logo.dataUrl) {
+    if (isPro() && settings.logo && settings.logo.dataUrl) {
       var maxLogoH = 56, maxLogoW = 120;
       var ratio = settings.logo.w / settings.logo.h;
       var lh = maxLogoH, lw = lh * ratio;
@@ -1215,15 +1228,86 @@
     /* Footer */
     var totalPages  = doc.internal.getNumberOfPages();
     var footerBrand = settings.companyName || 'Digital Foreman Suite';
+    var pro = isPro();
     for (var pg = 1; pg <= totalPages; pg++) {
       doc.setPage(pg); doc.setFont('helvetica','normal'); doc.setFontSize(8); doc.setTextColor(GRAY[0],GRAY[1],GRAY[2]);
       doc.text(currentCONumber() + '  ·  ' + footerBrand, margin, pageH-24);
+      if (!pro) { doc.text('Created with Digital Foreman Suite · digitalforemansuite.com', margin, pageH-13); }
       doc.text('Page ' + pg + ' of ' + totalPages, pageW-margin, pageH-24, { align:'right' });
     }
 
     doc.save(currentCONumber() + '.pdf');
     saveToLog(snapshotCO());
   });
+
+  /* ── UPGRADE MODAL ── */
+  var upgradeModal = document.getElementById('upgradeModal');
+  document.getElementById('upgradeModalClose').addEventListener('click', function () {
+    upgradeModal.classList.add('hidden');
+  });
+  function showUpgradeModal() { upgradeModal.classList.remove('hidden'); }
+
+  /* ── PRO SECTION ── */
+  var proSection = document.getElementById('proSection');
+  var logoProBadge = document.getElementById('logoProBadge');
+
+  function renderProSection() {
+    if (isPro()) {
+      logoProBadge.classList.add('hidden');
+      proSection.innerHTML = [
+        '<div class="flex items-center gap-3">',
+        '  <span class="text-safety text-2xl">⚡</span>',
+        '  <div class="flex-1">',
+        '    <p class="text-sm font-extrabold text-white">Digital Foreman Suite <span class="text-safety">PRO</span></p>',
+        '    <p class="text-xs text-slate-400">Unlimited · Logo on PDFs · No footer branding</p>',
+        '  </div>',
+        '  <span class="px-3 py-1 rounded-full bg-safety/20 text-safety text-xs font-extrabold border border-safety">ACTIVE</span>',
+        '</div>'
+      ].join('');
+    } else {
+      logoProBadge.classList.remove('hidden');
+      proSection.innerHTML = [
+        '<p class="text-sm font-extrabold text-safety mb-1">⚡ Upgrade to Pro — $14.99 one-time</p>',
+        '<p class="text-xs text-slate-400 mb-3">Your logo on every PDF. No footer branding. One payment, yours forever.</p>',
+        '<div class="flex gap-2 mb-2">',
+        '  <input id="licenseKeyInput" type="text" placeholder="Enter license key" autocomplete="off" autocorrect="off" spellcheck="false"',
+        '    class="flex-1 h-12 px-3 rounded-xl bg-ink border-2 border-slateline text-white text-sm font-mono tracking-wider" />',
+        '  <button id="activateProBtn" type="button"',
+        '    class="h-12 px-4 rounded-xl bg-safety text-ink font-extrabold text-sm tracking-wide active:bg-safetydeep shrink-0">ACTIVATE</button>',
+        '</div>',
+        '<p id="proActivateStatus" class="text-xs font-bold mb-3 text-center text-slate-500"></p>',
+        '<a href="https://digitalforemansuite.com/pro" target="_blank" rel="noopener"',
+        '   class="block text-center text-xs text-blueprintsoft font-bold underline">Get a license key at digitalforemansuite.com →</a>'
+      ].join('');
+
+      document.getElementById('activateProBtn').addEventListener('click', function () {
+        var key = (document.getElementById('licenseKeyInput').value || '').trim();
+        var statusEl = document.getElementById('proActivateStatus');
+        if (!key) { statusEl.textContent = 'Enter your license key first.'; statusEl.className = 'text-xs font-bold mb-3 text-center text-red-400'; return; }
+        statusEl.textContent = 'Verifying…'; statusEl.className = 'text-xs font-bold mb-3 text-center text-slate-400';
+        fetch('/api/verify', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ key: key })
+        })
+        .then(function (r) { return r.json(); })
+        .then(function (data) {
+          if (data && data.valid) {
+            activatePro(key);
+            renderProSection();
+            flashSettingsStatus('⚡ Pro activated! Your logo now prints on every PDF.', true);
+          } else {
+            statusEl.textContent = 'License key not recognized. Check for typos or visit digitalforemansuite.com for help.';
+            statusEl.className = 'text-xs font-bold mb-3 text-center text-red-400';
+          }
+        })
+        .catch(function () {
+          statusEl.textContent = 'Could not reach the license server. Check your connection and try again.';
+          statusEl.className = 'text-xs font-bold mb-3 text-center text-red-400';
+        });
+      });
+    }
+  }
 
   /* ── HELP PANEL ── */
   var helpChevron = document.getElementById('helpChevron');
@@ -1276,8 +1360,32 @@
   loadFavorites(); renderFavorites();
   loadLog();       renderLog();
   refreshHeader(); addLineItem(); recalc(); setStatus(false);
+  renderProSection();
 })();
 </script>
+<!-- UPGRADE MODAL -->
+<div id="upgradeModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-ink/90 p-4" role="dialog" aria-modal="true">
+  <div class="bg-slatecard rounded-2xl border-2 border-safety p-6 max-w-sm w-full shadow-2xl">
+    <p class="text-safety font-extrabold text-lg mb-1">⚡ Go Pro — $14.99 one-time</p>
+    <p class="text-slate-300 text-sm mb-5">Your logo on every PDF. No footer branding. Pay once, yours forever — no subscription, no cloud, no account.</p>
+    <div class="space-y-2 text-sm text-slate-300 mb-5">
+      <p>✓ Custom company logo on all PDFs</p>
+      <p>✓ "Created free" footer removed</p>
+      <p>✓ Works 100% offline — same as free</p>
+      <p>✓ One-time payment · No recurring fees</p>
+    </div>
+    <a href="https://digitalforemansuite.com/pro" target="_blank" rel="noopener"
+       class="block w-full h-14 rounded-xl bg-safety text-ink font-black text-center text-lg leading-[3.5rem] mb-3">
+      UPGRADE TO PRO — $14.99
+    </a>
+    <button id="upgradeModalClose" type="button"
+       class="w-full h-12 rounded-xl border-2 border-slateline text-slate-400 font-bold text-sm">
+      Not now
+    </button>
+    <p class="text-xs text-slate-500 text-center mt-3">Already have a license key? Go to Business Settings to activate it.</p>
+  </div>
+</div>
+
 <script>
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function () {

@@ -24,7 +24,7 @@
       the rest, and failures are logged to the console.
    =========================================================*/
 
-const CACHE_NAME = "change-order-cache-v2";
+const CACHE_NAME = "change-order-cache-v3";
 
 /* Files served from our own site. */
 const APP_SHELL = [
@@ -37,9 +37,11 @@ const APP_SHELL = [
 ];
 
 /* Third-party engines the app cannot run without.
-   These MUST be cached or "works offline" is false. */
+   These MUST be cached or "works offline" is false.
+   NOTE: URLs must match exactly what the HTML <script> tags request —
+   no trailing slash on cdn.tailwindcss.com to match the src attribute. */
 const CDN_ASSETS = [
-  "https://cdn.tailwindcss.com/",
+  "https://cdn.tailwindcss.com",
   "https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"
 ];
 
