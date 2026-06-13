@@ -32,18 +32,30 @@
 <style>
   html { -webkit-text-size-adjust: 100%; }
   body { background: #0b1220; }
-  /* Signature canvases must never let the page scroll while signing */
   canvas.sigpad { touch-action: none; -webkit-user-select: none; user-select: none; }
-  /* Kill native number spinners; we provide our own big steppers */
   input[type="number"]::-webkit-outer-spin-button,
   input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
   input[type="number"] { -moz-appearance: textfield; appearance: textfield; }
-  /* High-visibility focus for gloved-thumb feedback */
   input:focus, textarea:focus { outline: 3px solid #f97316; outline-offset: 1px; }
   button:focus-visible { outline: 3px solid #93c5fd; outline-offset: 2px; }
   ::placeholder { color: #64748b; opacity: 1; }
-  /* Hide the raw file inputs; we trigger them from styled buttons */
   #logoFile, #backupFile { display: none; }
+
+  /*
+   * FIX 1 — CO number header truncation
+   * The full CO number (e.g. CO-20260612-001) is 18 chars. On a ~360px
+   * phone the old text-base h1 with truncate was clipping it to "CO-202…".
+   * Solution: clamp the span's font size fluidly between 11px and 14px so
+   * the number always fits, and remove truncate from the h1 so it wraps
+   * instead of cutting. white-space:nowrap on the span keeps the number
+   * on a single line while the h1 wraps "Change Order" above it if needed.
+   */
+  #coNumber {
+    display: inline-block;
+    font-size: clamp(11px, 3.4vw, 14px);
+    letter-spacing: -0.01em;
+    white-space: nowrap;
+  }
 </style>
 </head>
 <body class="font-sans text-slate-100 min-h-screen pb-40">
@@ -53,7 +65,8 @@
     <div class="max-w-3xl mx-auto px-4 py-2 flex items-center justify-between gap-2">
       <div class="min-w-0 flex-1">
         <p id="headerBrand" class="text-[10px] font-bold tracking-[0.18em] text-blueprintsoft uppercase truncate leading-tight">Digital Foreman Suite</p>
-        <h1 class="text-base font-extrabold text-white leading-tight truncate">Change Order <span id="coNumber" class="text-safety"></span></h1>
+        <!-- FIX 1: removed `truncate`; CO number scales via #coNumber CSS rule above -->
+        <h1 class="text-base font-extrabold text-white leading-tight">Change Order <span id="coNumber" class="text-safety"></span></h1>
         <p id="coDate" class="text-[10px] text-slate-400 font-semibold leading-tight truncate"></p>
       </div>
       <span id="statusPill" class="shrink-0 px-3 py-1.5 rounded-full text-xs font-extrabold tracking-wide bg-safety/20 text-safety border-2 border-safety whitespace-nowrap">DRAFT</span>
@@ -62,7 +75,7 @@
 
   <main class="max-w-3xl mx-auto px-4 pt-5 space-y-5">
 
-    <!-- ============ SECTION 1: BUSINESS SETTINGS (saved on this device) ============ -->
+    <!-- ============ SECTION 1: BUSINESS SETTINGS ============ -->
     <section class="bg-slatecard rounded-2xl border-2 border-blueprint p-4 sm:p-5">
       <button type="button" id="settingsToggle" class="w-full flex items-center justify-between gap-3">
         <span class="text-sm font-extrabold tracking-[0.15em] text-blueprintsoft uppercase text-left">⚙ Business Settings <span class="text-slate-400 normal-case tracking-normal font-semibold">— set once, used on every CO</span></span>
@@ -93,7 +106,6 @@
           </div>
         </div>
 
-        <!-- Logo upload -->
         <div class="mt-4">
           <span class="block text-sm font-bold text-slate-300 mb-1.5">Company Logo <span class="text-slate-500 font-semibold">(PNG or JPG — prints on every PDF)</span></span>
           <input id="logoFile" type="file" accept=".svg,.png,.jpg,.jpeg" />
@@ -118,7 +130,6 @@
         </button>
         <p id="settingsStatus" class="text-sm font-bold text-slate-400 mt-3 text-center">Saved settings load automatically every time you open the app on this device.</p>
 
-        <!-- Backup & Restore -->
         <div class="mt-5 border-t-2 border-slateline pt-4">
           <p class="text-sm font-bold text-slate-300 mb-2">Backup &amp; Restore <span class="text-slate-500 font-semibold">(settings, logo, saved items, CO log)</span></p>
           <input id="backupFile" type="file" accept=".json,application/json" />
@@ -137,7 +148,7 @@
       </div>
     </section>
 
-    <!-- ============ SECTION 2: PROJECT & PARTIES ============ -->
+    <!-- ============ SECTION 2: CLIENT & JOB SITE ============ -->
     <section class="bg-slatecard rounded-2xl border border-slateline p-4 sm:p-5">
       <h2 class="text-sm font-extrabold tracking-[0.15em] text-blueprintsoft uppercase mb-4">1 · Client &amp; Job Site</h2>
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -182,7 +193,6 @@
         + ADD LINE ITEM
       </button>
 
-      <!-- Saved items (favorites) -->
       <div id="favWrap" class="hidden mt-4">
         <div class="flex items-center justify-between mb-2">
           <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">Saved items — tap to add</p>
@@ -193,7 +203,6 @@
         <p class="text-xs text-slate-400 font-semibold mt-2">Tap ☆ on any line item to save it here for one-tap reuse on future COs.</p>
       </div>
 
-      <!-- Totals stack -->
       <div class="mt-6 space-y-3 border-t-2 border-slateline pt-5">
         <div class="flex items-center justify-between">
           <span class="text-base font-bold text-slate-300">Subtotal</span>
@@ -274,7 +283,7 @@
       <p class="text-xs text-slate-400 font-semibold mt-3">Sign with a finger or stylus. The page will not scroll while signing.</p>
     </section>
 
-    <!-- ============ SECTION 7: CHANGE ORDER LOG (saved on this device) ============ -->
+    <!-- ============ SECTION 7: CHANGE ORDER LOG ============ -->
     <section class="bg-slatecard rounded-2xl border border-slateline p-4 sm:p-5">
       <button type="button" id="logToggle" class="w-full flex items-center justify-between gap-3">
         <span class="text-sm font-extrabold tracking-[0.15em] text-blueprintsoft uppercase text-left">📋 Change Order Log <span id="logCount" class="text-slate-400 normal-case tracking-normal font-semibold"></span></span>
@@ -294,7 +303,6 @@
       </button>
       <div id="helpBody" class="mt-4 space-y-5">
 
-        <!-- FAQ item template: orange number + bold Q + slate A -->
         <div class="bg-ink rounded-xl border border-slateline p-4">
           <p class="text-xs font-extrabold text-safety uppercase tracking-widest mb-1">01 · Most Important</p>
           <p class="text-sm font-extrabold text-white mb-1">Why does my CO log only show one entry even after multiple jobs?</p>
@@ -331,7 +339,6 @@
           <p class="text-sm text-slate-300 font-medium leading-relaxed">Yes — 100%. Once the app has loaded on your device, it works in concrete basements, metal buildings, and dead zones. All calculations, PDF generation, and saving happen entirely on your phone. No internet connection is ever required to use the app.</p>
         </div>
 
-        <!-- Bug report button -->
         <div class="border-t-2 border-slateline pt-4">
           <p class="text-sm font-extrabold text-white mb-1">Found a bug or have a feature request?</p>
           <p class="text-sm text-slate-400 font-medium mb-3">Tap below to send an email with your device info pre-filled. The more detail the better — screenshots help a lot.</p>
@@ -347,7 +354,7 @@
 
   </main>
 
-  <!-- ============ SECTION 9: STICKY EXPORT BAR ============ -->
+  <!-- ============ STICKY FOOTER ============ -->
   <footer class="fixed bottom-0 inset-x-0 z-40 bg-ink/95 backdrop-blur border-t-2 border-slateline">
     <div class="max-w-3xl mx-auto px-4 py-3 flex gap-3">
       <button type="button" id="resetBtn"
@@ -365,16 +372,11 @@
 (function () {
   'use strict';
 
-  /* =====================================================
-     SAFE LOCALSTORAGE WRAPPER
-     - Some embedded webviews / privacy modes throw on
-       localStorage access; the app must never crash for it.
-  ===================================================== */
   var SETTINGS_KEY = 'dfs.businessSettings.v1';
-  var COUNTER_KEY = 'dfs.coCounter.v1';
-  var FAV_KEY = 'dfs.favorites.v1';
-  var LOG_KEY = 'dfs.coLog.v1';
-  var LOG_CAP = 30; // newest 30 COs kept; oldest rolls off
+  var COUNTER_KEY  = 'dfs.coCounter.v1';
+  var FAV_KEY      = 'dfs.favorites.v1';
+  var LOG_KEY      = 'dfs.coLog.v1';
+  var LOG_CAP      = 30;
 
   function storageGet(key) {
     try { return window.localStorage.getItem(key); } catch (e) { return null; }
@@ -383,81 +385,53 @@
     try { window.localStorage.setItem(key, value); return true; } catch (e) { return false; }
   }
 
-  /* =====================================================
-     BUSINESS SETTINGS (multi-user customization)
-     settings = {
-       companyName, phone, email, taxRate,
-       logo: { dataUrl, w, h } | null
-     }
-  ===================================================== */
-  var settings = {
-    companyName: '',
-    phone: '',
-    email: '',
-    taxRate: 0,
-    logo: null
-  };
+  /* ── SETTINGS ── */
+  var settings = { companyName: '', phone: '', email: '', taxRate: 0, logo: null };
 
   function loadSettings() {
     var raw = storageGet(SETTINGS_KEY);
     if (!raw) return false;
-    try {
-      var parsed = JSON.parse(raw);
-      applySettingsObject(parsed);
-      return true;
-    } catch (e) {
-      return false;
-    }
+    try { applySettingsObject(JSON.parse(raw)); return true; } catch (e) { return false; }
   }
-
-  function applySettingsObject(parsed) {
-    settings.companyName = typeof parsed.companyName === 'string' ? parsed.companyName : '';
-    settings.phone = typeof parsed.phone === 'string' ? parsed.phone : '';
-    settings.email = typeof parsed.email === 'string' ? parsed.email : '';
-    settings.taxRate = isFinite(parseFloat(parsed.taxRate)) ? parseFloat(parsed.taxRate) : 0;
-    settings.logo = (parsed.logo && typeof parsed.logo.dataUrl === 'string') ? parsed.logo : null;
+  function applySettingsObject(p) {
+    settings.companyName = typeof p.companyName === 'string' ? p.companyName : '';
+    settings.phone       = typeof p.phone === 'string' ? p.phone : '';
+    settings.email       = typeof p.email === 'string' ? p.email : '';
+    settings.taxRate     = isFinite(parseFloat(p.taxRate)) ? parseFloat(p.taxRate) : 0;
+    settings.logo        = (p.logo && typeof p.logo.dataUrl === 'string') ? p.logo : null;
   }
+  function persistSettings() { return storageSet(SETTINGS_KEY, JSON.stringify(settings)); }
 
-  function persistSettings() {
-    return storageSet(SETTINGS_KEY, JSON.stringify(settings));
-  }
-
-  /* ---- Settings DOM ---- */
-  var setCompany = document.getElementById('setCompany');
-  var setPhone = document.getElementById('setPhone');
-  var setEmail = document.getElementById('setEmail');
-  var setTax = document.getElementById('setTax');
-  var settingsStatus = document.getElementById('settingsStatus');
-  var headerBrand = document.getElementById('headerBrand');
-  var logoFileInput = document.getElementById('logoFile');
-  var logoPickBtn = document.getElementById('logoPickBtn');
-  var logoRemoveBtn = document.getElementById('logoRemoveBtn');
+  var setCompany      = document.getElementById('setCompany');
+  var setPhone        = document.getElementById('setPhone');
+  var setEmail        = document.getElementById('setEmail');
+  var setTax          = document.getElementById('setTax');
+  var settingsStatus  = document.getElementById('settingsStatus');
+  var headerBrand     = document.getElementById('headerBrand');
+  var logoFileInput   = document.getElementById('logoFile');
+  var logoPickBtn     = document.getElementById('logoPickBtn');
+  var logoRemoveBtn   = document.getElementById('logoRemoveBtn');
   var logoPreviewWrap = document.getElementById('logoPreviewWrap');
-  var logoPreview = document.getElementById('logoPreview');
+  var logoPreview     = document.getElementById('logoPreview');
 
   function settingsToForm() {
     setCompany.value = settings.companyName;
-    setPhone.value = settings.phone;
-    setEmail.value = settings.email;
-    setTax.value = settings.taxRate || '';
+    setPhone.value   = settings.phone;
+    setEmail.value   = settings.email;
+    setTax.value     = settings.taxRate || '';
     renderLogoPreview();
     renderBrand();
   }
-
   function formToSettings() {
     settings.companyName = setCompany.value.trim();
-    settings.phone = setPhone.value.trim();
-    settings.email = setEmail.value.trim();
+    settings.phone       = setPhone.value.trim();
+    settings.email       = setEmail.value.trim();
     var tr = parseFloat(setTax.value);
     settings.taxRate = (isFinite(tr) && tr >= 0) ? Math.min(100, tr) : 0;
   }
-
   function renderBrand() {
-    headerBrand.textContent = settings.companyName
-      ? settings.companyName
-      : 'Digital Foreman Suite';
+    headerBrand.textContent = settings.companyName || 'Digital Foreman Suite';
   }
-
   function renderLogoPreview() {
     if (settings.logo && settings.logo.dataUrl) {
       logoPreview.src = settings.logo.dataUrl;
@@ -473,27 +447,22 @@
       logoPickBtn.textContent = 'UPLOAD LOGO';
     }
   }
-
   function flashSettingsStatus(msg, ok) {
     settingsStatus.textContent = msg;
     settingsStatus.className = 'text-sm font-bold mt-3 text-center ' + (ok ? 'text-green-400' : 'text-red-400');
   }
 
-  /* ---- Logo upload: downscale to keep localStorage small ---- */
   logoPickBtn.addEventListener('click', function () { logoFileInput.click(); });
-
   logoFileInput.addEventListener('change', function () {
     var file = logoFileInput.files && logoFileInput.files[0];
     if (!file) return;
     if (!/^image\/(png|jpeg|webp|svg\+xml)$/.test(file.type)) {
-      flashSettingsStatus('Please choose a PNG, JPG, WebP, or SVG image.', false);
-      return;
+      flashSettingsStatus('Please choose a PNG, JPG, WebP, or SVG image.', false); return;
     }
     var reader = new FileReader();
     reader.onload = function () {
       var img = new Image();
       img.onload = function () {
-        // Downscale to a print-friendly size that stays well under storage limits
         var MAX_W = 600, MAX_H = 300;
         var scale = Math.min(1, MAX_W / img.naturalWidth, MAX_H / img.naturalHeight);
         var w = Math.max(1, Math.round(img.naturalWidth * scale));
@@ -501,7 +470,6 @@
         var c = document.createElement('canvas');
         c.width = w; c.height = h;
         var cx = c.getContext('2d');
-        // White backing so transparent logos print cleanly on the PDF header chip
         cx.fillStyle = '#ffffff';
         cx.fillRect(0, 0, w, h);
         cx.drawImage(img, 0, 0, w, h);
@@ -514,79 +482,54 @@
     };
     reader.onerror = function () { flashSettingsStatus('Could not read that file.', false); };
     reader.readAsDataURL(file);
-    logoFileInput.value = ''; // allow re-selecting the same file later
+    logoFileInput.value = '';
   });
-
   logoRemoveBtn.addEventListener('click', function () {
     settings.logo = null;
     renderLogoPreview();
     flashSettingsStatus('Logo removed — tap SAVE BUSINESS SETTINGS to confirm.', true);
   });
-
-  /* ---- Save button ---- */
   document.getElementById('saveSettingsBtn').addEventListener('click', function () {
     formToSettings();
     var ok = persistSettings();
     renderBrand();
-    // Apply the saved tax rate to the current CO immediately
     taxInput.value = settings.taxRate;
     recalc();
-    if (ok) {
-      flashSettingsStatus('✓ Saved. Your info and logo now load automatically on this device.', true);
-    } else {
-      flashSettingsStatus('Saved for this session only — storage is blocked in this browser mode (e.g., private browsing).', false);
-    }
+    flashSettingsStatus(ok
+      ? '✓ Saved. Your info and logo now load automatically on this device.'
+      : 'Saved for this session only — storage is blocked in this browser mode (e.g., private browsing).', ok);
   });
 
-  /* ---- Collapsible panel ---- */
-  var settingsBody = document.getElementById('settingsBody');
+  var settingsBody    = document.getElementById('settingsBody');
   var settingsChevron = document.getElementById('settingsChevron');
   document.getElementById('settingsToggle').addEventListener('click', function () {
     var hidden = settingsBody.classList.toggle('hidden');
     settingsChevron.textContent = hidden ? '▸' : '▾';
   });
 
-  /* =====================================================
-     CO NUMBER, DATE, STATUS PILL
-     - Counter persists across sessions so CO numbers
-       stay sequential on this device.
-     - coOverride is set when an existing CO is reopened
-       from the log, so updates keep the original number.
-  ===================================================== */
+  /* ── CO NUMBER / DATE / STATUS ── */
   var coCounter = (function () {
     var saved = parseInt(storageGet(COUNTER_KEY), 10);
     return (isFinite(saved) && saved > 0) ? saved : 1;
   })();
-
-  var coOverride = null; // { number, datePretty } when editing a logged CO
-
+  var coOverride = null;
   var coNumberEl = document.getElementById('coNumber');
-  var coDateEl = document.getElementById('coDate');
+  var coDateEl   = document.getElementById('coDate');
   var statusPill = document.getElementById('statusPill');
 
   function todayStamp() {
     var d = new Date();
-    var y = d.getFullYear();
-    var m = String(d.getMonth() + 1).padStart(2, '0');
-    var day = String(d.getDate()).padStart(2, '0');
-    return y + m + day;
+    return d.getFullYear() + String(d.getMonth()+1).padStart(2,'0') + String(d.getDate()).padStart(2,'0');
   }
   function todayPretty() {
-    return new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+    return new Date().toLocaleDateString('en-US', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
   }
-  function currentCONumber() {
-    if (coOverride) return coOverride.number;
-    return 'CO-' + todayStamp() + '-' + String(coCounter).padStart(3, '0');
-  }
-  function currentCODatePretty() {
-    if (coOverride) return coOverride.datePretty;
-    return todayPretty();
-  }
+  function currentCONumber()     { return coOverride ? coOverride.number     : 'CO-' + todayStamp() + '-' + String(coCounter).padStart(3,'0'); }
+  function currentCODatePretty() { return coOverride ? coOverride.datePretty : todayPretty(); }
   function refreshHeader() {
     coNumberEl.textContent = currentCONumber();
-    coDateEl.textContent = currentCODatePretty();
+    coDateEl.textContent   = currentCODatePretty();
   }
-
   function setStatus(signed) {
     if (signed) {
       statusPill.textContent = 'SIGNED';
@@ -597,34 +540,31 @@
     }
   }
 
-  /* =====================================================
-     MONEY HELPERS
-  ===================================================== */
+  /* ── MONEY HELPERS ── */
   function fmt(n) {
     if (!isFinite(n)) n = 0;
-    return n.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
+    return n.toLocaleString('en-US', { style:'currency', currency:'USD' });
   }
-  function num(v) {
-    var n = parseFloat(v);
-    return isFinite(n) ? n : 0;
-  }
+  function num(v) { var n = parseFloat(v); return isFinite(n) ? n : 0; }
 
-  /* =====================================================
-     LINE ITEMS
-  ===================================================== */
+  /* ── LINE ITEMS ──
+     FIX 2: description input gets proper flex min-w-0 so it takes all
+     available space. Buttons are explicitly flex-none/shrink-0.
+     Font size drops to text-sm (14px) so longer words like "Materials"
+     or "Framing" display fully without clipping on a 360px screen.     */
   var lineItemsEl = document.getElementById('lineItems');
 
   function addLineItem(desc, qty, cost) {
     var row = document.createElement('div');
     row.className = 'lineItem bg-ink rounded-xl border-2 border-slateline p-3';
     row.innerHTML =
-      '<div class="flex gap-2 items-start">' +
+      '<div class="flex gap-2 items-center">' +
         '<input type="text" data-field="desc" placeholder="Item description (e.g., 2x10 LVL header, 8 ft)" ' +
-          'class="flex-1 h-14 px-3 text-base font-semibold rounded-lg bg-slatecard border-2 border-slateline text-white min-w-0" />' +
+          'class="flex-1 min-w-0 h-12 px-3 text-sm font-semibold rounded-lg bg-slatecard border-2 border-slateline text-white" />' +
         '<button type="button" data-action="fav" aria-label="Save item for reuse" title="Save this item for reuse" ' +
-          'class="h-14 w-14 shrink-0 rounded-lg border-2 border-slateline text-safety text-2xl font-extrabold active:border-safety">☆</button>' +
+          'class="flex-none h-12 w-12 rounded-lg border-2 border-slateline text-safety text-xl font-extrabold active:border-safety">☆</button>' +
         '<button type="button" data-action="delete" aria-label="Delete line item" ' +
-          'class="h-14 w-14 shrink-0 rounded-lg border-2 border-slateline text-slate-400 text-2xl font-extrabold active:border-red-500 active:text-red-400">✕</button>' +
+          'class="flex-none h-12 w-12 rounded-lg border-2 border-slateline text-slate-400 text-xl font-extrabold active:border-red-500 active:text-red-400">✕</button>' +
       '</div>' +
       '<div class="grid grid-cols-3 gap-2 mt-2 items-end">' +
         '<div>' +
@@ -643,9 +583,8 @@
         '</div>' +
       '</div>';
     lineItemsEl.appendChild(row);
-
     if (typeof desc === 'string') row.querySelector('[data-field="desc"]').value = desc;
-    if (qty !== undefined) row.querySelector('[data-field="qty"]').value = qty;
+    if (qty  !== undefined) row.querySelector('[data-field="qty"]').value  = qty;
     if (cost !== undefined) row.querySelector('[data-field="cost"]').value = cost;
     recalc();
   }
@@ -655,59 +594,37 @@
     var rows = lineItemsEl.querySelectorAll('.lineItem');
     rows[rows.length - 1].querySelector('[data-field="desc"]').focus();
   });
-
   lineItemsEl.addEventListener('click', function (e) {
     var del = e.target.closest('[data-action="delete"]');
-    if (del) {
-      del.closest('.lineItem').remove();
-      recalc();
-      return;
-    }
+    if (del) { del.closest('.lineItem').remove(); recalc(); return; }
     var fav = e.target.closest('[data-action="fav"]');
-    if (fav) {
-      var row = fav.closest('.lineItem');
-      saveFavoriteFromRow(row, fav);
-    }
+    if (fav) saveFavoriteFromRow(fav.closest('.lineItem'), fav);
   });
-
   lineItemsEl.addEventListener('input', recalc);
 
-  /* =====================================================
-     SAVED ITEMS (FAVORITES)
-     favorites = [{ desc, cost }]
-  ===================================================== */
-  var favorites = [];
-  var favWrap = document.getElementById('favWrap');
-  var favChips = document.getElementById('favChips');
-  var favEditBtn = document.getElementById('favEditBtn');
+  /* ── FAVORITES ── */
+  var favorites   = [];
+  var favWrap     = document.getElementById('favWrap');
+  var favChips    = document.getElementById('favChips');
+  var favEditBtn  = document.getElementById('favEditBtn');
   var favEditMode = false;
 
   function loadFavorites() {
     var raw = storageGet(FAV_KEY);
     if (!raw) return;
     try {
-      var parsed = JSON.parse(raw);
-      if (Array.isArray(parsed)) {
-        favorites = parsed.filter(function (f) {
-          return f && typeof f.desc === 'string' && f.desc.length > 0;
-        }).map(function (f) {
-          return { desc: f.desc, cost: num(f.cost) };
-        });
+      var p = JSON.parse(raw);
+      if (Array.isArray(p)) {
+        favorites = p.filter(function (f) { return f && typeof f.desc === 'string' && f.desc.length > 0; })
+                     .map(function (f) { return { desc: f.desc, cost: num(f.cost) }; });
       }
     } catch (e) { favorites = []; }
   }
-
-  function persistFavorites() {
-    storageSet(FAV_KEY, JSON.stringify(favorites));
-  }
-
+  function persistFavorites() { storageSet(FAV_KEY, JSON.stringify(favorites)); }
   function renderFavorites() {
     favChips.innerHTML = '';
     if (favorites.length === 0) {
-      favWrap.classList.add('hidden');
-      favEditMode = false;
-      favEditBtn.textContent = 'Edit';
-      return;
+      favWrap.classList.add('hidden'); favEditMode = false; favEditBtn.textContent = 'Edit'; return;
     }
     favWrap.classList.remove('hidden');
     favorites.forEach(function (f, i) {
@@ -718,405 +635,253 @@
         : 'h-12 px-4 rounded-xl bg-ink border-2 border-safety text-safety font-bold text-sm active:bg-safety active:text-ink';
       b.textContent = (favEditMode ? '✕ ' : '+ ') + f.desc + '  ·  ' + fmt(f.cost);
       b.addEventListener('click', function () {
-        if (favEditMode) {
-          favorites.splice(i, 1);
-          persistFavorites();
-          renderFavorites();
-        } else {
-          addLineItem(f.desc, 1, f.cost || undefined);
-        }
+        if (favEditMode) { favorites.splice(i,1); persistFavorites(); renderFavorites(); }
+        else             { addLineItem(f.desc, 1, f.cost || undefined); }
       });
       favChips.appendChild(b);
     });
   }
-
   favEditBtn.addEventListener('click', function () {
     favEditMode = !favEditMode;
     favEditBtn.textContent = favEditMode ? 'Done' : 'Edit';
     renderFavorites();
   });
-
   function saveFavoriteFromRow(row, btn) {
     var desc = row.querySelector('[data-field="desc"]').value.trim();
     var cost = num(row.querySelector('[data-field="cost"]').value);
-    if (!desc) {
-      btn.textContent = '!';
-      setTimeout(function () { btn.textContent = '☆'; }, 900);
-      return;
-    }
-    var exists = favorites.some(function (f) {
-      return f.desc === desc && f.cost === cost;
-    });
+    if (!desc) { btn.textContent = '!'; setTimeout(function () { btn.textContent = '☆'; }, 900); return; }
+    var exists = favorites.some(function (f) { return f.desc === desc && f.cost === cost; });
     if (!exists) {
       favorites.unshift({ desc: desc, cost: cost });
       if (favorites.length > 50) favorites.pop();
-      persistFavorites();
-      renderFavorites();
+      persistFavorites(); renderFavorites();
     }
     btn.textContent = '★';
     setTimeout(function () { btn.textContent = '☆'; }, 1200);
   }
 
-  /* =====================================================
-     LIVE CALCULATION ENGINE
-  ===================================================== */
+  /* ── CALCULATION ── */
   var markupInput = document.getElementById('markupPct');
-  var taxInput = document.getElementById('taxPct');
+  var taxInput    = document.getElementById('taxPct');
   var subtotalOut = document.getElementById('subtotalOut');
-  var markupOut = document.getElementById('markupOut');
-  var taxOut = document.getElementById('taxOut');
-  var grandOut = document.getElementById('grandOut');
+  var markupOut   = document.getElementById('markupOut');
+  var taxOut      = document.getElementById('taxOut');
+  var grandOut    = document.getElementById('grandOut');
 
   function readItems() {
     var items = [];
     lineItemsEl.querySelectorAll('.lineItem').forEach(function (row) {
-      var desc = row.querySelector('[data-field="desc"]').value.trim();
-      var qty = num(row.querySelector('[data-field="qty"]').value);
-      var cost = num(row.querySelector('[data-field="cost"]').value);
+      var desc  = row.querySelector('[data-field="desc"]').value.trim();
+      var qty   = num(row.querySelector('[data-field="qty"]').value);
+      var cost  = num(row.querySelector('[data-field="cost"]').value);
       var total = qty * cost;
       row.querySelector('[data-field="total"]').textContent = fmt(total);
       items.push({ desc: desc, qty: qty, cost: cost, total: total });
     });
     return items;
   }
-
   function computeTotals() {
-    var items = readItems();
-    var subtotal = items.reduce(function (s, it) { return s + it.total; }, 0);
+    var items     = readItems();
+    var subtotal  = items.reduce(function (s, it) { return s + it.total; }, 0);
     var markupPct = Math.max(0, num(markupInput.value));
-    var taxPct = Math.max(0, num(taxInput.value));
-    var markup = subtotal * (markupPct / 100);
-    var tax = (subtotal + markup) * (taxPct / 100);
-    var grand = subtotal + markup + tax;
+    var taxPct    = Math.max(0, num(taxInput.value));
+    var markup    = subtotal * (markupPct / 100);
+    var tax       = (subtotal + markup) * (taxPct / 100);
+    var grand     = subtotal + markup + tax;
     return { items: items, subtotal: subtotal, markupPct: markupPct, markup: markup, taxPct: taxPct, tax: tax, grand: grand };
   }
-
   function recalc() {
     var t = computeTotals();
     subtotalOut.textContent = fmt(t.subtotal);
-    markupOut.textContent = fmt(t.markup);
-    taxOut.textContent = fmt(t.tax);
-    grandOut.textContent = fmt(t.grand);
+    markupOut.textContent   = fmt(t.markup);
+    taxOut.textContent      = fmt(t.tax);
+    grandOut.textContent    = fmt(t.grand);
   }
-
   function bindStepper(minusId, plusId, input, step, min, max, after) {
-    document.getElementById(minusId).addEventListener('click', function () {
-      input.value = Math.max(min, num(input.value) - step);
-      after();
-    });
-    document.getElementById(plusId).addEventListener('click', function () {
-      input.value = Math.min(max, num(input.value) + step);
-      after();
-    });
+    document.getElementById(minusId).addEventListener('click', function () { input.value = Math.max(min, num(input.value) - step); after(); });
+    document.getElementById(plusId).addEventListener('click',  function () { input.value = Math.min(max, num(input.value) + step); after(); });
     input.addEventListener('input', after);
   }
-  bindStepper('markupMinus', 'markupPlus', markupInput, 1, 0, 100, recalc);
-  bindStepper('taxMinus', 'taxPlus', taxInput, 0.5, 0, 100, recalc);
+  bindStepper('markupMinus', 'markupPlus', markupInput, 1,   0, 100, recalc);
+  bindStepper('taxMinus',    'taxPlus',    taxInput,    0.5, 0, 100, recalc);
 
-  /* =====================================================
-     QUICK-INSERT CHIPS
-  ===================================================== */
+  /* ── QUICK-INSERT CHIPS ── */
   var descBox = document.getElementById('changeDesc');
   document.querySelectorAll('.chip').forEach(function (chip) {
     chip.addEventListener('click', function () {
       var text = chip.getAttribute('data-chip');
-      var cur = descBox.value;
+      var cur  = descBox.value;
       if (cur.length > 0 && !/\s$/.test(cur)) cur += ' ';
       descBox.value = cur + text;
       descBox.dispatchEvent(new Event('input'));
     });
   });
 
-  /* =====================================================
-     SCHEDULE IMPACT STEPPER
-  ===================================================== */
-  var days = 0;
+  /* ── SCHEDULE STEPPER ── */
+  var days    = 0;
   var daysOut = document.getElementById('daysOut');
   function renderDays() { daysOut.textContent = String(days); }
-  document.getElementById('daysMinus').addEventListener('click', function () {
-    days = Math.max(0, days - 1); renderDays();
-  });
-  document.getElementById('daysPlus').addEventListener('click', function () {
-    days = Math.min(365, days + 1); renderDays();
-  });
+  document.getElementById('daysMinus').addEventListener('click', function () { days = Math.max(0,   days - 1); renderDays(); });
+  document.getElementById('daysPlus').addEventListener('click',  function () { days = Math.min(365, days + 1); renderDays(); });
   renderDays();
 
-  /* =====================================================
-     SIGNATURE PADS
-  ===================================================== */
+  /* ── SIGNATURE PADS ── */
   function SignaturePad(canvas, onChange) {
-    this.canvas = canvas;
-    this.ctx = canvas.getContext('2d');
+    this.canvas  = canvas;
+    this.ctx     = canvas.getContext('2d');
     this.strokes = [];
     this.current = null;
     this.onChange = onChange || function () {};
-    this.drawing = false;
-
+    this.drawing  = false;
     var self = this;
 
     this.resize = function () {
-      var dpr = window.devicePixelRatio || 1;
+      var dpr  = window.devicePixelRatio || 1;
       var rect = canvas.getBoundingClientRect();
-      canvas.width = Math.max(1, Math.round(rect.width * dpr));
+      canvas.width  = Math.max(1, Math.round(rect.width  * dpr));
       canvas.height = Math.max(1, Math.round(rect.height * dpr));
       self.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       self.redraw();
     };
-
     this.point = function (e) {
       var rect = canvas.getBoundingClientRect();
       return { x: e.clientX - rect.left, y: e.clientY - rect.top };
     };
-
     this.redraw = function () {
       var rect = canvas.getBoundingClientRect();
       self.ctx.clearRect(0, 0, rect.width, rect.height);
-      self.ctx.lineWidth = 2.5;
-      self.ctx.lineCap = 'round';
-      self.ctx.lineJoin = 'round';
+      self.ctx.lineWidth = 2.5; self.ctx.lineCap = 'round'; self.ctx.lineJoin = 'round';
       self.ctx.strokeStyle = '#f1f5f9';
       self.strokes.forEach(function (stroke) {
-        if (stroke.length === 0) return;
+        if (!stroke.length) return;
         self.ctx.beginPath();
         self.ctx.moveTo(stroke[0].x, stroke[0].y);
-        if (stroke.length === 1) {
-          self.ctx.lineTo(stroke[0].x + 0.1, stroke[0].y + 0.1);
-        } else {
-          for (var i = 1; i < stroke.length; i++) {
-            self.ctx.lineTo(stroke[i].x, stroke[i].y);
-          }
-        }
+        if (stroke.length === 1) { self.ctx.lineTo(stroke[0].x + 0.1, stroke[0].y + 0.1); }
+        else { for (var i = 1; i < stroke.length; i++) self.ctx.lineTo(stroke[i].x, stroke[i].y); }
         self.ctx.stroke();
       });
     };
-
-    this.isEmpty = function () {
-      return self.strokes.length === 0;
-    };
-
-    this.clear = function () {
-      self.strokes = [];
-      self.redraw();
-      self.onChange();
-    };
-
-    // Load saved strokes (used when reopening a CO from the log)
-    this.loadStrokes = function (strokes) {
-      self.strokes = Array.isArray(strokes) ? strokes : [];
-      self.redraw();
-      self.onChange();
-    };
-
-    // Compact copy of strokes for storage (coords rounded to 0.1px)
+    this.isEmpty      = function () { return self.strokes.length === 0; };
+    this.clear        = function () { self.strokes = []; self.redraw(); self.onChange(); };
+    this.loadStrokes  = function (s) { self.strokes = Array.isArray(s) ? s : []; self.redraw(); self.onChange(); };
     this.exportStrokes = function () {
       return self.strokes.map(function (stroke) {
-        return stroke.map(function (p) {
-          return { x: Math.round(p.x * 10) / 10, y: Math.round(p.y * 10) / 10 };
-        });
+        return stroke.map(function (p) { return { x: Math.round(p.x*10)/10, y: Math.round(p.y*10)/10 }; });
       });
     };
-
-    // Export strokes re-inked in dark blue on white for the PDF.
-    // Renders at 1.5x (enough for crisp print), crops to ink bounding
-    // box with padding, and encodes as JPEG to keep PDF size small.
     this.exportForPDF = function () {
       if (self.isEmpty()) return null;
       var rect = canvas.getBoundingClientRect();
       var scale = 1.5;
-
-      // ---- first pass: find the ink bounding box ----
       var minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
-      self.strokes.forEach(function (stroke) {
-        stroke.forEach(function (p) {
-          if (p.x < minX) minX = p.x;
-          if (p.y < minY) minY = p.y;
-          if (p.x > maxX) maxX = p.x;
-          if (p.y > maxY) maxY = p.y;
-        });
-      });
-      // Pad the crop by 8px each side so strokes aren't clipped
+      self.strokes.forEach(function (s) { s.forEach(function (p) {
+        if (p.x < minX) minX = p.x; if (p.y < minY) minY = p.y;
+        if (p.x > maxX) maxX = p.x; if (p.y > maxY) maxY = p.y;
+      }); });
       var pad = 8;
-      minX = Math.max(0, minX - pad);
-      minY = Math.max(0, minY - pad);
-      maxX = Math.min(rect.width,  maxX + pad);
-      maxY = Math.min(rect.height, maxY + pad);
-      var cropW = Math.max(1, maxX - minX);
-      var cropH = Math.max(1, maxY - minY);
-
-      // ---- second pass: render only the cropped region ----
+      minX = Math.max(0, minX-pad); minY = Math.max(0, minY-pad);
+      maxX = Math.min(rect.width, maxX+pad); maxY = Math.min(rect.height, maxY+pad);
+      var cropW = Math.max(1, maxX-minX), cropH = Math.max(1, maxY-minY);
       var off = document.createElement('canvas');
-      off.width  = Math.round(cropW * scale);
-      off.height = Math.round(cropH * scale);
+      off.width = Math.round(cropW*scale); off.height = Math.round(cropH*scale);
       var octx = off.getContext('2d');
-      octx.fillStyle = '#ffffff';
-      octx.fillRect(0, 0, off.width, off.height);
-      // Shift origin so the ink box starts at (0,0) then scale up
-      octx.setTransform(scale, 0, 0, scale, -minX * scale, -minY * scale);
-      octx.lineWidth = 2;
-      octx.lineCap = 'round';
-      octx.lineJoin = 'round';
-      octx.strokeStyle = '#1e3a8a';
-      self.strokes.forEach(function (stroke) {
-        if (stroke.length === 0) return;
-        octx.beginPath();
-        octx.moveTo(stroke[0].x, stroke[0].y);
-        if (stroke.length === 1) {
-          octx.lineTo(stroke[0].x + 0.1, stroke[0].y + 0.1);
-        } else {
-          for (var i = 1; i < stroke.length; i++) {
-            octx.lineTo(stroke[i].x, stroke[i].y);
-          }
-        }
+      octx.fillStyle = '#ffffff'; octx.fillRect(0, 0, off.width, off.height);
+      octx.setTransform(scale, 0, 0, scale, -minX*scale, -minY*scale);
+      octx.lineWidth = 2; octx.lineCap = 'round'; octx.lineJoin = 'round'; octx.strokeStyle = '#1e3a8a';
+      self.strokes.forEach(function (s) {
+        if (!s.length) return;
+        octx.beginPath(); octx.moveTo(s[0].x, s[0].y);
+        if (s.length === 1) { octx.lineTo(s[0].x+0.1, s[0].y+0.1); }
+        else { for (var i = 1; i < s.length; i++) octx.lineTo(s[i].x, s[i].y); }
         octx.stroke();
       });
-      return {
-        // JPEG at 0.82 quality: signature ink is dark on white — no quality
-        // loss visible to the eye, but file size drops 70-80% vs PNG.
-        dataUrl: off.toDataURL('image/jpeg', 0.82),
-        // Return the cropped aspect ratio so the PDF engine sizes it correctly
-        ratio: cropW / cropH
-      };
+      return { dataUrl: off.toDataURL('image/jpeg', 0.82), ratio: cropW/cropH };
     };
 
     canvas.addEventListener('pointerdown', function (e) {
-      e.preventDefault();
-      canvas.setPointerCapture(e.pointerId);
-      self.drawing = true;
-      self.current = [self.point(e)];
-      self.strokes.push(self.current);
-      self.redraw();
+      e.preventDefault(); canvas.setPointerCapture(e.pointerId);
+      self.drawing = true; self.current = [self.point(e)]; self.strokes.push(self.current); self.redraw();
     });
-
     canvas.addEventListener('pointermove', function (e) {
-      if (!self.drawing) return;
-      e.preventDefault();
-      var events = (typeof e.getCoalescedEvents === 'function') ? e.getCoalescedEvents() : [e];
-      if (events.length === 0) events = [e];
-      for (var i = 0; i < events.length; i++) {
-        self.current.push(self.point(events[i]));
-      }
+      if (!self.drawing) return; e.preventDefault();
+      var evts = (typeof e.getCoalescedEvents === 'function') ? e.getCoalescedEvents() : [e];
+      if (!evts.length) evts = [e];
+      for (var i = 0; i < evts.length; i++) self.current.push(self.point(evts[i]));
       self.redraw();
     });
-
     function endStroke(e) {
-      if (!self.drawing) return;
-      self.drawing = false;
-      self.current = null;
-      try { canvas.releasePointerCapture(e.pointerId); } catch (err) { /* already released */ }
+      if (!self.drawing) return; self.drawing = false; self.current = null;
+      try { canvas.releasePointerCapture(e.pointerId); } catch (err) {}
       self.onChange();
     }
     canvas.addEventListener('pointerup', endStroke);
     canvas.addEventListener('pointercancel', endStroke);
-
     this.resize();
   }
 
   var clientPad, contractorPad;
-
-  function syncStatus() {
-    setStatus(!clientPad.isEmpty());
-  }
-
-  clientPad = new SignaturePad(document.getElementById('sigClient'), function () { syncStatus(); });
+  function syncStatus() { setStatus(!clientPad.isEmpty()); }
+  clientPad     = new SignaturePad(document.getElementById('sigClient'),     function () { syncStatus(); });
   contractorPad = new SignaturePad(document.getElementById('sigContractor'), function () {});
-
-  document.getElementById('clearClient').addEventListener('click', function () { clientPad.clear(); });
+  document.getElementById('clearClient').addEventListener('click',     function () { clientPad.clear(); });
   document.getElementById('clearContractor').addEventListener('click', function () { contractorPad.clear(); });
-
   var resizeTimer = null;
   window.addEventListener('resize', function () {
     clearTimeout(resizeTimer);
-    resizeTimer = setTimeout(function () {
-      clientPad.resize();
-      contractorPad.resize();
-    }, 150);
+    resizeTimer = setTimeout(function () { clientPad.resize(); contractorPad.resize(); }, 150);
   });
 
-  /* =====================================================
-     CHANGE ORDER LOG
-     coLog = [{ coNumber, datePretty, savedAt, client,
-                jobAddress, description, items, markupPct,
-                taxPct, days, grand, signed,
-                sigClient, sigContractor }]
-     - Saved/updated automatically on PDF generation.
-     - Newest first; capped at LOG_CAP entries.
-  ===================================================== */
-  var coLog = [];
-  var logBody = document.getElementById('logBody');
+  /* ── CO LOG ── */
+  var coLog     = [];
+  var logBody   = document.getElementById('logBody');
   var logChevron = document.getElementById('logChevron');
-  var logList = document.getElementById('logList');
-  var logEmpty = document.getElementById('logEmpty');
-  var logCount = document.getElementById('logCount');
+  var logList   = document.getElementById('logList');
+  var logEmpty  = document.getElementById('logEmpty');
+  var logCount  = document.getElementById('logCount');
 
   document.getElementById('logToggle').addEventListener('click', function () {
     var hidden = logBody.classList.toggle('hidden');
     logChevron.textContent = hidden ? '▸' : '▾';
   });
-
   function loadLog() {
     var raw = storageGet(LOG_KEY);
     if (!raw) return;
-    try {
-      var parsed = JSON.parse(raw);
-      if (Array.isArray(parsed)) coLog = parsed;
-    } catch (e) { coLog = []; }
+    try { var p = JSON.parse(raw); if (Array.isArray(p)) coLog = p; } catch (e) { coLog = []; }
   }
-
   function persistLog() {
     var ok = storageSet(LOG_KEY, JSON.stringify(coLog));
     if (!ok && coLog.length > 1) {
-      // Storage full (likely big signatures) — drop oldest entries and retry
-      while (!ok && coLog.length > 1) {
-        coLog.pop();
-        ok = storageSet(LOG_KEY, JSON.stringify(coLog));
-      }
+      while (!ok && coLog.length > 1) { coLog.pop(); ok = storageSet(LOG_KEY, JSON.stringify(coLog)); }
     }
     return ok;
   }
-
   function snapshotCO() {
     var t = computeTotals();
     return {
-      coNumber: currentCONumber(),
-      datePretty: currentCODatePretty(),
+      coNumber: currentCONumber(), datePretty: currentCODatePretty(),
       savedAt: new Date().toISOString(),
       client: document.getElementById('clientName').value.trim(),
       jobAddress: document.getElementById('jobAddress').value.trim(),
       description: descBox.value,
-      items: t.items.map(function (it) {
-        return { desc: it.desc, qty: it.qty, cost: it.cost };
-      }),
-      markupPct: t.markupPct,
-      taxPct: t.taxPct,
-      days: days,
-      grand: t.grand,
+      items: t.items.map(function (it) { return { desc: it.desc, qty: it.qty, cost: it.cost }; }),
+      markupPct: t.markupPct, taxPct: t.taxPct, days: days, grand: t.grand,
       signed: !clientPad.isEmpty(),
-      sigClient: clientPad.exportStrokes(),
-      sigContractor: contractorPad.exportStrokes()
+      sigClient: clientPad.exportStrokes(), sigContractor: contractorPad.exportStrokes()
     };
   }
-
   function saveToLog(rec) {
     var idx = -1;
-    for (var i = 0; i < coLog.length; i++) {
-      if (coLog[i].coNumber === rec.coNumber) { idx = i; break; }
-    }
-    if (idx >= 0) {
-      coLog.splice(idx, 1);
-    }
+    for (var i = 0; i < coLog.length; i++) { if (coLog[i].coNumber === rec.coNumber) { idx = i; break; } }
+    if (idx >= 0) coLog.splice(idx, 1);
     coLog.unshift(rec);
     while (coLog.length > LOG_CAP) coLog.pop();
-    persistLog();
-    renderLog();
+    persistLog(); renderLog();
   }
 
   function renderLog() {
     logList.innerHTML = '';
     logCount.textContent = coLog.length ? '— ' + coLog.length + ' saved' : '';
-    if (coLog.length === 0) {
-      logEmpty.classList.remove('hidden');
-      return;
-    }
+    if (coLog.length === 0) { logEmpty.classList.remove('hidden'); return; }
     logEmpty.classList.add('hidden');
 
     coLog.forEach(function (rec, i) {
@@ -1127,15 +892,28 @@
       top.className = 'flex items-start justify-between gap-2';
 
       var info = document.createElement('div');
-      info.className = 'min-w-0';
-      var l1 = document.createElement('p');
-      l1.className = 'text-sm font-extrabold text-white truncate';
-      l1.textContent = rec.coNumber + (rec.client ? '  ·  ' + rec.client : '');
-      var l2 = document.createElement('p');
-      l2.className = 'text-xs text-slate-400 font-semibold truncate';
-      l2.textContent = (rec.datePretty || '') + (rec.jobAddress ? '  ·  ' + rec.jobAddress : '');
-      info.appendChild(l1);
-      info.appendChild(l2);
+      info.className = 'min-w-0 flex-1';
+
+      /*
+       * FIX 1 (log card): CO number on its own dedicated line in safety orange
+       * at a slightly smaller size — never truncated. Client name below it,
+       * which can truncate since the number is already fully visible.
+       */
+      var coNumLine = document.createElement('p');
+      coNumLine.className = 'text-xs font-extrabold text-safety tracking-tight leading-tight';
+      coNumLine.textContent = rec.coNumber;
+
+      var clientLine = document.createElement('p');
+      clientLine.className = 'text-sm font-extrabold text-white truncate mt-0.5';
+      clientLine.textContent = rec.client || '—';
+
+      var dateLine = document.createElement('p');
+      dateLine.className = 'text-xs text-slate-400 font-semibold truncate';
+      dateLine.textContent = (rec.datePretty || '') + (rec.jobAddress ? '  ·  ' + rec.jobAddress : '');
+
+      info.appendChild(coNumLine);
+      info.appendChild(clientLine);
+      info.appendChild(dateLine);
 
       var right = document.createElement('div');
       right.className = 'text-right shrink-0';
@@ -1143,9 +921,7 @@
       amt.className = 'text-lg font-black text-safety leading-tight tabular-nums';
       amt.textContent = fmt(rec.grand || 0);
       var st = document.createElement('p');
-      st.className = rec.signed
-        ? 'text-[11px] font-extrabold text-green-400 tracking-wide'
-        : 'text-[11px] font-extrabold text-safety tracking-wide';
+      st.className = rec.signed ? 'text-[11px] font-extrabold text-green-400 tracking-wide' : 'text-[11px] font-extrabold text-safety tracking-wide';
       st.textContent = rec.signed ? 'SIGNED' : 'DRAFT';
       right.appendChild(amt);
       right.appendChild(st);
@@ -1164,241 +940,128 @@
         b.addEventListener('click', fn);
         return b;
       }
-
-      actions.appendChild(actionBtn('REOPEN', 'flex-1 border-blueprint text-blueprintsoft active:bg-blueprint active:text-white', function () {
-        if (!confirmDiscardCurrent()) return;
-        loadFromLog(rec, false);
-      }));
-      actions.appendChild(actionBtn('DUPLICATE', 'flex-1 border-safety text-safety active:bg-safety active:text-ink', function () {
-        if (!confirmDiscardCurrent()) return;
-        loadFromLog(rec, true);
-      }));
-      actions.appendChild(actionBtn('DELETE', 'border-slateline text-slate-400 active:border-red-500 active:text-red-400', function () {
-        var ok = window.confirm('Delete ' + rec.coNumber + ' from the log? The PDF you already downloaded is not affected.');
-        if (!ok) return;
-        coLog.splice(i, 1);
-        persistLog();
-        renderLog();
+      actions.appendChild(actionBtn('REOPEN',    'flex-1 border-blueprint text-blueprintsoft active:bg-blueprint active:text-white', function () { if (!confirmDiscardCurrent()) return; loadFromLog(rec, false); }));
+      actions.appendChild(actionBtn('DUPLICATE', 'flex-1 border-safety text-safety active:bg-safety active:text-ink',               function () { if (!confirmDiscardCurrent()) return; loadFromLog(rec, true); }));
+      actions.appendChild(actionBtn('DELETE',    'border-slateline text-slate-400 active:border-red-500 active:text-red-400',       function () {
+        if (!window.confirm('Delete ' + rec.coNumber + ' from the log? The PDF you already downloaded is not affected.')) return;
+        coLog.splice(i, 1); persistLog(); renderLog();
       }));
 
-      card.appendChild(top);
-      card.appendChild(actions);
+      card.appendChild(top); card.appendChild(actions);
       logList.appendChild(card);
     });
   }
 
   function currentCOHasWork() {
-    var hasClient = document.getElementById('clientName').value.trim().length > 0;
-    var hasDesc = descBox.value.trim().length > 0;
-    var hasItems = computeTotals().subtotal > 0;
-    var hasSig = !clientPad.isEmpty() || !contractorPad.isEmpty();
-    return hasClient || hasDesc || hasItems || hasSig;
+    return document.getElementById('clientName').value.trim().length > 0
+      || descBox.value.trim().length > 0
+      || computeTotals().subtotal > 0
+      || !clientPad.isEmpty() || !contractorPad.isEmpty();
   }
-
   function confirmDiscardCurrent() {
     if (!currentCOHasWork()) return true;
     return window.confirm('Load this CO from the log? Anything on the current screen that has not been saved as a PDF will be replaced.');
   }
-
   function loadFromLog(rec, asDuplicate) {
-    document.getElementById('clientName').value = rec.client || '';
-    document.getElementById('jobAddress').value = rec.jobAddress || '';
+    document.getElementById('clientName').value  = rec.client || '';
+    document.getElementById('jobAddress').value  = rec.jobAddress || '';
     descBox.value = rec.description || '';
-
     lineItemsEl.innerHTML = '';
     var items = Array.isArray(rec.items) ? rec.items : [];
-    if (items.length === 0) {
-      addLineItem();
-    } else {
-      items.forEach(function (it) {
-        addLineItem(it.desc || '', it.qty, it.cost);
-      });
-    }
-
+    if (!items.length) { addLineItem(); }
+    else { items.forEach(function (it) { addLineItem(it.desc||'', it.qty, it.cost); }); }
     markupInput.value = isFinite(rec.markupPct) ? rec.markupPct : 15;
-    taxInput.value = isFinite(rec.taxPct) ? rec.taxPct : (settings.taxRate || 0);
-    days = isFinite(rec.days) ? rec.days : 0;
-    renderDays();
-
-    if (asDuplicate) {
-      // Fresh CO: new number, today's date, no signatures
-      coOverride = null;
-      clientPad.clear();
-      contractorPad.clear();
-    } else {
-      // Same CO: keep its number, date, and signatures
-      coOverride = { number: rec.coNumber, datePretty: rec.datePretty || todayPretty() };
-      clientPad.loadStrokes(rec.sigClient || []);
-      contractorPad.loadStrokes(rec.sigContractor || []);
-    }
-
-    refreshHeader();
-    syncStatus();
-    recalc();
+    taxInput.value    = isFinite(rec.taxPct)    ? rec.taxPct    : (settings.taxRate || 0);
+    days = isFinite(rec.days) ? rec.days : 0; renderDays();
+    if (asDuplicate) { coOverride = null; clientPad.clear(); contractorPad.clear(); }
+    else { coOverride = { number: rec.coNumber, datePretty: rec.datePretty || todayPretty() }; clientPad.loadStrokes(rec.sigClient||[]); contractorPad.loadStrokes(rec.sigContractor||[]); }
+    refreshHeader(); syncStatus(); recalc();
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
-  /* =====================================================
-     BACKUP & RESTORE
-     - One JSON file containing everything this app stores.
-  ===================================================== */
+  /* ── BACKUP & RESTORE ── */
   var backupFileInput = document.getElementById('backupFile');
-
   document.getElementById('backupBtn').addEventListener('click', function () {
     formToSettings();
-    var payload = {
-      kind: 'dfs-change-order-backup',
-      version: 1,
-      exportedAt: new Date().toISOString(),
-      settings: settings,
-      coCounter: coCounter,
-      favorites: favorites,
-      coLog: coLog
-    };
-    var blob = new Blob([JSON.stringify(payload)], { type: 'application/json' });
+    var payload = { kind:'dfs-change-order-backup', version:1, exportedAt:new Date().toISOString(), settings:settings, coCounter:coCounter, favorites:favorites, coLog:coLog };
+    var blob = new Blob([JSON.stringify(payload)], { type:'application/json' });
     var url = URL.createObjectURL(blob);
-    var a = document.createElement('a');
-    a.href = url;
-    a.download = 'DFS-Backup-' + todayStamp() + '.json';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
+    var a = document.createElement('a'); a.href = url; a.download = 'DFS-Backup-' + todayStamp() + '.json';
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
     setTimeout(function () { URL.revokeObjectURL(url); }, 2000);
     flashSettingsStatus('✓ Backup downloaded. Keep it somewhere safe — it restores everything on a new device.', true);
   });
-
-  document.getElementById('restoreBtn').addEventListener('click', function () {
-    backupFileInput.click();
-  });
-
+  document.getElementById('restoreBtn').addEventListener('click', function () { backupFileInput.click(); });
   backupFileInput.addEventListener('change', function () {
-    var file = backupFileInput.files && backupFileInput.files[0];
-    backupFileInput.value = '';
+    var file = backupFileInput.files && backupFileInput.files[0]; backupFileInput.value = '';
     if (!file) return;
     var reader = new FileReader();
     reader.onload = function () {
       var data;
-      try {
-        data = JSON.parse(reader.result);
-      } catch (e) {
-        flashSettingsStatus('That file is not a valid DFS backup.', false);
-        return;
-      }
-      if (!data || data.kind !== 'dfs-change-order-backup') {
-        flashSettingsStatus('That file is not a valid DFS backup.', false);
-        return;
-      }
-      var ok = window.confirm('Restore this backup? It will replace the settings, saved items, and CO log currently on this device.');
-      if (!ok) return;
-
+      try { data = JSON.parse(reader.result); } catch (e) { flashSettingsStatus('That file is not a valid DFS backup.', false); return; }
+      if (!data || data.kind !== 'dfs-change-order-backup') { flashSettingsStatus('That file is not a valid DFS backup.', false); return; }
+      if (!window.confirm('Restore this backup? It will replace the settings, saved items, and CO log currently on this device.')) return;
       if (data.settings) applySettingsObject(data.settings);
-      persistSettings();
-      settingsToForm();
-      taxInput.value = settings.taxRate || 0;
-
+      persistSettings(); settingsToForm(); taxInput.value = settings.taxRate || 0;
       var c = parseInt(data.coCounter, 10);
-      if (isFinite(c) && c > 0) {
-        coCounter = Math.max(coCounter, c); // never reuse a lower number
-        storageSet(COUNTER_KEY, String(coCounter));
-      }
-
-      favorites = Array.isArray(data.favorites) ? data.favorites : [];
-      persistFavorites();
-      renderFavorites();
-
-      coLog = Array.isArray(data.coLog) ? data.coLog.slice(0, LOG_CAP) : [];
-      persistLog();
-      renderLog();
-
-      refreshHeader();
-      recalc();
+      if (isFinite(c) && c > 0) { coCounter = Math.max(coCounter, c); storageSet(COUNTER_KEY, String(coCounter)); }
+      favorites = Array.isArray(data.favorites) ? data.favorites : []; persistFavorites(); renderFavorites();
+      coLog = Array.isArray(data.coLog) ? data.coLog.slice(0, LOG_CAP) : []; persistLog(); renderLog();
+      refreshHeader(); recalc();
       flashSettingsStatus('✓ Backup restored. Settings, saved items, and CO log are back.', true);
     };
-    reader.onerror = function () {
-      flashSettingsStatus('Could not read that file.', false);
-    };
+    reader.onerror = function () { flashSettingsStatus('Could not read that file.', false); };
     reader.readAsText(file);
   });
 
-  /* =====================================================
-     PDF ENGINE (jsPDF, hand-drawn corporate layout)
-     - All company branding pulls from Business Settings.
-     - Every generated PDF is also saved to the CO Log.
-  ===================================================== */
+  /* ── PDF ENGINE ── */
   document.getElementById('pdfBtn').addEventListener('click', function () {
     var jsPDFCtor = (window.jspdf && window.jspdf.jsPDF) ? window.jspdf.jsPDF : null;
-    if (!jsPDFCtor) {
-      alert('PDF library failed to load. Check your internet connection and reload the page.');
-      return;
-    }
-
-    // Pull the freshest settings values (covers "typed but forgot to save")
+    if (!jsPDFCtor) { alert('PDF library failed to load. Check your internet connection and reload the page.'); return; }
     formToSettings();
 
-    /* ---- Reopened-CO mismatch guard ----
-       If the user loaded a CO from the log (coOverride is set) but has
-       since changed the client name, warn them. This catches the common
-       mistake of filling in a new job over a reopened old one without
-       hitting RESET first, which would silently overwrite the log entry. */
     if (coOverride) {
       var loggedRec = null;
-      for (var li = 0; li < coLog.length; li++) {
-        if (coLog[li].coNumber === coOverride.number) { loggedRec = coLog[li]; break; }
-      }
+      for (var li = 0; li < coLog.length; li++) { if (coLog[li].coNumber === coOverride.number) { loggedRec = coLog[li]; break; } }
       if (loggedRec) {
         var currentClient = document.getElementById('clientName').value.trim();
         if (currentClient && loggedRec.client && currentClient !== loggedRec.client) {
-          var proceed = window.confirm(
-            'Heads up: this CO is logged under "' + loggedRec.client + '" but the client name now reads "' + currentClient + '".\n\n' +
-            'If this is a NEW job, tap Cancel and hit RESET / NEW CO first — that gives it its own number.\n\n' +
-            'Tap OK only if you intentionally changed the client name on this same CO.'
-          );
-          if (!proceed) return;
+          if (!window.confirm('Heads up: this CO is logged under "' + loggedRec.client + '" but the client name now reads "' + currentClient + '".\n\nIf this is a NEW job, tap Cancel and hit RESET / NEW CO first.\n\nTap OK only if you intentionally changed the client name on this same CO.')) return;
         }
       }
     }
 
-    var t = computeTotals();
-    var doc = new jsPDFCtor({ unit: 'pt', format: 'letter' });
-    var pageW = doc.internal.pageSize.getWidth();   // 612
-    var pageH = doc.internal.pageSize.getHeight();  // 792
-    var margin = 48;
-    var contentW = pageW - margin * 2;
-    var y = 0;
+    var t     = computeTotals();
+    var doc   = new jsPDFCtor({ unit:'pt', format:'letter' });
+    var pageW = doc.internal.pageSize.getWidth();
+    var pageH = doc.internal.pageSize.getHeight();
+    var margin = 48, contentW = pageW - margin * 2, y = 0;
 
-    var INK = [15, 23, 42];
-    var GRAY = [100, 116, 139];
-    var LIGHT = [241, 245, 249];
-    var BLUE = [30, 58, 138];
-    var ORANGE = [234, 88, 12];
-    var LINE = [203, 213, 225];
+    var INK    = [15,  23,  42];
+    var GRAY   = [100, 116, 139];
+    var LIGHT  = [241, 245, 249];
+    var BLUE   = [30,  58,  138];
+    var ORANGE = [234, 88,  12];
+    var LINE   = [203, 213, 225];
 
-    var companyName = settings.companyName || 'Contractor';
-    var companyPhone = settings.phone;
-    var companyEmail = settings.email;
-    var clientName = document.getElementById('clientName').value.trim() || 'Client';
-    var jobAddress = document.getElementById('jobAddress').value.trim();
-    var description = descBox.value.trim();
+    var companyName    = settings.companyName || 'Contractor';
+    var companyPhone   = settings.phone;
+    var companyEmail   = settings.email;
+    var clientName     = document.getElementById('clientName').value.trim() || 'Client';
+    var jobAddress     = document.getElementById('jobAddress').value.trim();
+    var description    = descBox.value.trim();
     var signedByClient = !clientPad.isEmpty();
 
-    function newPage() {
-      doc.addPage();
-      y = margin;
-    }
-    function ensureSpace(needed) {
-      if (y + needed > pageH - margin - 20) newPage();
-    }
+    function newPage()         { doc.addPage(); y = margin; }
+    function ensureSpace(need) { if (y + need > pageH - margin - 20) newPage(); }
     function hr(color) {
-      doc.setDrawColor(color[0], color[1], color[2]);
-      doc.setLineWidth(0.75);
+      doc.setDrawColor(color[0],color[1],color[2]); doc.setLineWidth(0.75);
       doc.line(margin, y, pageW - margin, y);
     }
 
-    /* ---- Header band (with optional logo chip) ---- */
-    doc.setFillColor(INK[0], INK[1], INK[2]);
-    doc.rect(0, 0, pageW, 96, 'F');
-    doc.setFillColor(ORANGE[0], ORANGE[1], ORANGE[2]);
-    doc.rect(0, 96, pageW, 4, 'F');
+    /* Header band */
+    doc.setFillColor(INK[0],INK[1],INK[2]); doc.rect(0, 0, pageW, 96, 'F');
+    doc.setFillColor(ORANGE[0],ORANGE[1],ORANGE[2]); doc.rect(0, 96, pageW, 4, 'F');
 
     var textX = margin;
     if (settings.logo && settings.logo.dataUrl) {
@@ -1407,359 +1070,209 @@
       var lh = maxLogoH, lw = lh * ratio;
       if (lw > maxLogoW) { lw = maxLogoW; lh = lw / ratio; }
       var chipPad = 6;
-      // White chip behind the logo so it reads on the dark band
-      doc.setFillColor(255, 255, 255);
-      if (typeof doc.roundedRect === 'function') {
-        doc.roundedRect(margin, 48 - lh / 2 - chipPad + 0, lw + chipPad * 2, lh + chipPad * 2, 6, 6, 'F');
-      } else {
-        doc.rect(margin, 48 - lh / 2 - chipPad, lw + chipPad * 2, lh + chipPad * 2, 'F');
-      }
+      doc.setFillColor(255,255,255);
+      if (typeof doc.roundedRect === 'function') { doc.roundedRect(margin, 48-lh/2-chipPad, lw+chipPad*2, lh+chipPad*2, 6, 6, 'F'); }
+      else { doc.rect(margin, 48-lh/2-chipPad, lw+chipPad*2, lh+chipPad*2, 'F'); }
       try {
-        // Re-encode the stored logo as JPEG at print quality before embedding.
-        // The logo was already downscaled on upload; this sheds another 60-70%
-        // of the remaining byte cost with no visible difference at PDF print size.
-        var logoImg = new Image();
-        logoImg.src = settings.logo.dataUrl;
-        var lc = document.createElement('canvas');
-        lc.width = settings.logo.w; lc.height = settings.logo.h;
-        var lctx = lc.getContext('2d');
-        lctx.fillStyle = '#ffffff';
-        lctx.fillRect(0, 0, lc.width, lc.height);
-        lctx.drawImage(logoImg, 0, 0);
-        var logoJpeg = lc.toDataURL('image/jpeg', 0.85);
-        doc.addImage(logoJpeg, 'JPEG', margin + chipPad, 48 - lh / 2, lw, lh);
-      } catch (imgErr) { /* skip logo if image data is unreadable */ }
-      textX = margin + lw + chipPad * 2 + 16;
+        var logoImg = new Image(); logoImg.src = settings.logo.dataUrl;
+        var lc = document.createElement('canvas'); lc.width = settings.logo.w; lc.height = settings.logo.h;
+        var lctx = lc.getContext('2d'); lctx.fillStyle='#ffffff'; lctx.fillRect(0,0,lc.width,lc.height); lctx.drawImage(logoImg,0,0);
+        doc.addImage(lc.toDataURL('image/jpeg',0.85), 'JPEG', margin+chipPad, 48-lh/2, lw, lh);
+      } catch (imgErr) {}
+      textX = margin + lw + chipPad*2 + 16;
     }
 
-    doc.setTextColor(255, 255, 255);
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(22);
+    doc.setTextColor(255,255,255); doc.setFont('helvetica','bold'); doc.setFontSize(22);
     doc.text('CHANGE ORDER', textX, 40);
-    doc.setFontSize(10);
-    doc.setTextColor(147, 197, 253);
+    doc.setFontSize(10); doc.setTextColor(147,197,253);
     doc.text(companyName.toUpperCase(), textX, 58);
     var contactBits = [];
     if (companyPhone) contactBits.push(companyPhone);
     if (companyEmail) contactBits.push(companyEmail);
-    if (contactBits.length) {
-      doc.setTextColor(203, 213, 225);
-      doc.setFont('helvetica', 'normal');
-      doc.text(contactBits.join('   ·   '), textX, 73);
-    }
+    if (contactBits.length) { doc.setTextColor(203,213,225); doc.setFont('helvetica','normal'); doc.text(contactBits.join('   ·   '), textX, 73); }
 
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(13);
-    doc.setTextColor(249, 115, 22);
-    doc.text(currentCONumber(), pageW - margin, 40, { align: 'right' });
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(10);
-    doc.setTextColor(203, 213, 225);
-    doc.text(currentCODatePretty(), pageW - margin, 56, { align: 'right' });
-    doc.text('Status: ' + (signedByClient ? 'SIGNED' : 'DRAFT'), pageW - margin, 70, { align: 'right' });
+    doc.setFont('helvetica','bold'); doc.setFontSize(13); doc.setTextColor(249,115,22);
+    doc.text(currentCONumber(), pageW-margin, 40, { align:'right' });
+    doc.setFont('helvetica','normal'); doc.setFontSize(10); doc.setTextColor(203,213,225);
+    doc.text(currentCODatePretty(), pageW-margin, 56, { align:'right' });
+    doc.text('Status: ' + (signedByClient ? 'SIGNED' : 'DRAFT'), pageW-margin, 70, { align:'right' });
 
     y = 124;
 
-    /* ---- Parties block (two columns) ---- */
-    var colW = contentW / 2 - 10;
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(8.5);
-    doc.setTextColor(GRAY[0], GRAY[1], GRAY[2]);
-    doc.text('CLIENT', margin, y);
-    doc.text('JOB SITE', margin + colW + 20, y);
-    y += 14;
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(11);
-    doc.setTextColor(INK[0], INK[1], INK[2]);
+    /* Parties */
+    var colW = contentW/2 - 10;
+    doc.setFont('helvetica','bold'); doc.setFontSize(8.5); doc.setTextColor(GRAY[0],GRAY[1],GRAY[2]);
+    doc.text('CLIENT', margin, y); doc.text('JOB SITE', margin+colW+20, y); y += 14;
+    doc.setFont('helvetica','bold'); doc.setFontSize(11); doc.setTextColor(INK[0],INK[1],INK[2]);
     doc.text(clientName, margin, y);
-    var addrLines = doc.splitTextToSize(jobAddress || '—', colW);
-    doc.setFont('helvetica', 'normal');
-    doc.text(addrLines, margin + colW + 20, y);
-    y += Math.max(16, addrLines.length * 13 + 4);
-    y += 8;
-    hr(LINE);
-    y += 22;
+    var addrLines = doc.splitTextToSize(jobAddress||'—', colW);
+    doc.setFont('helvetica','normal'); doc.text(addrLines, margin+colW+20, y);
+    y += Math.max(16, addrLines.length*13+4); y += 8; hr(LINE); y += 22;
 
-    /* ---- Description ---- */
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(8.5);
-    doc.setTextColor(BLUE[0], BLUE[1], BLUE[2]);
-    doc.text('DESCRIPTION OF CHANGE', margin, y);
-    y += 14;
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(10);
-    doc.setTextColor(INK[0], INK[1], INK[2]);
-    var descLines = doc.splitTextToSize(description || 'No description provided.', contentW);
-    for (var d = 0; d < descLines.length; d++) {
-      ensureSpace(14);
-      doc.text(descLines[d], margin, y);
-      y += 13;
-    }
+    /* Description */
+    doc.setFont('helvetica','bold'); doc.setFontSize(8.5); doc.setTextColor(BLUE[0],BLUE[1],BLUE[2]);
+    doc.text('DESCRIPTION OF CHANGE', margin, y); y += 14;
+    doc.setFont('helvetica','normal'); doc.setFontSize(10); doc.setTextColor(INK[0],INK[1],INK[2]);
+    var descLines = doc.splitTextToSize(description||'No description provided.', contentW);
+    for (var d = 0; d < descLines.length; d++) { ensureSpace(14); doc.text(descLines[d], margin, y); y += 13; }
     y += 14;
 
-    /* ---- Line item table ---- */
-    var colDescW = contentW * 0.50;
-    var colQtyW = contentW * 0.12;
-    var colCostW = contentW * 0.18;
-    var xDesc = margin + 8;
-    var xQty = margin + colDescW + colQtyW;
-    var xCost = margin + colDescW + colQtyW + colCostW;
-    var xTot = margin + contentW - 8;
-
+    /* Line items table */
+    var colDescW = contentW*0.50, colQtyW = contentW*0.12, colCostW = contentW*0.18;
+    var xDesc = margin+8, xQty = margin+colDescW+colQtyW, xCost = margin+colDescW+colQtyW+colCostW, xTot = margin+contentW-8;
     function tableHeader() {
       ensureSpace(26);
-      doc.setFillColor(INK[0], INK[1], INK[2]);
-      doc.rect(margin, y, contentW, 22, 'F');
-      doc.setFont('helvetica', 'bold');
-      doc.setFontSize(8.5);
-      doc.setTextColor(255, 255, 255);
-      doc.text('ITEM DESCRIPTION', xDesc, y + 14.5);
-      doc.text('QTY', xQty - 8, y + 14.5, { align: 'right' });
-      doc.text('UNIT COST', xCost - 8, y + 14.5, { align: 'right' });
-      doc.text('LINE TOTAL', xTot, y + 14.5, { align: 'right' });
+      doc.setFillColor(INK[0],INK[1],INK[2]); doc.rect(margin, y, contentW, 22, 'F');
+      doc.setFont('helvetica','bold'); doc.setFontSize(8.5); doc.setTextColor(255,255,255);
+      doc.text('ITEM DESCRIPTION', xDesc, y+14.5);
+      doc.text('QTY',        xQty-8,  y+14.5, { align:'right' });
+      doc.text('UNIT COST',  xCost-8, y+14.5, { align:'right' });
+      doc.text('LINE TOTAL', xTot,    y+14.5, { align:'right' });
       y += 22;
     }
-
     tableHeader();
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(9.5);
+    doc.setFont('helvetica','normal'); doc.setFontSize(9.5);
 
-    var printableItems = t.items.filter(function (it) {
-      return it.desc.length > 0 || it.qty > 0 || it.cost > 0;
-    });
-
-    if (printableItems.length === 0) {
-      ensureSpace(22);
-      doc.setTextColor(GRAY[0], GRAY[1], GRAY[2]);
-      doc.text('No line items entered.', xDesc, y + 14);
-      y += 22;
+    var printableItems = t.items.filter(function (it) { return it.desc.length > 0 || it.qty > 0 || it.cost > 0; });
+    if (!printableItems.length) {
+      ensureSpace(22); doc.setTextColor(GRAY[0],GRAY[1],GRAY[2]); doc.text('No line items entered.', xDesc, y+14); y += 22;
     } else {
       printableItems.forEach(function (it, idx) {
-        var dLines = doc.splitTextToSize(it.desc || '—', colDescW - 16);
-        var rowH = Math.max(22, dLines.length * 12 + 10);
-        if (y + rowH > pageH - margin - 20) {
-          newPage();
-          tableHeader();
-          doc.setFont('helvetica', 'normal');
-          doc.setFontSize(9.5);
-        }
-        if (idx % 2 === 1) {
-          doc.setFillColor(LIGHT[0], LIGHT[1], LIGHT[2]);
-          doc.rect(margin, y, contentW, rowH, 'F');
-        }
-        doc.setTextColor(INK[0], INK[1], INK[2]);
-        doc.text(dLines, xDesc, y + 14);
-        doc.text(String(it.qty), xQty - 8, y + 14, { align: 'right' });
-        doc.text(fmt(it.cost), xCost - 8, y + 14, { align: 'right' });
-        doc.setFont('helvetica', 'bold');
-        doc.text(fmt(it.total), xTot, y + 14, { align: 'right' });
-        doc.setFont('helvetica', 'normal');
+        var dLines = doc.splitTextToSize(it.desc||'—', colDescW-16);
+        var rowH   = Math.max(22, dLines.length*12+10);
+        if (y + rowH > pageH - margin - 20) { newPage(); tableHeader(); doc.setFont('helvetica','normal'); doc.setFontSize(9.5); }
+        if (idx % 2 === 1) { doc.setFillColor(LIGHT[0],LIGHT[1],LIGHT[2]); doc.rect(margin, y, contentW, rowH, 'F'); }
+        doc.setTextColor(INK[0],INK[1],INK[2]);
+        doc.text(dLines, xDesc, y+14);
+        doc.text(String(it.qty), xQty-8, y+14, { align:'right' });
+        doc.text(fmt(it.cost),   xCost-8, y+14, { align:'right' });
+        doc.setFont('helvetica','bold'); doc.text(fmt(it.total), xTot, y+14, { align:'right' }); doc.setFont('helvetica','normal');
         y += rowH;
-        doc.setDrawColor(LINE[0], LINE[1], LINE[2]);
-        doc.setLineWidth(0.5);
-        doc.line(margin, y, pageW - margin, y);
+        doc.setDrawColor(LINE[0],LINE[1],LINE[2]); doc.setLineWidth(0.5); doc.line(margin, y, pageW-margin, y);
       });
     }
 
-    /* ---- Totals stack (right-aligned) ---- */
-    y += 14;
-    ensureSpace(110);
-    var labelX = margin + contentW * 0.55;
+    /* Totals */
+    y += 14; ensureSpace(110);
+    var labelX = margin + contentW*0.55;
     function totalRow(label, value, bold) {
-      doc.setFont('helvetica', bold ? 'bold' : 'normal');
-      doc.setFontSize(10);
-      doc.setTextColor(bold ? INK[0] : GRAY[0], bold ? INK[1] : GRAY[1], bold ? INK[2] : GRAY[2]);
-      doc.text(label, labelX, y);
-      doc.setTextColor(INK[0], INK[1], INK[2]);
-      doc.text(value, xTot, y, { align: 'right' });
-      y += 17;
+      doc.setFont('helvetica', bold?'bold':'normal'); doc.setFontSize(10);
+      doc.setTextColor(bold?INK[0]:GRAY[0], bold?INK[1]:GRAY[1], bold?INK[2]:GRAY[2]);
+      doc.text(label, labelX, y); doc.setTextColor(INK[0],INK[1],INK[2]);
+      doc.text(value, xTot, y, { align:'right' }); y += 17;
     }
-    totalRow('Subtotal', fmt(t.subtotal), false);
+    totalRow('Subtotal',              fmt(t.subtotal), false);
     totalRow('Markup (' + t.markupPct + '%)', fmt(t.markup), false);
-    totalRow('Tax (' + t.taxPct + '%)', fmt(t.tax), false);
+    totalRow('Tax (' + t.taxPct + '%)',       fmt(t.tax),    false);
     y += 2;
-    doc.setFillColor(ORANGE[0], ORANGE[1], ORANGE[2]);
-    doc.rect(labelX - 10, y - 12, (pageW - margin) - (labelX - 10), 26, 'F');
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(12);
-    doc.setTextColor(255, 255, 255);
-    doc.text('GRAND TOTAL', labelX, y + 5);
-    doc.text(fmt(t.grand), xTot, y + 5, { align: 'right' });
-    y += 36;
+    doc.setFillColor(ORANGE[0],ORANGE[1],ORANGE[2]);
+    doc.rect(labelX-10, y-12, (pageW-margin)-(labelX-10), 26, 'F');
+    doc.setFont('helvetica','bold'); doc.setFontSize(12); doc.setTextColor(255,255,255);
+    doc.text('GRAND TOTAL', labelX, y+5); doc.text(fmt(t.grand), xTot, y+5, { align:'right' }); y += 36;
 
-    /* ---- Schedule impact ---- */
+    /* Schedule */
     ensureSpace(40);
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(8.5);
-    doc.setTextColor(BLUE[0], BLUE[1], BLUE[2]);
-    doc.text('SCHEDULE IMPACT', margin, y);
-    y += 14;
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(10);
-    doc.setTextColor(INK[0], INK[1], INK[2]);
-    doc.text(
-      days === 0
-        ? 'No change to the project timeline.'
-        : 'The project substantial completion date is extended by ' + days + ' calendar day' + (days === 1 ? '' : 's') + '.',
-      margin, y
-    );
+    doc.setFont('helvetica','bold'); doc.setFontSize(8.5); doc.setTextColor(BLUE[0],BLUE[1],BLUE[2]);
+    doc.text('SCHEDULE IMPACT', margin, y); y += 14;
+    doc.setFont('helvetica','normal'); doc.setFontSize(10); doc.setTextColor(INK[0],INK[1],INK[2]);
+    doc.text(days===0 ? 'No change to the project timeline.'
+      : 'The project substantial completion date is extended by ' + days + ' calendar day' + (days===1?'':'s') + '.', margin, y);
     y += 24;
 
-    /* ---- Acknowledgment + signatures ---- */
-    ensureSpace(170);
-    hr(LINE);
-    y += 18;
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(8.5);
-    doc.setTextColor(GRAY[0], GRAY[1], GRAY[2]);
+    /* Signatures */
+    ensureSpace(170); hr(LINE); y += 18;
+    doc.setFont('helvetica','normal'); doc.setFontSize(8.5); doc.setTextColor(GRAY[0],GRAY[1],GRAY[2]);
     var ack = 'By signing below, the Client authorizes the work described in this Change Order, agrees to the Grand Total shown above as an adjustment to the contract price, and accepts the stated schedule impact. This Change Order becomes part of the original construction agreement.';
     var ackLines = doc.splitTextToSize(ack, contentW);
-    doc.text(ackLines, margin, y);
-    y += ackLines.length * 11 + 16;
+    doc.text(ackLines, margin, y); y += ackLines.length*11 + 16;
 
     ensureSpace(120);
-    var sigW = contentW / 2 - 16;
-    var sigH = 56;
-    var sigDate = new Date().toLocaleDateString('en-US');
-
+    var sigW = contentW/2 - 16, sigH = 56, sigDate = new Date().toLocaleDateString('en-US');
     function placeSignature(pad, x, label, name) {
       var exp = pad.exportForPDF();
-      if (exp) {
-        var w = sigW;
-        var h = w / exp.ratio;
-        if (h > sigH) { h = sigH; w = h * exp.ratio; }
-        doc.addImage(exp.dataUrl, 'JPEG', x, y + (sigH - h), w, h);
-      }
-      doc.setDrawColor(INK[0], INK[1], INK[2]);
-      doc.setLineWidth(0.75);
-      doc.line(x, y + sigH + 6, x + sigW, y + sigH + 6);
-      doc.setFont('helvetica', 'bold');
-      doc.setFontSize(8.5);
-      doc.setTextColor(INK[0], INK[1], INK[2]);
-      doc.text(label, x, y + sigH + 18);
-      doc.setFont('helvetica', 'normal');
-      doc.setTextColor(GRAY[0], GRAY[1], GRAY[2]);
-      doc.text(name + (exp ? '  ·  Signed ' + sigDate : '  ·  Not signed'), x, y + sigH + 29);
+      if (exp) { var w=sigW, h=w/exp.ratio; if (h>sigH){h=sigH;w=h*exp.ratio;} doc.addImage(exp.dataUrl,'JPEG',x,y+(sigH-h),w,h); }
+      doc.setDrawColor(INK[0],INK[1],INK[2]); doc.setLineWidth(0.75); doc.line(x, y+sigH+6, x+sigW, y+sigH+6);
+      doc.setFont('helvetica','bold'); doc.setFontSize(8.5); doc.setTextColor(INK[0],INK[1],INK[2]); doc.text(label, x, y+sigH+18);
+      doc.setFont('helvetica','normal'); doc.setTextColor(GRAY[0],GRAY[1],GRAY[2]);
+      doc.text(name + (exp ? '  ·  Signed ' + sigDate : '  ·  Not signed'), x, y+sigH+29);
     }
-
-    placeSignature(clientPad, margin, 'CLIENT SIGNATURE', clientName);
-    placeSignature(contractorPad, margin + sigW + 32, 'CONTRACTOR SIGNATURE', companyName);
+    placeSignature(clientPad,     margin,           'CLIENT SIGNATURE',     clientName);
+    placeSignature(contractorPad, margin+sigW+32,   'CONTRACTOR SIGNATURE', companyName);
     y += sigH + 44;
 
-    /* ---- Draft watermark (only when client has not signed) ---- */
+    /* Draft watermark */
     if (!signedByClient) {
       var pages = doc.internal.getNumberOfPages();
       for (var p = 1; p <= pages; p++) {
-        doc.setPage(p);
-        doc.setFont('helvetica', 'bold');
-        doc.setFontSize(54);
-        doc.setTextColor(226, 232, 240);
-        doc.text('DRAFT — NOT EXECUTED', pageW / 2, pageH / 2, { align: 'center', angle: 35 });
+        doc.setPage(p); doc.setFont('helvetica','bold'); doc.setFontSize(54); doc.setTextColor(226,232,240);
+        doc.text('DRAFT — NOT EXECUTED', pageW/2, pageH/2, { align:'center', angle:35 });
       }
     }
 
-    /* ---- Footer page numbers (branded with company name) ---- */
-    var totalPages = doc.internal.getNumberOfPages();
-    var footerBrand = settings.companyName ? settings.companyName : 'Digital Foreman Suite';
+    /* Footer */
+    var totalPages  = doc.internal.getNumberOfPages();
+    var footerBrand = settings.companyName || 'Digital Foreman Suite';
     for (var pg = 1; pg <= totalPages; pg++) {
-      doc.setPage(pg);
-      doc.setFont('helvetica', 'normal');
-      doc.setFontSize(8);
-      doc.setTextColor(GRAY[0], GRAY[1], GRAY[2]);
-      doc.text(currentCONumber() + '  ·  ' + footerBrand, margin, pageH - 24);
-      doc.text('Page ' + pg + ' of ' + totalPages, pageW - margin, pageH - 24, { align: 'right' });
+      doc.setPage(pg); doc.setFont('helvetica','normal'); doc.setFontSize(8); doc.setTextColor(GRAY[0],GRAY[1],GRAY[2]);
+      doc.text(currentCONumber() + '  ·  ' + footerBrand, margin, pageH-24);
+      doc.text('Page ' + pg + ' of ' + totalPages, pageW-margin, pageH-24, { align:'right' });
     }
 
     doc.save(currentCONumber() + '.pdf');
-
-    // Auto-save this CO to the log (new entries on top; same CO number updates in place)
     saveToLog(snapshotCO());
   });
 
-  /* =====================================================
-     HELP & FAQ PANEL
-  ===================================================== */
+  /* ── HELP PANEL ── */
   var helpChevron = document.getElementById('helpChevron');
-  var helpBody = document.getElementById('helpBody');
-  // Collapsed by default — it's reference material, not a primary workflow
-  helpBody.classList.add('hidden');
-  helpChevron.textContent = '▸';
-
+  var helpBody    = document.getElementById('helpBody');
+  helpBody.classList.add('hidden'); helpChevron.textContent = '▸';
   document.getElementById('helpToggle').addEventListener('click', function () {
     var hidden = helpBody.classList.toggle('hidden');
     helpChevron.textContent = hidden ? '▸' : '▾';
   });
 
-  /* ---- Bug report: pre-fill email with device + app context ---- */
+  /* ── BUG REPORT ── */
   document.getElementById('bugReportBtn').addEventListener('click', function () {
-    var ua = navigator.userAgent || 'unknown';
-    var coNum = currentCONumber();
-    var logLen = coLog.length;
     var body = [
-      'Hi Digital Foreman Suite team,',
-      '',
-      'I found an issue / have a request:',
-      '',
-      '[DESCRIBE YOUR ISSUE OR REQUEST HERE]',
-      '',
+      'Hi Digital Foreman Suite team,', '', 'I found an issue / have a request:',
+      '', '[DESCRIBE YOUR ISSUE OR REQUEST HERE]', '',
       '--- App info (auto-filled) ---',
-      'CO currently open: ' + coNum,
-      'COs in log: ' + logLen,
-      'Device: ' + ua,
+      'CO currently open: ' + currentCONumber(),
+      'COs in log: ' + coLog.length,
+      'Device: ' + (navigator.userAgent || 'unknown'),
       'App URL: ' + window.location.href
     ].join('\n');
-
-    var subject = 'DFS Bug Report / Feature Request — ' + coNum;
     window.location.href = 'mailto:digitalforemansuite@gmail.com'
-      + '?subject=' + encodeURIComponent(subject)
-      + '&body=' + encodeURIComponent(body);
+      + '?subject=' + encodeURIComponent('DFS Bug Report / Feature Request — ' + currentCONumber())
+      + '&body='    + encodeURIComponent(body);
   });
 
-  /* =====================================================
-     RESET / NEW CO (with confirm guard)
-     - Business Settings are intentionally NOT cleared.
-  ===================================================== */
+  /* ── RESET ── */
   document.getElementById('resetBtn').addEventListener('click', function () {
-    var ok = window.confirm('Start a new Change Order? Client info, line items, and signatures will be cleared.\n\nYour Business Settings, saved items, and CO history are NOT affected.');
-    if (!ok) return;
+    if (!window.confirm('Start a new Change Order? Client info, line items, and signatures will be cleared.\n\nYour Business Settings, saved items, and CO history are NOT affected.')) return;
     document.getElementById('clientName').value = '';
     document.getElementById('jobAddress').value = '';
     descBox.value = '';
     lineItemsEl.innerHTML = '';
-    markupInput.value = 15;
-    taxInput.value = settings.taxRate || 0;
-    days = 0;
-    renderDays();
-    clientPad.clear();
-    contractorPad.clear();
-    coOverride = null;
-    coCounter++;
+    markupInput.value = 15; taxInput.value = settings.taxRate || 0;
+    days = 0; renderDays();
+    clientPad.clear(); contractorPad.clear();
+    coOverride = null; coCounter++;
     storageSet(COUNTER_KEY, String(coCounter));
-    refreshHeader();
-    addLineItem();
-    recalc();
+    refreshHeader(); addLineItem(); recalc();
     window.scrollTo({ top: 0, behavior: 'smooth' });
   });
 
-  /* =====================================================
-     BOOT
-  ===================================================== */
+  /* ── BOOT ── */
   var hasSavedSettings = loadSettings();
   settingsToForm();
   if (hasSavedSettings) {
-    // Returning user: collapse the settings panel, apply saved tax rate
-    settingsBody.classList.add('hidden');
-    settingsChevron.textContent = '▸';
+    settingsBody.classList.add('hidden'); settingsChevron.textContent = '▸';
     taxInput.value = settings.taxRate || 0;
   }
-  loadFavorites();
-  renderFavorites();
-  loadLog();
-  renderLog();
-  refreshHeader();
-  addLineItem();
-  recalc();
-  setStatus(false);
+  loadFavorites(); renderFavorites();
+  loadLog();       renderLog();
+  refreshHeader(); addLineItem(); recalc(); setStatus(false);
 })();
 </script>
 <script>
