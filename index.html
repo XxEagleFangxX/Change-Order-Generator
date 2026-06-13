@@ -253,8 +253,8 @@
     <!-- ============ SECTION 5: SCHEDULE IMPACT ============ -->
     <section class="bg-slatecard rounded-2xl border border-slateline p-4 sm:p-5">
       <h2 class="text-sm font-extrabold tracking-[0.15em] text-blueprintsoft uppercase mb-4">4 · Schedule Impact</h2>
-      <div class="flex items-center justify-between gap-4">
-        <p class="text-lg font-semibold text-slate-200 leading-snug">Days added to<br class="sm:hidden" /> project timeline</p>
+      <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <p class="text-base font-semibold text-slate-200 leading-snug">Days added to project timeline</p>
         <div class="flex items-center gap-3">
           <button type="button" id="daysMinus" class="h-14 w-14 rounded-xl bg-ink border-2 border-slateline text-3xl font-extrabold text-blueprintsoft active:border-blueprint">−</button>
           <span id="daysOut" class="text-4xl font-black text-white w-16 text-center tabular-nums">0</span>
@@ -368,8 +368,8 @@
         RESET /<br/>NEW CO
       </button>
       <button type="button" id="pdfBtn"
-        class="h-16 flex-1 rounded-xl bg-safety text-ink text-lg sm:text-xl font-black tracking-wide active:bg-safetydeep">
-        GENERATE PDF CHANGE ORDER
+        class="h-16 flex-1 rounded-xl bg-safety text-ink text-base sm:text-lg font-black tracking-wide leading-tight active:bg-safetydeep">
+        GENERATE PDF<br>CHANGE ORDER
       </button>
     </div>
   </footer>
@@ -969,7 +969,7 @@
       top.appendChild(right);
 
       var actions = document.createElement('div');
-      actions.className = 'flex gap-2 mt-3';
+      actions.className = 'grid grid-cols-3 gap-2 mt-3';
 
       function actionBtn(label, cls, fn) {
         var b = document.createElement('button');
@@ -979,8 +979,8 @@
         b.addEventListener('click', fn);
         return b;
       }
-      actions.appendChild(actionBtn('REOPEN',    'flex-1 border-blueprint text-blueprintsoft active:bg-blueprint active:text-white', function () { if (!confirmDiscardCurrent()) return; loadFromLog(rec, false); }));
-      actions.appendChild(actionBtn('DUPLICATE', 'flex-1 border-safety text-safety active:bg-safety active:text-ink',               function () { if (!confirmDiscardCurrent()) return; loadFromLog(rec, true); }));
+      actions.appendChild(actionBtn('REOPEN',    'border-blueprint text-blueprintsoft active:bg-blueprint active:text-white', function () { if (!confirmDiscardCurrent()) return; loadFromLog(rec, false); }));
+      actions.appendChild(actionBtn('DUPLICATE', 'border-safety text-safety active:bg-safety active:text-ink',               function () { if (!confirmDiscardCurrent()) return; loadFromLog(rec, true); }));
       actions.appendChild(actionBtn('DELETE',    'border-slateline text-slate-400 active:border-red-500 active:text-red-400',       function () {
         if (!window.confirm('Delete ' + rec.coNumber + ' from the log? The PDF you already downloaded is not affected.')) return;
         coLog.splice(i, 1); persistLog(); renderLog();
@@ -1293,12 +1293,10 @@
       proSection.innerHTML = [
         '<p class="text-sm font-extrabold text-safety mb-1">⚡ Upgrade to Pro — $14.99 one-time</p>',
         '<p class="text-xs text-slate-400 mb-3">Your logo on every PDF. No footer branding. One payment, yours forever.</p>',
-        '<div class="flex gap-2 mb-2">',
-        '  <input id="licenseKeyInput" type="text" placeholder="Enter license key" autocomplete="off" autocorrect="off" spellcheck="false"',
-        '    class="flex-1 h-12 px-3 rounded-xl bg-ink border-2 border-slateline text-white text-sm font-mono tracking-wider" />',
-        '  <button id="activateProBtn" type="button"',
-        '    class="h-12 px-4 rounded-xl bg-safety text-ink font-extrabold text-sm tracking-wide active:bg-safetydeep shrink-0">ACTIVATE</button>',
-        '</div>',
+        '<input id="licenseKeyInput" type="text" placeholder="Enter license key" autocomplete="off" autocorrect="off" spellcheck="false"',
+        '  class="w-full h-12 px-3 rounded-xl bg-ink border-2 border-slateline text-white text-sm font-mono tracking-wider mb-2" />',
+        '<button id="activateProBtn" type="button"',
+        '  class="w-full h-12 rounded-xl bg-safety text-ink font-extrabold text-sm tracking-wide active:bg-safetydeep mb-2">ACTIVATE LICENSE KEY</button>',
         '<p id="proActivateStatus" class="text-xs font-bold mb-3 text-center text-slate-500"></p>',
         '<a href="https://digitalforemansuite.com/pro" target="_blank" rel="noopener"',
         '   class="block text-center text-xs text-blueprintsoft font-bold underline">Get a license key at digitalforemansuite.com →</a>'
