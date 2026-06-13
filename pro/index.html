@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Go Pro — On-The-Spot Change Order Generator</title>
+  <meta name="description" content="Upgrade to Pro and put your brand on every change order. One-time $14.99. No subscription. Built for contractors." />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root { --bg: #0f1117; --bg2: #181c27; --bg3: #1e2330; --orange: #f97316; --orange-dark: #c2580f; --text: #f1f5f9; --muted: #94a3b8; --border: #2d3448; --green: #22c55e; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; }
+    nav { display: flex; align-items: center; justify-content: space-between; padding: 1rem 1.5rem; border-bottom: 1px solid var(--border); position: sticky; top: 0; background: var(--bg); z-index: 100; }
+    .nav-logo { font-size: 0.95rem; font-weight: 700; color: var(--text); text-decoration: none; letter-spacing: 0.02em; }
+    .nav-logo span { color: var(--orange); }
+    .nav-cta { background: var(--orange); color: #fff; font-weight: 700; font-size: 0.85rem; padding: 0.5rem 1.1rem; border-radius: 6px; text-decoration: none; white-space: nowrap; }
+    .nav-cta:hover { background: var(--orange-dark); }
+    .hero { padding: 3.5rem 1.5rem 3rem; text-align: center; max-width: 700px; margin: 0 auto; }
+    .badge { display: inline-block; background: rgba(249,115,22,0.15); color: var(--orange); font-size: 0.75rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; padding: 0.35rem 0.9rem; border-radius: 999px; border: 1px solid rgba(249,115,22,0.3); margin-bottom: 1.25rem; }
+    .hero h1 { font-size: clamp(2rem, 6vw, 3.2rem); font-weight: 800; line-height: 1.15; margin-bottom: 1.1rem; letter-spacing: -0.02em; }
+    .hero h1 em { font-style: normal; color: var(--orange); }
+    .hero p { font-size: 1.1rem; color: var(--muted); max-width: 520px; margin: 0 auto 2rem; }
+    .hero-cta { display: inline-block; background: var(--orange); color: #fff; font-size: 1.1rem; font-weight: 800; padding: 1rem 2.2rem; border-radius: 8px; text-decoration: none; letter-spacing: 0.01em; box-shadow: 0 4px 24px rgba(249,115,22,0.35); }
+    .hero-cta:hover { background: var(--orange-dark); }
+    .hero-sub { margin-top: 0.85rem; font-size: 0.82rem; color: var(--muted); }
+    .divider { height: 1px; background: var(--border); max-width: 900px; margin: 0 auto; }
+    .pain { padding: 3rem 1.5rem; max-width: 680px; margin: 0 auto; text-align: center; }
+    .pain h2 { font-size: clamp(1.4rem, 4vw, 2rem); font-weight: 800; margin-bottom: 1rem; }
+    .pain p { color: var(--muted); font-size: 1.05rem; margin-bottom: 0.75rem; }
+    .pain p strong { color: var(--text); }
+    .compare-wrap { padding: 3rem 1.5rem; max-width: 700px; margin: 0 auto; }
+    .compare-wrap h2 { font-size: 1.5rem; font-weight: 800; text-align: center; margin-bottom: 1.75rem; }
+    .compare-table { width: 100%; border-collapse: collapse; border-radius: 12px; overflow: hidden; }
+    .compare-table th { padding: 1rem; font-size: 0.95rem; font-weight: 700; text-align: center; }
+    .compare-table th:first-child { text-align: left; }
+    .compare-table thead tr { background: var(--bg3); }
+    .compare-table th.pro-col { background: var(--orange); color: #fff; }
+    .compare-table td { padding: 0.85rem 1rem; font-size: 0.95rem; border-bottom: 1px solid var(--border); background: var(--bg2); text-align: center; }
+    .compare-table td:first-child { text-align: left; color: var(--muted); }
+    .compare-table tr:last-child td { border-bottom: none; }
+    .check { color: var(--green); font-size: 1.1rem; }
+    .ex { color: #ef4444; font-size: 1.1rem; }
+    .price-row td { font-weight: 700; font-size: 1rem; padding-top: 1.1rem; padding-bottom: 1.1rem; }
+    .price-row td.pro-price { color: var(--orange); font-size: 1.2rem; }
+    .features { padding: 3rem 1.5rem; background: var(--bg2); }
+    .features-inner { max-width: 700px; margin: 0 auto; }
+    .features h2 { font-size: 1.5rem; font-weight: 800; text-align: center; margin-bottom: 2rem; }
+    .feature-grid { display: grid; grid-template-columns: 1fr; gap: 1.25rem; }
+    @media (min-width: 540px) { .feature-grid { grid-template-columns: 1fr 1fr; } }
+    .feature-card { background: var(--bg3); border: 1px solid var(--border); border-radius: 10px; padding: 1.25rem; }
+    .feature-icon { font-size: 1.6rem; margin-bottom: 0.5rem; }
+    .feature-card h3 { font-size: 1rem; font-weight: 700; margin-bottom: 0.3rem; }
+    .feature-card p { font-size: 0.88rem; color: var(--muted); }
+    .pricing { padding: 3.5rem 1.5rem; max-width: 480px; margin: 0 auto; text-align: center; }
+    .pricing h2 { font-size: 1.5rem; font-weight: 800; margin-bottom: 0.5rem; }
+    .pricing-sub { color: var(--muted); font-size: 0.95rem; margin-bottom: 2rem; }
+    .price-card { background: var(--bg2); border: 2px solid var(--orange); border-radius: 14px; padding: 2rem 1.5rem; }
+    .price-label { font-size: 0.75rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--orange); margin-bottom: 0.75rem; }
+    .price-amount { font-size: 3.5rem; font-weight: 900; line-height: 1; margin-bottom: 0.25rem; }
+    .price-amount sup { font-size: 1.5rem; vertical-align: top; margin-top: 0.6rem; display: inline-block; }
+    .price-once { font-size: 0.85rem; color: var(--muted); margin-bottom: 1.75rem; }
+    .price-features { list-style: none; text-align: left; margin-bottom: 1.75rem; }
+    .price-features li { display: flex; align-items: center; gap: 0.6rem; padding: 0.45rem 0; font-size: 0.95rem; border-bottom: 1px solid var(--border); }
+    .price-features li:last-child { border-bottom: none; }
+    .price-features .icon { color: var(--green); font-size: 1rem; flex-shrink: 0; }
+    .buy-btn { display: block; width: 100%; background: var(--orange); color: #fff; font-size: 1.1rem; font-weight: 800; padding: 1rem; border-radius: 8px; text-decoration: none; box-shadow: 0 4px 24px rgba(249,115,22,0.35); }
+    .buy-btn:hover { background: var(--orange-dark); }
+    .guarantee { margin-top: 1rem; font-size: 0.8rem; color: var(--muted); }
+    .faq { padding: 3rem 1.5rem; max-width: 660px; margin: 0 auto; }
+    .faq h2 { font-size: 1.5rem; font-weight: 800; text-align: center; margin-bottom: 1.75rem; }
+    .faq-item { border-bottom: 1px solid var(--border); padding: 1.1rem 0; }
+    .faq-item:last-child { border-bottom: none; }
+    .faq-q { font-weight: 700; font-size: 0.95rem; margin-bottom: 0.4rem; }
+    .faq-a { font-size: 0.9rem; color: var(--muted); }
+    .final-cta { padding: 3.5rem 1.5rem; background: var(--bg2); text-align: center; }
+    .final-cta h2 { font-size: clamp(1.5rem, 4vw, 2.2rem); font-weight: 800; margin-bottom: 0.75rem; }
+    .final-cta p { color: var(--muted); margin-bottom: 1.75rem; font-size: 1rem; }
+    footer { padding: 1.5rem; text-align: center; font-size: 0.8rem; color: var(--muted); border-top: 1px solid var(--border); }
+    footer a { color: var(--muted); text-decoration: underline; }
+  </style>
+</head>
+<body>
+  <nav>
+    <a class="nav-logo" href="/"><span>Digital Foreman</span> Suite</a>
+    <a class="nav-cta" href="https://digitalforemansuite.gumroad.com/l/change-order-generator" target="_blank">Get Pro &mdash; $14.99</a>
+  </nav>
+  <section class="hero">
+    <div class="badge">Pro Upgrade</div>
+    <h1>Your name.<br>Your logo.<br><em>Your change order.</em></h1>
+    <p>Upgrade to Pro and send fully branded PDFs with your company logo on every change order. One-time payment. No subscriptions. Ever.</p>
+    <a class="hero-cta" href="https://digitalforemansuite.gumroad.com/l/change-order-generator" target="_blank">Upgrade to Pro &mdash; $14.99</a>
+    <p class="hero-sub">One-time payment &nbsp;&middot;&nbsp; Instant delivery &nbsp;&middot;&nbsp; Works offline</p>
+  </section>
+  <div class="divider"></div>
+  <section class="pain">
+    <h2>The free version gets the job done.<br>Pro makes it <em style="font-style:normal;color:var(--orange)">yours.</em></h2>
+    <p>Every PDF you send on the free plan has a small footer: <strong>"Created with Digital Foreman Suite."</strong></p>
+    <p>Upgrade to Pro and that's gone. Your logo goes on every change order instead &mdash; so the only name clients remember is <strong>yours.</strong></p>
+  </section>
+  <div class="divider"></div>
+  <section class="compare-wrap">
+    <h2>Free vs. Pro</h2>
+    <table class="compare-table">
+      <thead><tr><th></th><th>Free</th><th class="pro-col">Pro</th></tr></thead>
+      <tbody>
+        <tr><td>Generate change orders</td><td><span class="check">&#10003;</span></td><td><span class="check">&#10003;</span></td></tr>
+        <tr><td>Finger signature capture</td><td><span class="check">&#10003;</span></td><td><span class="check">&#10003;</span></td></tr>
+        <tr><td>Auto markup + tax calculation</td><td><span class="check">&#10003;</span></td><td><span class="check">&#10003;</span></td></tr>
+        <tr><td>PDF generation</td><td><span class="check">&#10003;</span></td><td><span class="check">&#10003;</span></td></tr>
+        <tr><td>Share to Gmail / WhatsApp / text</td><td><span class="check">&#10003;</span></td><td><span class="check">&#10003;</span></td></tr>
+        <tr><td>Change order log</td><td><span class="check">&#10003;</span></td><td><span class="check">&#10003;</span></td></tr>
+        <tr><td>Works 100% offline</td><td><span class="check">&#10003;</span></td><td><span class="check">&#10003;</span></td></tr>
+        <tr><td>Company logo on every PDF</td><td><span class="ex">&#10007;</span></td><td><span class="check">&#10003;</span></td></tr>
+        <tr><td>No "Digital Foreman Suite" footer</td><td><span class="ex">&#10007;</span></td><td><span class="check">&#10003;</span></td></tr>
+        <tr class="price-row"><td>Price</td><td>Free</td><td class="pro-price">$14.99 once</td></tr>
+      </tbody>
+    </table>
+  </section>
+  <div class="divider"></div>
+  <section class="features">
+    <div class="features-inner">
+      <h2>Built for the job site. Not the office.</h2>
+      <div class="feature-grid">
+        <div class="feature-card"><div class="feature-icon">&#128285;</div><h3>Zero signal? No problem.</h3><p>Works in concrete basements, metal buildings, and dead zones. If your phone is on, it works.</p></div>
+        <div class="feature-card"><div class="feature-icon">&#128274;</div><h3>100% private.</h3><p>All your data stays on your phone. Nothing is sent to any server. Ever. No cloud, no account.</p></div>
+        <div class="feature-card"><div class="feature-icon">&#128179;</div><h3>Pay once. Use forever.</h3><p>No monthly fees. No subscriptions. Buy it once and use it on every job for the rest of your career.</p></div>
+        <div class="feature-card"><div class="feature-icon">&#127959;</div><h3>Built by a contractor.</h3><p>30 years in the trade. Every feature was designed for real job site conditions &mdash; not a boardroom.</p></div>
+      </div>
+    </div>
+  </section>
+  <section class="pricing">
+    <h2>Simple pricing.</h2>
+    <p class="pricing-sub">One price. One time. Done.</p>
+    <div class="price-card">
+      <div class="price-label">Pro License</div>
+      <div class="price-amount"><sup>$</sup>14<span style="font-size:2rem">.99</span></div>
+      <p class="price-once">One-time payment &mdash; no subscription</p>
+      <ul class="price-features">
+        <li><span class="icon">&#10003;</span> Company logo on every PDF change order</li>
+        <li><span class="icon">&#10003;</span> No "Digital Foreman Suite" footer branding</li>
+        <li><span class="icon">&#10003;</span> Instant license key delivery via email</li>
+        <li><span class="icon">&#10003;</span> Works on any phone, tablet, or computer</li>
+        <li><span class="icon">&#10003;</span> Lifetime use &mdash; no expiration</li>
+      </ul>
+      <a class="buy-btn" href="https://digitalforemansuite.gumroad.com/l/change-order-generator" target="_blank">Get Pro Now &mdash; $14.99</a>
+      <p class="guarantee">30-day money-back guarantee &nbsp;&middot;&nbsp; Powered by Gumroad</p>
+    </div>
+  </section>
+  <div class="divider"></div>
+  <section class="faq">
+    <h2>Questions</h2>
+    <div class="faq-item"><p class="faq-q">How do I get my license key after purchase?</p><p class="faq-a">Gumroad emails it to you instantly after checkout. Open the app, go to Settings, tap "Activate Pro," and paste the key. That's it.</p></div>
+    <div class="faq-item"><p class="faq-q">Does Pro work offline?</p><p class="faq-a">Yes. Once activated, Pro works everywhere the free version does &mdash; including zero-signal job sites. You only need internet to activate the key once.</p></div>
+    <div class="faq-item"><p class="faq-q">What size should my logo be?</p><p class="faq-a">Any standard image file works (JPG or PNG). Square or wide logos both look great on the PDF. You upload it once in Settings and it appears on every change order.</p></div>
+    <div class="faq-item"><p class="faq-q">Can I use this on multiple phones?</p><p class="faq-a">Your license key can be used on your devices. It's tied to you, not your hardware &mdash; so if you get a new phone, just activate Pro again with the same key.</p></div>
+    <div class="faq-item"><p class="faq-q">What if it doesn't work for me?</p><p class="faq-a">30-day money-back guarantee through Gumroad. No questions asked.</p></div>
+  </section>
+  <section class="final-cta">
+    <h2>One recovered change order pays for this 10 times over.</h2>
+    <p>Stop eating costs you didn't document. Put your name on it and get paid.</p>
+    <a class="hero-cta" href="https://digitalforemansuite.gumroad.com/l/change-order-generator" target="_blank">Upgrade to Pro &mdash; $14.99</a>
+    <p style="margin-top:0.85rem;font-size:0.82rem;color:var(--muted)">One-time payment &nbsp;&middot;&nbsp; 30-day guarantee &nbsp;&middot;&nbsp; Instant delivery</p>
+  </section>
+  <footer>
+    <p>&copy; 2026 Digital Foreman Suite &nbsp;&middot;&nbsp; <a href="/">Back to the app</a></p>
+  </footer>
+</body>
+</html>
