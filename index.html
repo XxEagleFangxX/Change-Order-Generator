@@ -303,7 +303,7 @@
 
     <!-- ============ SECTION 8: HELP & FAQ ============ -->
     <section class="bg-slatecard rounded-2xl border border-slateline p-4 sm:p-5">
-      <button type="button" id="helpToggle" class="w-full flex items-center justify-between gap-3">
+      <button type="button" id="helpToggle" class="w-full flex items-center justify-between gap-3 py-3 min-h-[52px]">
         <span class="text-sm font-extrabold tracking-[0.15em] text-blueprintsoft uppercase text-left">❓ Help &amp; How-To</span>
         <span id="helpChevron" class="text-blueprintsoft text-2xl font-extrabold leading-none select-none">▾</span>
       </button>
@@ -574,7 +574,7 @@
       '<div style="display:flex;gap:8px;align-items:center;">' +
         '<input type="text" data-field="desc" placeholder="Item description (e.g., 2x10 LVL header, 8 ft)" ' +
           'style="flex:1;min-width:0;" ' +
-          'class="h-12 px-3 text-sm font-semibold rounded-lg bg-slatecard border-2 border-slateline text-white" />' +
+          'class="h-12 px-3 text-base font-semibold rounded-lg bg-slatecard border-2 border-slateline text-white" />' +
         '<button type="button" data-action="fav" aria-label="Save item for reuse" title="Save this item for reuse" ' +
           'style="flex:none;width:48px;height:48px;" ' +
           'class="rounded-lg border-2 border-slateline text-safety text-xl font-extrabold active:border-safety">☆</button>' +
@@ -1035,6 +1035,7 @@
     var jsPDFCtor = (window.jspdf && window.jspdf.jsPDF) ? window.jspdf.jsPDF : null;
     if (!jsPDFCtor) { alert('PDF library failed to load. Check your internet connection and reload the page.'); return; }
     formToSettings();
+    persistSettings();
 
     if (coOverride) {
       var loggedRec = null;
@@ -1236,8 +1237,8 @@
       doc.text('Page ' + pg + ' of ' + totalPages, pageW-margin, pageH-24, { align:'right' });
     }
 
-    doc.save(currentCONumber() + '.pdf');
     saveToLog(snapshotCO());
+    doc.save(currentCONumber() + '.pdf');
   });
 
   /* ── UPGRADE MODAL ── */
