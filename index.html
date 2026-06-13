@@ -362,13 +362,13 @@
 
   <!-- ============ STICKY FOOTER ============ -->
   <footer class="fixed bottom-0 inset-x-0 z-40 bg-ink/95 backdrop-blur border-t-2 border-slateline">
-    <div class="max-w-3xl mx-auto px-4 py-3 flex gap-3">
+    <div class="max-w-3xl mx-auto px-4 py-3 grid grid-cols-5 gap-3">
       <button type="button" id="resetBtn"
-        class="h-16 px-5 rounded-xl border-2 border-slateline text-slate-300 font-extrabold text-sm tracking-wide active:border-safety active:text-safety shrink-0">
+        class="col-span-2 h-16 rounded-xl border-2 border-slateline text-slate-300 font-extrabold text-sm tracking-wide leading-tight active:border-safety active:text-safety">
         RESET /<br/>NEW CO
       </button>
       <button type="button" id="pdfBtn"
-        class="h-16 flex-1 rounded-xl bg-safety text-ink text-base sm:text-lg font-black tracking-wide leading-tight active:bg-safetydeep">
+        class="col-span-3 h-16 rounded-xl bg-safety text-ink text-sm sm:text-base font-black tracking-wide leading-tight active:bg-safetydeep">
         GENERATE PDF<br>CHANGE ORDER
       </button>
     </div>
@@ -979,8 +979,8 @@
         b.addEventListener('click', fn);
         return b;
       }
-      actions.appendChild(actionBtn('REOPEN',    'border-blueprint text-blueprintsoft active:bg-blueprint active:text-white', function () { if (!confirmDiscardCurrent()) return; loadFromLog(rec, false); }));
-      actions.appendChild(actionBtn('DUPLICATE', 'border-safety text-safety active:bg-safety active:text-ink',               function () { if (!confirmDiscardCurrent()) return; loadFromLog(rec, true); }));
+      actions.appendChild(actionBtn('REOPEN', 'border-blueprint text-blueprintsoft active:bg-blueprint active:text-white', function () { if (!confirmDiscardCurrent()) return; loadFromLog(rec, false); }));
+      actions.appendChild(actionBtn('COPY',   'border-safety text-safety active:bg-safety active:text-ink',               function () { if (!confirmDiscardCurrent()) return; loadFromLog(rec, true); }));
       actions.appendChild(actionBtn('DELETE',    'border-slateline text-slate-400 active:border-red-500 active:text-red-400',       function () {
         if (!window.confirm('Delete ' + rec.coNumber + ' from the log? The PDF you already downloaded is not affected.')) return;
         coLog.splice(i, 1); persistLog(); renderLog();
