@@ -1261,7 +1261,22 @@
     }
 
     saveToLog(snapshotCO());
-    doc.save(currentCONumber() + '.pdf');
+    var pdfFilename = currentCONumber() + '.pdf';
+    /* Try native share sheet (Android/iOS PWA) — falls back to download */
+    var pdfBlob = doc.output('blob');
+    var shareFile = new File([pdfBlob], pdfFilename, { type: 'application/pdf' });
+    if (navigator.canShare && navigator.canShare({ files: [shareFile] })) {
+      navigator.share({
+        files: [shareFile],
+        title: pdfFilename,
+        text: 'Change Order ' + currentCONumber()
+      }).catch(function () {
+        /* User cancelled share sheet or error — fall back to download */
+        doc.save(pdfFilename);
+      });
+    } else {
+      doc.save(pdfFilename);
+    }
   });
 
   /* ── UPGRADE MODAL ── */
