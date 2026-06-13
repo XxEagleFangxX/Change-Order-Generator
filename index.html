@@ -558,13 +558,16 @@
     var row = document.createElement('div');
     row.className = 'lineItem bg-ink rounded-xl border-2 border-slateline p-3';
     row.innerHTML =
-      '<div class="flex gap-2 items-center">' +
+      '<div style="display:flex;gap:8px;align-items:center;">' +
         '<input type="text" data-field="desc" placeholder="Item description (e.g., 2x10 LVL header, 8 ft)" ' +
-          'class="flex-1 min-w-0 h-12 px-3 text-sm font-semibold rounded-lg bg-slatecard border-2 border-slateline text-white" />' +
+          'style="flex:1;min-width:0;" ' +
+          'class="h-12 px-3 text-sm font-semibold rounded-lg bg-slatecard border-2 border-slateline text-white" />' +
         '<button type="button" data-action="fav" aria-label="Save item for reuse" title="Save this item for reuse" ' +
-          'class="flex-none h-12 w-12 rounded-lg border-2 border-slateline text-safety text-xl font-extrabold active:border-safety">☆</button>' +
+          'style="flex:none;width:48px;height:48px;" ' +
+          'class="rounded-lg border-2 border-slateline text-safety text-xl font-extrabold active:border-safety">☆</button>' +
         '<button type="button" data-action="delete" aria-label="Delete line item" ' +
-          'class="flex-none h-12 w-12 rounded-lg border-2 border-slateline text-slate-400 text-xl font-extrabold active:border-red-500 active:text-red-400">✕</button>' +
+          'style="flex:none;width:48px;height:48px;" ' +
+          'class="rounded-lg border-2 border-slateline text-slate-400 text-xl font-extrabold active:border-red-500 active:text-red-400">✕</button>' +
       '</div>' +
       '<div class="grid grid-cols-3 gap-2 mt-2 items-end">' +
         '<div>' +
