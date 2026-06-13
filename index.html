@@ -374,6 +374,29 @@
     </div>
   </footer>
 
+<!-- UPGRADE MODAL — must be in DOM before the main script runs -->
+<div id="upgradeModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-ink/90 p-4" role="dialog" aria-modal="true">
+  <div class="bg-slatecard rounded-2xl border-2 border-safety p-6 max-w-sm w-full shadow-2xl">
+    <p class="text-safety font-extrabold text-lg mb-1">⚡ Go Pro — $14.99 one-time</p>
+    <p class="text-slate-300 text-sm mb-5">Your logo on every PDF. No footer branding. Pay once, yours forever — no subscription, no cloud, no account.</p>
+    <div class="space-y-2 text-sm text-slate-300 mb-5">
+      <p>✓ Custom company logo on all PDFs</p>
+      <p>✓ "Created free" footer removed</p>
+      <p>✓ Works 100% offline — same as free</p>
+      <p>✓ One-time payment · No recurring fees</p>
+    </div>
+    <a href="https://digitalforemansuite.com/pro" target="_blank" rel="noopener"
+       class="block w-full h-14 rounded-xl bg-safety text-ink font-black text-center text-lg leading-[3.5rem] mb-3">
+      UPGRADE TO PRO — $14.99
+    </a>
+    <button id="upgradeModalClose" type="button"
+       class="w-full h-12 rounded-xl border-2 border-slateline text-slate-400 font-bold text-sm">
+      Not now
+    </button>
+    <p class="text-xs text-slate-500 text-center mt-3">Already have a license key? Go to Business Settings to activate it.</p>
+  </div>
+</div>
+
 <script>
 (function () {
   'use strict';
@@ -1364,29 +1387,6 @@
   renderProSection();
 })();
 </script>
-<!-- UPGRADE MODAL -->
-<div id="upgradeModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-ink/90 p-4" role="dialog" aria-modal="true">
-  <div class="bg-slatecard rounded-2xl border-2 border-safety p-6 max-w-sm w-full shadow-2xl">
-    <p class="text-safety font-extrabold text-lg mb-1">⚡ Go Pro — $14.99 one-time</p>
-    <p class="text-slate-300 text-sm mb-5">Your logo on every PDF. No footer branding. Pay once, yours forever — no subscription, no cloud, no account.</p>
-    <div class="space-y-2 text-sm text-slate-300 mb-5">
-      <p>✓ Custom company logo on all PDFs</p>
-      <p>✓ "Created free" footer removed</p>
-      <p>✓ Works 100% offline — same as free</p>
-      <p>✓ One-time payment · No recurring fees</p>
-    </div>
-    <a href="https://digitalforemansuite.com/pro" target="_blank" rel="noopener"
-       class="block w-full h-14 rounded-xl bg-safety text-ink font-black text-center text-lg leading-[3.5rem] mb-3">
-      UPGRADE TO PRO — $14.99
-    </a>
-    <button id="upgradeModalClose" type="button"
-       class="w-full h-12 rounded-xl border-2 border-slateline text-slate-400 font-bold text-sm">
-      Not now
-    </button>
-    <p class="text-xs text-slate-500 text-center mt-3">Already have a license key? Go to Business Settings to activate it.</p>
-  </div>
-</div>
-
 <script>
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function () {
