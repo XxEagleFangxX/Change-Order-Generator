@@ -1,0 +1,1413 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>On-The-Spot Change Order Generator | Digital Foreman Suite</title>
+<link rel="manifest" href="manifest.json" />
+<meta name="theme-color" content="#f5a623" />
+<link rel="apple-touch-icon" href="icons/icon-192.png" />
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        colors: {
+          ink: '#0b1220',
+          slatecard: '#16223a',
+          slateline: '#27375a',
+          safety: '#f97316',
+          safetydeep: '#ea580c',
+          blueprint: '#3b82f6',
+          blueprintsoft: '#93c5fd'
+        },
+        fontFamily: {
+          sans: ['system-ui', '-apple-system', 'Segoe UI', 'Roboto', 'Helvetica Neue', 'Arial', 'sans-serif']
+        }
+      }
+    }
+  };
+</script>
+<style>
+  html { -webkit-text-size-adjust: 100%; }
+  body { background: #0b1220; }
+  canvas.sigpad { touch-action: none; -webkit-user-select: none; user-select: none; }
+  input[type="number"]::-webkit-outer-spin-button,
+  input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+  input[type="number"] { -moz-appearance: textfield; appearance: textfield; }
+  input:focus, textarea:focus { outline: 3px solid #f97316; outline-offset: 1px; }
+  button:focus-visible { outline: 3px solid #93c5fd; outline-offset: 2px; }
+  ::placeholder { color: #64748b; opacity: 1; }
+  #logoFile, #backupFile { display: none; }
+
+  /*
+   * FIX 1 — CO number header truncation
+   * The full CO number (e.g. CO-20260612-001) is 18 chars. On a ~360px
+   * phone the old text-base h1 with truncate was clipping it to "CO-202…".
+   * Solution: clamp the span's font size fluidly between 11px and 14px so
+   * the number always fits, and remove truncate from the h1 so it wraps
+   * instead of cutting. white-space:nowrap on the span keeps the number
+   * on a single line while the h1 wraps "Change Order" above it if needed.
+   */
+  #coNumber {
+    display: inline-block;
+    font-size: clamp(11px, 3.4vw, 14px);
+    letter-spacing: -0.01em;
+    white-space: nowrap;
+  }
+</style>
+</head>
+<body class="font-sans text-slate-100 min-h-screen pb-40">
+
+  <!-- ============ SECTION 0: STICKY HEADER ============ -->
+  <header class="sticky top-0 z-40 bg-ink/95 backdrop-blur border-b-2 border-safety">
+    <div class="max-w-3xl mx-auto px-4 py-2 flex items-center justify-between gap-2">
+      <div class="min-w-0 flex-1">
+        <p id="headerBrand" class="text-[10px] font-bold tracking-[0.18em] text-blueprintsoft uppercase truncate leading-tight">Digital Foreman Suite</p>
+        <!-- FIX 1: removed `truncate`; CO number scales via #coNumber CSS rule above -->
+        <h1 class="text-base font-extrabold text-white leading-tight">Change Order <span id="coNumber" class="text-safety"></span></h1>
+        <p id="coDate" class="text-[10px] text-slate-400 font-semibold leading-tight truncate"></p>
+      </div>
+      <span id="statusPill" class="shrink-0 px-3 py-1.5 rounded-full text-xs font-extrabold tracking-wide bg-safety/20 text-safety border-2 border-safety whitespace-nowrap">DRAFT</span>
+    </div>
+  </header>
+
+  <main class="max-w-3xl mx-auto px-4 pt-5 space-y-5">
+
+    <!-- ============ SECTION 1: BUSINESS SETTINGS ============ -->
+    <section class="bg-slatecard rounded-2xl border-2 border-blueprint p-4 sm:p-5">
+      <button type="button" id="settingsToggle" class="w-full flex items-center justify-between gap-3">
+        <span class="text-sm font-extrabold tracking-[0.15em] text-blueprintsoft uppercase text-left">⚙ Business Settings <span class="text-slate-400 normal-case tracking-normal font-semibold">— set once, used on every CO</span></span>
+        <span id="settingsChevron" class="text-blueprintsoft text-2xl font-extrabold leading-none select-none">▾</span>
+      </button>
+
+      <div id="settingsBody" class="mt-4">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label for="setCompany" class="block text-sm font-bold text-slate-300 mb-1.5">Company Name</label>
+            <input id="setCompany" type="text" placeholder="e.g., Ridgeline Builders LLC"
+              class="w-full h-14 px-4 text-lg font-semibold rounded-xl bg-ink border-2 border-slateline text-white" />
+          </div>
+          <div>
+            <label for="setPhone" class="block text-sm font-bold text-slate-300 mb-1.5">Business Phone</label>
+            <input id="setPhone" type="tel" inputmode="tel" placeholder="(501) 555-0100"
+              class="w-full h-14 px-4 text-lg font-semibold rounded-xl bg-ink border-2 border-slateline text-white" />
+          </div>
+          <div>
+            <label for="setEmail" class="block text-sm font-bold text-slate-300 mb-1.5">Business Email</label>
+            <input id="setEmail" type="email" inputmode="email" placeholder="office@yourcompany.com"
+              class="w-full h-14 px-4 text-lg font-semibold rounded-xl bg-ink border-2 border-slateline text-white" />
+          </div>
+          <div>
+            <label for="setTax" class="block text-sm font-bold text-slate-300 mb-1.5">Local Tax Rate %</label>
+            <input id="setTax" type="number" inputmode="decimal" step="0.001" min="0" max="100" placeholder="e.g., 8.625"
+              class="w-full h-14 px-4 text-lg font-extrabold rounded-xl bg-ink border-2 border-slateline text-white" />
+          </div>
+        </div>
+
+        <div class="mt-4">
+          <span class="block text-sm font-bold text-slate-300 mb-1.5">Company Logo <span class="text-slate-500 font-semibold">(PNG or JPG · prints on PDF)</span> <span id="logoProBadge" class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-safety/20 text-safety border border-safety">PRO</span></span>
+          <input id="logoFile" type="file" accept=".svg,.png,.jpg,.jpeg" />
+          <div class="flex items-center gap-3 flex-wrap">
+            <button type="button" id="logoPickBtn"
+              class="h-14 px-5 rounded-xl bg-ink border-2 border-blueprint text-blueprintsoft font-extrabold text-sm tracking-wide active:bg-blueprint active:text-white">
+              UPLOAD LOGO
+            </button>
+            <button type="button" id="logoRemoveBtn"
+              class="hidden h-14 px-5 rounded-xl bg-ink border-2 border-slateline text-slate-300 font-bold text-sm active:border-red-500 active:text-red-400">
+              Remove
+            </button>
+            <div id="logoPreviewWrap" class="hidden items-center gap-2 bg-white rounded-xl p-2">
+              <img id="logoPreview" alt="Company logo preview" class="h-12 max-w-[180px] object-contain" />
+            </div>
+          </div>
+        </div>
+
+        <button type="button" id="saveSettingsBtn"
+          class="mt-5 w-full h-14 rounded-xl bg-blueprint text-white text-lg font-extrabold tracking-wide active:bg-blue-700">
+          SAVE BUSINESS SETTINGS
+        </button>
+        <p id="settingsStatus" class="text-sm font-bold text-slate-400 mt-3 text-center">Saved settings load automatically every time you open the app on this device.</p>
+
+        <div class="mt-5 border-t-2 border-slateline pt-4">
+          <p class="text-sm font-bold text-slate-300 mb-2">Backup &amp; Restore <span class="text-slate-500 font-semibold">(settings, logo, saved items, CO log)</span></p>
+          <input id="backupFile" type="file" accept=".json,application/json" />
+          <div class="flex gap-3">
+            <button type="button" id="backupBtn"
+              class="flex-1 h-14 rounded-xl bg-ink border-2 border-blueprint text-blueprintsoft font-extrabold text-sm tracking-wide active:bg-blueprint active:text-white">
+              DOWNLOAD BACKUP
+            </button>
+            <button type="button" id="restoreBtn"
+              class="flex-1 h-14 rounded-xl bg-ink border-2 border-slateline text-slate-300 font-extrabold text-sm tracking-wide active:border-safety active:text-safety">
+              RESTORE BACKUP
+            </button>
+          </div>
+          <p class="text-xs text-slate-400 font-semibold mt-2">Save the backup file anywhere you trust. A new phone restores everything in one tap — nothing ever leaves your device otherwise.</p>
+        </div>
+
+        <!-- PRO LICENSE SECTION -->
+        <div class="mt-5 border-t-2 border-slateline pt-4" id="proSection">
+          <!-- populated by JS based on isPro() -->
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ============ SECTION 2: CLIENT & JOB SITE ============ -->
+    <section class="bg-slatecard rounded-2xl border border-slateline p-4 sm:p-5">
+      <h2 class="text-sm font-extrabold tracking-[0.15em] text-blueprintsoft uppercase mb-4">1 · Client &amp; Job Site</h2>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <label for="clientName" class="block text-sm font-bold text-slate-300 mb-1.5">Client Name</label>
+          <input id="clientName" type="text" placeholder="e.g., Sarah Donnelly"
+            class="w-full h-14 px-4 text-lg font-semibold rounded-xl bg-ink border-2 border-slateline text-white" />
+        </div>
+        <div>
+          <label for="jobAddress" class="block text-sm font-bold text-slate-300 mb-1.5">Job Site Address</label>
+          <input id="jobAddress" type="text" placeholder="e.g., 412 Cedar Hollow Rd, Little Rock, AR"
+            class="w-full h-14 px-4 text-lg font-semibold rounded-xl bg-ink border-2 border-slateline text-white" />
+        </div>
+      </div>
+      <p class="text-xs text-slate-400 font-semibold mt-3">Your company info and logo come from Business Settings above — no retyping.</p>
+    </section>
+
+    <!-- ============ SECTION 3: CHANGE DESCRIPTION ============ -->
+    <section class="bg-slatecard rounded-2xl border border-slateline p-4 sm:p-5">
+      <h2 class="text-sm font-extrabold tracking-[0.15em] text-blueprintsoft uppercase mb-4">2 · Change Description</h2>
+      <label for="changeDesc" class="block text-sm font-bold text-slate-300 mb-1.5">Describe the change in plain language</label>
+      <textarea id="changeDesc" rows="4" placeholder="e.g., Client requests relocating the kitchen pass-through wall 18 inches east. Requires new header, reroute of two circuits, and drywall patch on both faces."
+        class="w-full px-4 py-3 text-lg font-medium rounded-xl bg-ink border-2 border-slateline text-white leading-relaxed"></textarea>
+      <p class="text-xs font-bold text-slate-400 mt-3 mb-2 uppercase tracking-wider">Quick insert</p>
+      <div class="flex flex-wrap gap-2">
+        <button type="button" data-chip="Additional labor required beyond original scope of work. " class="chip h-12 px-4 rounded-xl bg-ink border-2 border-blueprint text-blueprintsoft font-bold text-sm active:bg-blueprint active:text-white">+ Additional labor</button>
+        <button type="button" data-chip="Material substitution approved by client at adjusted cost. " class="chip h-12 px-4 rounded-xl bg-ink border-2 border-blueprint text-blueprintsoft font-bold text-sm active:bg-blueprint active:text-white">+ Material substitution</button>
+        <button type="button" data-chip="Scope addition: work not included in the original contract. " class="chip h-12 px-4 rounded-xl bg-ink border-2 border-blueprint text-blueprintsoft font-bold text-sm active:bg-blueprint active:text-white">+ Scope addition</button>
+        <button type="button" data-chip="Client-requested revision to plans/specifications dated on the original agreement. " class="chip h-12 px-4 rounded-xl bg-ink border-2 border-blueprint text-blueprintsoft font-bold text-sm active:bg-blueprint active:text-white">+ Client-requested revision</button>
+        <button type="button" data-chip="Concealed/unforeseen condition discovered during work, requiring corrective action. " class="chip h-12 px-4 rounded-xl bg-ink border-2 border-blueprint text-blueprintsoft font-bold text-sm active:bg-blueprint active:text-white">+ Unforeseen condition</button>
+      </div>
+    </section>
+
+    <!-- ============ SECTION 4: LINE ITEMS & PRICING ============ -->
+    <section class="bg-slatecard rounded-2xl border border-slateline p-4 sm:p-5">
+      <h2 class="text-sm font-extrabold tracking-[0.15em] text-blueprintsoft uppercase mb-4">3 · Line Items &amp; Pricing</h2>
+
+      <div id="lineItems" class="space-y-3"></div>
+
+      <button id="addItemBtn" type="button"
+        class="mt-4 w-full h-14 rounded-xl bg-safety text-ink text-lg font-extrabold tracking-wide active:bg-safetydeep">
+        + ADD LINE ITEM
+      </button>
+
+      <div id="favWrap" class="hidden mt-4">
+        <div class="flex items-center justify-between mb-2">
+          <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">Saved items — tap to add</p>
+          <button type="button" id="favEditBtn"
+            class="h-10 px-4 rounded-lg border-2 border-slateline text-slate-300 text-sm font-bold active:border-red-500 active:text-red-400">Edit</button>
+        </div>
+        <div id="favChips" class="flex flex-wrap gap-2"></div>
+        <p class="text-xs text-slate-400 font-semibold mt-2">Tap ☆ on any line item to save it here for one-tap reuse on future COs.</p>
+      </div>
+
+      <div class="mt-6 space-y-3 border-t-2 border-slateline pt-5">
+        <div class="flex items-center justify-between">
+          <span class="text-base font-bold text-slate-300">Subtotal</span>
+          <span id="subtotalOut" class="text-xl font-extrabold text-white">$0.00</span>
+        </div>
+
+        <div class="flex items-center justify-between gap-3">
+          <span class="text-base font-bold text-slate-300">Markup</span>
+          <div class="flex items-center gap-2">
+            <button type="button" id="markupMinus" class="h-12 w-12 rounded-xl bg-ink border-2 border-slateline text-2xl font-extrabold text-blueprintsoft active:border-blueprint">−</button>
+            <div class="relative">
+              <input id="markupPct" type="number" inputmode="decimal" step="0.5" min="0" max="100" value="15"
+                class="h-12 w-20 text-center text-lg font-extrabold rounded-xl bg-ink border-2 border-slateline text-white pr-6" />
+              <span class="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 font-bold">%</span>
+            </div>
+            <button type="button" id="markupPlus" class="h-12 w-12 rounded-xl bg-ink border-2 border-slateline text-2xl font-extrabold text-blueprintsoft active:border-blueprint">+</button>
+          </div>
+          <span id="markupOut" class="text-lg font-extrabold text-white w-24 text-right">$0.00</span>
+        </div>
+
+        <div class="flex items-center justify-between gap-3">
+          <span class="text-base font-bold text-slate-300">Tax <span class="text-xs text-slate-500 font-semibold">(from Settings)</span></span>
+          <div class="flex items-center gap-2">
+            <button type="button" id="taxMinus" class="h-12 w-12 rounded-xl bg-ink border-2 border-slateline text-2xl font-extrabold text-blueprintsoft active:border-blueprint">−</button>
+            <div class="relative">
+              <input id="taxPct" type="number" inputmode="decimal" step="0.5" min="0" max="100" value="0"
+                class="h-12 w-20 text-center text-lg font-extrabold rounded-xl bg-ink border-2 border-slateline text-white pr-6" />
+              <span class="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 font-bold">%</span>
+            </div>
+            <button type="button" id="taxPlus" class="h-12 w-12 rounded-xl bg-ink border-2 border-slateline text-2xl font-extrabold text-blueprintsoft active:border-blueprint">+</button>
+          </div>
+          <span id="taxOut" class="text-lg font-extrabold text-white w-24 text-right">$0.00</span>
+        </div>
+
+        <div class="flex items-end justify-between bg-ink rounded-2xl border-2 border-safety px-4 py-4 mt-2">
+          <span class="text-sm font-extrabold tracking-[0.2em] text-slate-300 uppercase pb-1">Grand Total</span>
+          <span id="grandOut" class="text-4xl sm:text-5xl font-black text-safety leading-none">$0.00</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ SECTION 5: SCHEDULE IMPACT ============ -->
+    <section class="bg-slatecard rounded-2xl border border-slateline p-4 sm:p-5">
+      <h2 class="text-sm font-extrabold tracking-[0.15em] text-blueprintsoft uppercase mb-4">4 · Schedule Impact</h2>
+      <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <p class="text-base font-semibold text-slate-200 leading-snug">Days added to project timeline</p>
+        <div class="flex items-center gap-3">
+          <button type="button" id="daysMinus" class="h-14 w-14 rounded-xl bg-ink border-2 border-slateline text-3xl font-extrabold text-blueprintsoft active:border-blueprint">−</button>
+          <span id="daysOut" class="text-4xl font-black text-white w-16 text-center tabular-nums">0</span>
+          <button type="button" id="daysPlus" class="h-14 w-14 rounded-xl bg-ink border-2 border-slateline text-3xl font-extrabold text-blueprintsoft active:border-blueprint">+</button>
+        </div>
+      </div>
+      <p class="text-sm text-slate-400 font-medium mt-3">Substantial completion date shifts by this many calendar days upon approval.</p>
+    </section>
+
+    <!-- ============ SECTION 6: APPROVAL & SIGNATURES ============ -->
+    <section class="bg-slatecard rounded-2xl border border-slateline p-4 sm:p-5">
+      <h2 class="text-sm font-extrabold tracking-[0.15em] text-blueprintsoft uppercase mb-4">5 · Approval &amp; Signatures</h2>
+      <p class="text-sm text-slate-300 font-medium leading-relaxed bg-ink border border-slateline rounded-xl p-4 mb-5">
+        By signing below, the Client authorizes the work described in this Change Order, agrees to the Grand Total shown above as an adjustment to the contract price, and accepts the stated schedule impact. This Change Order becomes part of the original construction agreement.
+      </p>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+        <div>
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-sm font-extrabold text-white uppercase tracking-wider">Client Signature</span>
+            <button type="button" id="clearClient" class="h-10 px-4 rounded-lg border-2 border-slateline text-slate-300 text-sm font-bold active:border-safety active:text-safety">Clear</button>
+          </div>
+          <canvas id="sigClient" class="sigpad w-full h-40 rounded-xl bg-ink border-2 border-dashed border-blueprint"></canvas>
+        </div>
+        <div>
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-sm font-extrabold text-white uppercase tracking-wider">Contractor Signature</span>
+            <button type="button" id="clearContractor" class="h-10 px-4 rounded-lg border-2 border-slateline text-slate-300 text-sm font-bold active:border-safety active:text-safety">Clear</button>
+          </div>
+          <canvas id="sigContractor" class="sigpad w-full h-40 rounded-xl bg-ink border-2 border-dashed border-blueprint"></canvas>
+        </div>
+      </div>
+      <p class="text-xs text-slate-400 font-semibold mt-3">Sign with a finger or stylus. The page will not scroll while signing.</p>
+    </section>
+
+    <!-- ============ SECTION 7: CHANGE ORDER LOG ============ -->
+    <section class="bg-slatecard rounded-2xl border border-slateline p-4 sm:p-5">
+      <button type="button" id="logToggle" class="w-full flex items-center justify-between gap-3">
+        <span class="text-sm font-extrabold tracking-[0.15em] text-blueprintsoft uppercase text-left">📋 Change Order Log <span id="logCount" class="text-slate-400 normal-case tracking-normal font-semibold"></span></span>
+        <span id="logChevron" class="text-blueprintsoft text-2xl font-extrabold leading-none select-none">▾</span>
+      </button>
+      <div id="logBody" class="mt-4">
+        <p id="logEmpty" class="text-sm text-slate-400 font-semibold">No change orders saved yet. Every CO is logged here automatically the moment you generate its PDF.</p>
+        <div id="logList" class="space-y-3"></div>
+      </div>
+    </section>
+
+    <!-- ============ SECTION 8: HELP & FAQ ============ -->
+    <section class="bg-slatecard rounded-2xl border border-slateline p-4 sm:p-5">
+      <button type="button" id="helpToggle" class="w-full flex items-center justify-between gap-3 py-3 min-h-[52px]">
+        <span class="text-sm font-extrabold tracking-[0.15em] text-blueprintsoft uppercase text-left">❓ Help &amp; How-To</span>
+        <span id="helpChevron" class="text-blueprintsoft text-2xl font-extrabold leading-none select-none">▾</span>
+      </button>
+      <div id="helpBody" class="mt-4 space-y-5">
+
+        <div class="bg-ink rounded-xl border border-slateline p-4">
+          <p class="text-xs font-extrabold text-safety uppercase tracking-widest mb-1">01 · Most Important</p>
+          <p class="text-sm font-extrabold text-white mb-1">Why does my CO log only show one entry even after multiple jobs?</p>
+          <p class="text-sm text-slate-300 font-medium leading-relaxed">Every change order gets its own unique number. You must tap <span class="text-safety font-extrabold">RESET / NEW CO</span> between jobs — that increments the number from -001 to -002 and so on. If you skip RESET and fill in a new job over the old one, both COs share the same number and the log updates the first entry instead of adding a new one. Think of RESET as "tearing off the old form."</p>
+        </div>
+
+        <div class="bg-ink rounded-xl border border-slateline p-4">
+          <p class="text-xs font-extrabold text-safety uppercase tracking-widest mb-1">02 · Workflow</p>
+          <p class="text-sm font-extrabold text-white mb-1">What's the difference between REOPEN and DUPLICATE?</p>
+          <p class="text-sm text-slate-300 font-medium leading-relaxed"><span class="text-blueprintsoft font-extrabold">REOPEN</span> loads the exact CO back — same number, same date, same signatures — so you can add the client signature later and regenerate a SIGNED version. <span class="text-safety font-extrabold">DUPLICATE</span> copies all the line items and description into a brand-new CO number with blank signatures. Use it for repeat work at the same property or for a similar job with a different client.</p>
+        </div>
+
+        <div class="bg-ink rounded-xl border border-slateline p-4">
+          <p class="text-xs font-extrabold text-safety uppercase tracking-widest mb-1">03 · Signatures</p>
+          <p class="text-sm font-extrabold text-white mb-1">My client wasn't on site. How do I get their signature later?</p>
+          <p class="text-sm text-slate-300 font-medium leading-relaxed">Generate the PDF now — it saves as a DRAFT with a watermark. Send it to the client however you like. When they're ready to sign in person, scroll down to the Change Order Log, tap <span class="text-blueprintsoft font-extrabold">REOPEN</span> on that CO, have them sign the Client Signature pad, then tap <span class="text-safety font-extrabold">GENERATE PDF</span> again. The new PDF will say SIGNED, the watermark disappears, and the log entry updates automatically.</p>
+        </div>
+
+        <div class="bg-ink rounded-xl border border-slateline p-4">
+          <p class="text-xs font-extrabold text-safety uppercase tracking-widest mb-1">04 · Saved Items</p>
+          <p class="text-sm font-extrabold text-white mb-1">How do I save a line item for reuse?</p>
+          <p class="text-sm text-slate-300 font-medium leading-relaxed">Fill in the item description and unit cost, then tap the <span class="text-safety font-extrabold">☆</span> star button on that row. It saves instantly and appears as an orange chip below the ADD LINE ITEM button. On any future CO, tap the chip and it drops into a new line item with qty 1. Tap <span class="text-blueprintsoft font-extrabold">Edit</span> next to "Saved items" to delete any you no longer need.</p>
+        </div>
+
+        <div class="bg-ink rounded-xl border border-slateline p-4">
+          <p class="text-xs font-extrabold text-safety uppercase tracking-widest mb-1">05 · Your Data</p>
+          <p class="text-sm font-extrabold text-white mb-1">Is my data safe if I get a new phone?</p>
+          <p class="text-sm text-slate-300 font-medium leading-relaxed">Everything — settings, logo, saved items, and your full CO history — lives only on your device. To move it to a new phone, open Business Settings, tap <span class="text-blueprintsoft font-extrabold">DOWNLOAD BACKUP</span>, and save the file to your cloud storage or email it to yourself. On the new phone, open the app, go to Business Settings, tap <span class="text-blueprintsoft font-extrabold">RESTORE BACKUP</span>, and select that file. Done. Nothing ever passes through any server.</p>
+        </div>
+
+        <div class="bg-ink rounded-xl border border-slateline p-4">
+          <p class="text-xs font-extrabold text-safety uppercase tracking-widest mb-1">06 · Offline Use</p>
+          <p class="text-sm font-extrabold text-white mb-1">Does this work with no cell service?</p>
+          <p class="text-sm text-slate-300 font-medium leading-relaxed">Yes — 100%. Once the app has loaded on your device, it works in concrete basements, metal buildings, and dead zones. All calculations, PDF generation, and saving happen entirely on your phone. No internet connection is ever required to use the app.</p>
+        </div>
+
+        <div class="border-t-2 border-slateline pt-4">
+          <p class="text-sm font-extrabold text-white mb-1">Found a bug or have a feature request?</p>
+          <p class="text-sm text-slate-400 font-medium mb-3">Tap below to send an email with your device info pre-filled. The more detail the better — screenshots help a lot.</p>
+          <button type="button" id="bugReportBtn"
+            class="w-full h-14 rounded-xl bg-ink border-2 border-blueprint text-blueprintsoft font-extrabold text-sm tracking-wide active:bg-blueprint active:text-white">
+            ✉ REPORT A BUG / REQUEST A FEATURE
+          </button>
+          <p class="text-xs text-slate-500 font-semibold mt-2 text-center">Opens your email app · digitalforemansuite@gmail.com</p>
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ============ STICKY FOOTER ============ -->
+  <footer class="fixed bottom-0 inset-x-0 z-40 bg-ink/95 backdrop-blur border-t-2 border-slateline">
+    <div class="max-w-3xl mx-auto px-4 py-3 grid grid-cols-5 gap-3">
+      <button type="button" id="resetBtn"
+        class="col-span-2 h-16 rounded-xl border-2 border-slateline text-slate-300 font-extrabold text-sm tracking-wide leading-tight active:border-safety active:text-safety">
+        RESET /<br/>NEW CO
+      </button>
+      <button type="button" id="pdfBtn"
+        class="col-span-3 h-16 rounded-xl bg-safety text-ink text-sm sm:text-base font-black tracking-wide leading-tight active:bg-safetydeep">
+        GENERATE PDF<br>CHANGE ORDER
+      </button>
+    </div>
+  </footer>
+
+<!-- UPGRADE MODAL — must be in DOM before the main script runs -->
+<div id="upgradeModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-ink/90 p-4" role="dialog" aria-modal="true">
+  <div class="bg-slatecard rounded-2xl border-2 border-safety p-6 max-w-sm w-full shadow-2xl">
+    <p class="text-safety font-extrabold text-lg mb-1">⚡ Go Pro — $14.99 one-time</p>
+    <p class="text-slate-300 text-sm mb-5">Your logo on every PDF. No footer branding. Pay once, yours forever — no subscription, no cloud, no account.</p>
+    <div class="space-y-2 text-sm text-slate-300 mb-5">
+      <p>✓ Custom company logo on all PDFs</p>
+      <p>✓ "Created free" footer removed</p>
+      <p>✓ Works 100% offline — same as free</p>
+      <p>✓ One-time payment · No recurring fees</p>
+    </div>
+    <a href="https://digitalforemansuite.com/pro" target="_blank" rel="noopener"
+       class="block w-full h-14 rounded-xl bg-safety text-ink font-black text-center text-lg leading-[3.5rem] mb-3">
+      UPGRADE TO PRO — $14.99
+    </a>
+    <button id="upgradeModalClose" type="button"
+       class="w-full h-12 rounded-xl border-2 border-slateline text-slate-400 font-bold text-sm">
+      Not now
+    </button>
+    <p class="text-xs text-slate-500 text-center mt-3">Already have a license key? Go to Business Settings to activate it.</p>
+  </div>
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  var SETTINGS_KEY = 'dfs.businessSettings.v1';
+  var COUNTER_KEY  = 'dfs.coCounter.v1';
+  var FAV_KEY      = 'dfs.favorites.v1';
+  var LOG_KEY      = 'dfs.coLog.v1';
+  var LOG_CAP      = 30;
+  var PRO_KEY      = 'dfs.pro.v1';
+
+  function storageGet(key) {
+    try { return window.localStorage.getItem(key); } catch (e) { return null; }
+  }
+  function storageSet(key, value) {
+    try { window.localStorage.setItem(key, value); return true; } catch (e) { return false; }
+  }
+  function isPro() {
+    try { var p = JSON.parse(storageGet(PRO_KEY) || 'null'); return !!(p && p.verified === true); } catch(e) { return false; }
+  }
+  function activatePro(key) {
+    storageSet(PRO_KEY, JSON.stringify({ key: key, verified: true, activatedAt: new Date().toISOString() }));
+  }
+
+  /* ── SETTINGS ── */
+  var settings = { companyName: '', phone: '', email: '', taxRate: 0, logo: null };
+
+  function loadSettings() {
+    var raw = storageGet(SETTINGS_KEY);
+    if (!raw) return false;
+    try { applySettingsObject(JSON.parse(raw)); return true; } catch (e) { return false; }
+  }
+  function applySettingsObject(p) {
+    settings.companyName = typeof p.companyName === 'string' ? p.companyName : '';
+    settings.phone       = typeof p.phone === 'string' ? p.phone : '';
+    settings.email       = typeof p.email === 'string' ? p.email : '';
+    settings.taxRate     = isFinite(parseFloat(p.taxRate)) ? parseFloat(p.taxRate) : 0;
+    settings.logo        = (p.logo && typeof p.logo.dataUrl === 'string') ? p.logo : null;
+  }
+  function persistSettings() { return storageSet(SETTINGS_KEY, JSON.stringify(settings)); }
+
+  var setCompany      = document.getElementById('setCompany');
+  var setPhone        = document.getElementById('setPhone');
+  var setEmail        = document.getElementById('setEmail');
+  var setTax          = document.getElementById('setTax');
+  var settingsStatus  = document.getElementById('settingsStatus');
+  var headerBrand     = document.getElementById('headerBrand');
+  var logoFileInput   = document.getElementById('logoFile');
+  var logoPickBtn     = document.getElementById('logoPickBtn');
+  var logoRemoveBtn   = document.getElementById('logoRemoveBtn');
+  var logoPreviewWrap = document.getElementById('logoPreviewWrap');
+  var logoPreview     = document.getElementById('logoPreview');
+
+  function settingsToForm() {
+    setCompany.value = settings.companyName;
+    setPhone.value   = settings.phone;
+    setEmail.value   = settings.email;
+    setTax.value     = settings.taxRate || '';
+    renderLogoPreview();
+    renderBrand();
+  }
+  function formToSettings() {
+    settings.companyName = setCompany.value.trim();
+    settings.phone       = setPhone.value.trim();
+    settings.email       = setEmail.value.trim();
+    var tr = parseFloat(setTax.value);
+    settings.taxRate = (isFinite(tr) && tr >= 0) ? Math.min(100, tr) : 0;
+  }
+  function renderBrand() {
+    headerBrand.textContent = settings.companyName || 'Digital Foreman Suite';
+  }
+  function renderLogoPreview() {
+    if (settings.logo && settings.logo.dataUrl) {
+      logoPreview.src = settings.logo.dataUrl;
+      logoPreviewWrap.classList.remove('hidden');
+      logoPreviewWrap.classList.add('flex');
+      logoRemoveBtn.classList.remove('hidden');
+      logoPickBtn.textContent = 'REPLACE LOGO';
+    } else {
+      logoPreview.removeAttribute('src');
+      logoPreviewWrap.classList.add('hidden');
+      logoPreviewWrap.classList.remove('flex');
+      logoRemoveBtn.classList.add('hidden');
+      logoPickBtn.textContent = 'UPLOAD LOGO';
+    }
+  }
+  function flashSettingsStatus(msg, ok) {
+    settingsStatus.textContent = msg;
+    settingsStatus.className = 'text-sm font-bold mt-3 text-center ' + (ok ? 'text-green-400' : 'text-red-400');
+  }
+
+  logoPickBtn.addEventListener('click', function () { logoFileInput.click(); });
+  logoFileInput.addEventListener('change', function () {
+    var file = logoFileInput.files && logoFileInput.files[0];
+    if (!file) return;
+    if (!/^image\/(png|jpeg|webp|svg\+xml)$/.test(file.type)) {
+      flashSettingsStatus('Please choose a PNG, JPG, WebP, or SVG image.', false); return;
+    }
+    var reader = new FileReader();
+    reader.onload = function () {
+      var img = new Image();
+      img.onload = function () {
+        var MAX_W = 600, MAX_H = 300;
+        var scale = Math.min(1, MAX_W / img.naturalWidth, MAX_H / img.naturalHeight);
+        var w = Math.max(1, Math.round(img.naturalWidth * scale));
+        var h = Math.max(1, Math.round(img.naturalHeight * scale));
+        var c = document.createElement('canvas');
+        c.width = w; c.height = h;
+        var cx = c.getContext('2d');
+        cx.fillStyle = '#ffffff';
+        cx.fillRect(0, 0, w, h);
+        cx.drawImage(img, 0, 0, w, h);
+        settings.logo = { dataUrl: c.toDataURL('image/png'), w: w, h: h };
+        renderLogoPreview();
+        flashSettingsStatus('Logo loaded — tap SAVE BUSINESS SETTINGS to keep it.', true);
+      };
+      img.onerror = function () { flashSettingsStatus('Could not read that image file.', false); };
+      img.src = reader.result;
+    };
+    reader.onerror = function () { flashSettingsStatus('Could not read that file.', false); };
+    reader.readAsDataURL(file);
+    logoFileInput.value = '';
+  });
+  logoRemoveBtn.addEventListener('click', function () {
+    settings.logo = null;
+    renderLogoPreview();
+    flashSettingsStatus('Logo removed — tap SAVE BUSINESS SETTINGS to confirm.', true);
+  });
+  document.getElementById('saveSettingsBtn').addEventListener('click', function () {
+    formToSettings();
+    var ok = persistSettings();
+    renderBrand();
+    taxInput.value = settings.taxRate;
+    recalc();
+    flashSettingsStatus(ok
+      ? '✓ Saved. Your info and logo now load automatically on this device.'
+      : 'Saved for this session only — storage is blocked in this browser mode (e.g., private browsing).', ok);
+  });
+
+  var settingsBody    = document.getElementById('settingsBody');
+  var settingsChevron = document.getElementById('settingsChevron');
+  document.getElementById('settingsToggle').addEventListener('click', function () {
+    var hidden = settingsBody.classList.toggle('hidden');
+    settingsChevron.textContent = hidden ? '▸' : '▾';
+  });
+
+  /* ── CO NUMBER / DATE / STATUS ── */
+  var coCounter = (function () {
+    var saved = parseInt(storageGet(COUNTER_KEY), 10);
+    return (isFinite(saved) && saved > 0) ? saved : 1;
+  })();
+  var coOverride = null;
+  var coNumberEl = document.getElementById('coNumber');
+  var coDateEl   = document.getElementById('coDate');
+  var statusPill = document.getElementById('statusPill');
+
+  function todayStamp() {
+    var d = new Date();
+    return d.getFullYear() + String(d.getMonth()+1).padStart(2,'0') + String(d.getDate()).padStart(2,'0');
+  }
+  function todayPretty() {
+    return new Date().toLocaleDateString('en-US', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+  }
+  function currentCONumber()     { return coOverride ? coOverride.number     : 'CO-' + todayStamp() + '-' + String(coCounter).padStart(3,'0'); }
+  function currentCODatePretty() { return coOverride ? coOverride.datePretty : todayPretty(); }
+  function refreshHeader() {
+    coNumberEl.textContent = currentCONumber();
+    coDateEl.textContent   = currentCODatePretty();
+  }
+  function setStatus(signed) {
+    if (signed) {
+      statusPill.textContent = 'SIGNED';
+      statusPill.className = 'shrink-0 px-4 py-2 rounded-full text-sm font-extrabold tracking-wide bg-green-500/20 text-green-400 border-2 border-green-400';
+    } else {
+      statusPill.textContent = 'DRAFT';
+      statusPill.className = 'shrink-0 px-4 py-2 rounded-full text-sm font-extrabold tracking-wide bg-safety/20 text-safety border-2 border-safety';
+    }
+  }
+
+  /* ── MONEY HELPERS ── */
+  function fmt(n) {
+    if (!isFinite(n)) n = 0;
+    return n.toLocaleString('en-US', { style:'currency', currency:'USD' });
+  }
+  function num(v) { var n = parseFloat(v); return isFinite(n) ? n : 0; }
+
+  /* ── LINE ITEMS ──
+     FIX 2: description input gets proper flex min-w-0 so it takes all
+     available space. Buttons are explicitly flex-none/shrink-0.
+     Font size drops to text-sm (14px) so longer words like "Materials"
+     or "Framing" display fully without clipping on a 360px screen.     */
+  var lineItemsEl = document.getElementById('lineItems');
+
+  function addLineItem(desc, qty, cost) {
+    var row = document.createElement('div');
+    row.className = 'lineItem bg-ink rounded-xl border-2 border-slateline p-3';
+    row.innerHTML =
+      '<div style="display:flex;gap:8px;align-items:center;">' +
+        '<input type="text" data-field="desc" placeholder="Item description (e.g., 2x10 LVL header, 8 ft)" ' +
+          'style="flex:1;min-width:0;" ' +
+          'class="h-12 px-3 text-base font-semibold rounded-lg bg-slatecard border-2 border-slateline text-white" />' +
+        '<button type="button" data-action="fav" aria-label="Save item for reuse" title="Save this item for reuse" ' +
+          'style="flex:none;width:48px;height:48px;" ' +
+          'class="rounded-lg border-2 border-slateline text-safety text-xl font-extrabold active:border-safety">☆</button>' +
+        '<button type="button" data-action="delete" aria-label="Delete line item" ' +
+          'style="flex:none;width:48px;height:48px;" ' +
+          'class="rounded-lg border-2 border-slateline text-slate-400 text-xl font-extrabold active:border-red-500 active:text-red-400">✕</button>' +
+      '</div>' +
+      '<div class="grid grid-cols-3 gap-2 mt-2 items-end">' +
+        '<div>' +
+          '<label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">Qty</label>' +
+          '<input type="number" data-field="qty" inputmode="decimal" min="0" step="any" placeholder="0" ' +
+            'class="w-full h-14 px-3 text-lg font-extrabold rounded-lg bg-slatecard border-2 border-slateline text-white text-center" />' +
+        '</div>' +
+        '<div>' +
+          '<label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">Unit Cost $</label>' +
+          '<input type="number" data-field="cost" inputmode="decimal" min="0" step="any" placeholder="0.00" ' +
+            'class="w-full h-14 px-3 text-lg font-extrabold rounded-lg bg-slatecard border-2 border-slateline text-white text-center" />' +
+        '</div>' +
+        '<div class="text-right pb-1">' +
+          '<span class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">Line Total</span>' +
+          '<span data-field="total" class="text-xl font-black text-blueprintsoft tabular-nums">$0.00</span>' +
+        '</div>' +
+      '</div>';
+    lineItemsEl.appendChild(row);
+    if (typeof desc === 'string') row.querySelector('[data-field="desc"]').value = desc;
+    if (qty  !== undefined) row.querySelector('[data-field="qty"]').value  = qty;
+    if (cost !== undefined) row.querySelector('[data-field="cost"]').value = cost;
+    recalc();
+  }
+
+  document.getElementById('addItemBtn').addEventListener('click', function () {
+    addLineItem();
+    var rows = lineItemsEl.querySelectorAll('.lineItem');
+    rows[rows.length - 1].querySelector('[data-field="desc"]').focus();
+  });
+  lineItemsEl.addEventListener('click', function (e) {
+    var del = e.target.closest('[data-action="delete"]');
+    if (del) { del.closest('.lineItem').remove(); recalc(); return; }
+    var fav = e.target.closest('[data-action="fav"]');
+    if (fav) saveFavoriteFromRow(fav.closest('.lineItem'), fav);
+  });
+  lineItemsEl.addEventListener('input', recalc);
+
+  /* ── FAVORITES ── */
+  var favorites   = [];
+  var favWrap     = document.getElementById('favWrap');
+  var favChips    = document.getElementById('favChips');
+  var favEditBtn  = document.getElementById('favEditBtn');
+  var favEditMode = false;
+
+  function loadFavorites() {
+    var raw = storageGet(FAV_KEY);
+    if (!raw) return;
+    try {
+      var p = JSON.parse(raw);
+      if (Array.isArray(p)) {
+        favorites = p.filter(function (f) { return f && typeof f.desc === 'string' && f.desc.length > 0; })
+                     .map(function (f) { return { desc: f.desc, cost: num(f.cost) }; });
+      }
+    } catch (e) { favorites = []; }
+  }
+  function persistFavorites() { storageSet(FAV_KEY, JSON.stringify(favorites)); }
+  function renderFavorites() {
+    favChips.innerHTML = '';
+    if (favorites.length === 0) {
+      favWrap.classList.add('hidden'); favEditMode = false; favEditBtn.textContent = 'Edit'; return;
+    }
+    favWrap.classList.remove('hidden');
+    favorites.forEach(function (f, i) {
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.className = favEditMode
+        ? 'h-12 px-4 rounded-xl bg-ink border-2 border-red-500 text-red-400 font-bold text-sm'
+        : 'h-12 px-4 rounded-xl bg-ink border-2 border-safety text-safety font-bold text-sm active:bg-safety active:text-ink';
+      b.textContent = (favEditMode ? '✕ ' : '+ ') + f.desc + '  ·  ' + fmt(f.cost);
+      b.addEventListener('click', function () {
+        if (favEditMode) { favorites.splice(i,1); persistFavorites(); renderFavorites(); }
+        else             { addLineItem(f.desc, 1, f.cost || undefined); }
+      });
+      favChips.appendChild(b);
+    });
+  }
+  favEditBtn.addEventListener('click', function () {
+    favEditMode = !favEditMode;
+    favEditBtn.textContent = favEditMode ? 'Done' : 'Edit';
+    renderFavorites();
+  });
+  function saveFavoriteFromRow(row, btn) {
+    var desc = row.querySelector('[data-field="desc"]').value.trim();
+    var cost = num(row.querySelector('[data-field="cost"]').value);
+    if (!desc) { btn.textContent = '!'; setTimeout(function () { btn.textContent = '☆'; }, 900); return; }
+    var exists = favorites.some(function (f) { return f.desc === desc && f.cost === cost; });
+    if (!exists) {
+      favorites.unshift({ desc: desc, cost: cost });
+      if (favorites.length > 50) favorites.pop();
+      persistFavorites(); renderFavorites();
+    }
+    btn.textContent = '★';
+    setTimeout(function () { btn.textContent = '☆'; }, 1200);
+  }
+
+  /* ── CALCULATION ── */
+  var markupInput = document.getElementById('markupPct');
+  var taxInput    = document.getElementById('taxPct');
+  var subtotalOut = document.getElementById('subtotalOut');
+  var markupOut   = document.getElementById('markupOut');
+  var taxOut      = document.getElementById('taxOut');
+  var grandOut    = document.getElementById('grandOut');
+
+  function readItems() {
+    var items = [];
+    lineItemsEl.querySelectorAll('.lineItem').forEach(function (row) {
+      var desc  = row.querySelector('[data-field="desc"]').value.trim();
+      var qty   = num(row.querySelector('[data-field="qty"]').value);
+      var cost  = num(row.querySelector('[data-field="cost"]').value);
+      var total = qty * cost;
+      row.querySelector('[data-field="total"]').textContent = fmt(total);
+      items.push({ desc: desc, qty: qty, cost: cost, total: total });
+    });
+    return items;
+  }
+  function computeTotals() {
+    var items     = readItems();
+    var subtotal  = items.reduce(function (s, it) { return s + it.total; }, 0);
+    var markupPct = Math.max(0, num(markupInput.value));
+    var taxPct    = Math.max(0, num(taxInput.value));
+    var markup    = subtotal * (markupPct / 100);
+    var tax       = (subtotal + markup) * (taxPct / 100);
+    var grand     = subtotal + markup + tax;
+    return { items: items, subtotal: subtotal, markupPct: markupPct, markup: markup, taxPct: taxPct, tax: tax, grand: grand };
+  }
+  function recalc() {
+    var t = computeTotals();
+    subtotalOut.textContent = fmt(t.subtotal);
+    markupOut.textContent   = fmt(t.markup);
+    taxOut.textContent      = fmt(t.tax);
+    grandOut.textContent    = fmt(t.grand);
+  }
+  function bindStepper(minusId, plusId, input, step, min, max, after) {
+    document.getElementById(minusId).addEventListener('click', function () { input.value = Math.max(min, num(input.value) - step); after(); });
+    document.getElementById(plusId).addEventListener('click',  function () { input.value = Math.min(max, num(input.value) + step); after(); });
+    input.addEventListener('input', after);
+  }
+  bindStepper('markupMinus', 'markupPlus', markupInput, 1,   0, 100, recalc);
+  bindStepper('taxMinus',    'taxPlus',    taxInput,    0.5, 0, 100, recalc);
+
+  /* ── QUICK-INSERT CHIPS ── */
+  var descBox = document.getElementById('changeDesc');
+  document.querySelectorAll('.chip').forEach(function (chip) {
+    chip.addEventListener('click', function () {
+      var text = chip.getAttribute('data-chip');
+      var cur  = descBox.value;
+      if (cur.length > 0 && !/\s$/.test(cur)) cur += ' ';
+      descBox.value = cur + text;
+      descBox.dispatchEvent(new Event('input'));
+    });
+  });
+
+  /* ── SCHEDULE STEPPER ── */
+  var days    = 0;
+  var daysOut = document.getElementById('daysOut');
+  function renderDays() { daysOut.textContent = String(days); }
+  document.getElementById('daysMinus').addEventListener('click', function () { days = Math.max(0,   days - 1); renderDays(); });
+  document.getElementById('daysPlus').addEventListener('click',  function () { days = Math.min(365, days + 1); renderDays(); });
+  renderDays();
+
+  /* ── SIGNATURE PADS ── */
+  function SignaturePad(canvas, onChange) {
+    this.canvas  = canvas;
+    this.ctx     = canvas.getContext('2d');
+    this.strokes = [];
+    this.current = null;
+    this.onChange = onChange || function () {};
+    this.drawing  = false;
+    var self = this;
+
+    this.resize = function () {
+      var dpr  = window.devicePixelRatio || 1;
+      var rect = canvas.getBoundingClientRect();
+      canvas.width  = Math.max(1, Math.round(rect.width  * dpr));
+      canvas.height = Math.max(1, Math.round(rect.height * dpr));
+      self.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      self.redraw();
+    };
+    this.point = function (e) {
+      var rect = canvas.getBoundingClientRect();
+      return { x: e.clientX - rect.left, y: e.clientY - rect.top };
+    };
+    this.redraw = function () {
+      var rect = canvas.getBoundingClientRect();
+      self.ctx.clearRect(0, 0, rect.width, rect.height);
+      self.ctx.lineWidth = 2.5; self.ctx.lineCap = 'round'; self.ctx.lineJoin = 'round';
+      self.ctx.strokeStyle = '#f1f5f9';
+      self.strokes.forEach(function (stroke) {
+        if (!stroke.length) return;
+        self.ctx.beginPath();
+        self.ctx.moveTo(stroke[0].x, stroke[0].y);
+        if (stroke.length === 1) { self.ctx.lineTo(stroke[0].x + 0.1, stroke[0].y + 0.1); }
+        else { for (var i = 1; i < stroke.length; i++) self.ctx.lineTo(stroke[i].x, stroke[i].y); }
+        self.ctx.stroke();
+      });
+    };
+    this.isEmpty      = function () { return self.strokes.length === 0; };
+    this.clear        = function () { self.strokes = []; self.redraw(); self.onChange(); };
+    this.loadStrokes  = function (s) { self.strokes = Array.isArray(s) ? s : []; self.redraw(); self.onChange(); };
+    this.exportStrokes = function () {
+      return self.strokes.map(function (stroke) {
+        return stroke.map(function (p) { return { x: Math.round(p.x*10)/10, y: Math.round(p.y*10)/10 }; });
+      });
+    };
+    this.exportForPDF = function () {
+      if (self.isEmpty()) return null;
+      var rect = canvas.getBoundingClientRect();
+      var scale = 1.5;
+      var minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+      self.strokes.forEach(function (s) { s.forEach(function (p) {
+        if (p.x < minX) minX = p.x; if (p.y < minY) minY = p.y;
+        if (p.x > maxX) maxX = p.x; if (p.y > maxY) maxY = p.y;
+      }); });
+      var pad = 8;
+      minX = Math.max(0, minX-pad); minY = Math.max(0, minY-pad);
+      maxX = Math.min(rect.width, maxX+pad); maxY = Math.min(rect.height, maxY+pad);
+      var cropW = Math.max(1, maxX-minX), cropH = Math.max(1, maxY-minY);
+      var off = document.createElement('canvas');
+      off.width = Math.round(cropW*scale); off.height = Math.round(cropH*scale);
+      var octx = off.getContext('2d');
+      octx.fillStyle = '#ffffff'; octx.fillRect(0, 0, off.width, off.height);
+      octx.setTransform(scale, 0, 0, scale, -minX*scale, -minY*scale);
+      octx.lineWidth = 2; octx.lineCap = 'round'; octx.lineJoin = 'round'; octx.strokeStyle = '#1e3a8a';
+      self.strokes.forEach(function (s) {
+        if (!s.length) return;
+        octx.beginPath(); octx.moveTo(s[0].x, s[0].y);
+        if (s.length === 1) { octx.lineTo(s[0].x+0.1, s[0].y+0.1); }
+        else { for (var i = 1; i < s.length; i++) octx.lineTo(s[i].x, s[i].y); }
+        octx.stroke();
+      });
+      return { dataUrl: off.toDataURL('image/jpeg', 0.82), ratio: cropW/cropH };
+    };
+
+    canvas.addEventListener('pointerdown', function (e) {
+      e.preventDefault(); canvas.setPointerCapture(e.pointerId);
+      self.drawing = true; self.current = [self.point(e)]; self.strokes.push(self.current); self.redraw();
+    });
+    canvas.addEventListener('pointermove', function (e) {
+      if (!self.drawing) return; e.preventDefault();
+      var evts = (typeof e.getCoalescedEvents === 'function') ? e.getCoalescedEvents() : [e];
+      if (!evts.length) evts = [e];
+      for (var i = 0; i < evts.length; i++) self.current.push(self.point(evts[i]));
+      self.redraw();
+    });
+    function endStroke(e) {
+      if (!self.drawing) return; self.drawing = false; self.current = null;
+      try { canvas.releasePointerCapture(e.pointerId); } catch (err) {}
+      self.onChange();
+    }
+    canvas.addEventListener('pointerup', endStroke);
+    canvas.addEventListener('pointercancel', endStroke);
+    this.resize();
+  }
+
+  var clientPad, contractorPad;
+  function syncStatus() { setStatus(!clientPad.isEmpty()); }
+  clientPad     = new SignaturePad(document.getElementById('sigClient'),     function () { syncStatus(); });
+  contractorPad = new SignaturePad(document.getElementById('sigContractor'), function () {});
+  document.getElementById('clearClient').addEventListener('click',     function () { clientPad.clear(); });
+  document.getElementById('clearContractor').addEventListener('click', function () { contractorPad.clear(); });
+  var resizeTimer = null;
+  window.addEventListener('resize', function () {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(function () { clientPad.resize(); contractorPad.resize(); }, 150);
+  });
+
+  /* ── CO LOG ── */
+  var coLog     = [];
+  var logBody   = document.getElementById('logBody');
+  var logChevron = document.getElementById('logChevron');
+  var logList   = document.getElementById('logList');
+  var logEmpty  = document.getElementById('logEmpty');
+  var logCount  = document.getElementById('logCount');
+
+  document.getElementById('logToggle').addEventListener('click', function () {
+    var hidden = logBody.classList.toggle('hidden');
+    logChevron.textContent = hidden ? '▸' : '▾';
+  });
+  function loadLog() {
+    var raw = storageGet(LOG_KEY);
+    if (!raw) return;
+    try { var p = JSON.parse(raw); if (Array.isArray(p)) coLog = p; } catch (e) { coLog = []; }
+  }
+  function persistLog() {
+    var ok = storageSet(LOG_KEY, JSON.stringify(coLog));
+    if (!ok && coLog.length > 1) {
+      while (!ok && coLog.length > 1) { coLog.pop(); ok = storageSet(LOG_KEY, JSON.stringify(coLog)); }
+    }
+    return ok;
+  }
+  function snapshotCO() {
+    var t = computeTotals();
+    return {
+      coNumber: currentCONumber(), datePretty: currentCODatePretty(),
+      savedAt: new Date().toISOString(),
+      client: document.getElementById('clientName').value.trim(),
+      jobAddress: document.getElementById('jobAddress').value.trim(),
+      description: descBox.value,
+      items: t.items.map(function (it) { return { desc: it.desc, qty: it.qty, cost: it.cost }; }),
+      markupPct: t.markupPct, taxPct: t.taxPct, days: days, grand: t.grand,
+      signed: !clientPad.isEmpty(),
+      sigClient: clientPad.exportStrokes(), sigContractor: contractorPad.exportStrokes()
+    };
+  }
+  function saveToLog(rec) {
+    var idx = -1;
+    for (var i = 0; i < coLog.length; i++) { if (coLog[i].coNumber === rec.coNumber) { idx = i; break; } }
+    if (idx >= 0) coLog.splice(idx, 1);
+    coLog.unshift(rec);
+    while (coLog.length > LOG_CAP) coLog.pop();
+    persistLog(); renderLog();
+  }
+
+  function renderLog() {
+    logList.innerHTML = '';
+    logCount.textContent = coLog.length ? '— ' + coLog.length + ' saved' : '';
+    if (coLog.length === 0) { logEmpty.classList.remove('hidden'); return; }
+    logEmpty.classList.add('hidden');
+
+    coLog.forEach(function (rec, i) {
+      var card = document.createElement('div');
+      card.className = 'bg-ink rounded-xl border-2 border-slateline p-3';
+
+      var top = document.createElement('div');
+      top.className = 'flex items-start justify-between gap-2';
+
+      var info = document.createElement('div');
+      info.className = 'min-w-0 flex-1';
+
+      /*
+       * FIX 1 (log card): CO number on its own dedicated line in safety orange
+       * at a slightly smaller size — never truncated. Client name below it,
+       * which can truncate since the number is already fully visible.
+       */
+      var coNumLine = document.createElement('p');
+      coNumLine.className = 'text-xs font-extrabold text-safety tracking-tight leading-tight';
+      coNumLine.textContent = rec.coNumber;
+
+      var clientLine = document.createElement('p');
+      clientLine.className = 'text-sm font-extrabold text-white truncate mt-0.5';
+      clientLine.textContent = rec.client || '—';
+
+      var dateLine = document.createElement('p');
+      dateLine.className = 'text-xs text-slate-400 font-semibold truncate';
+      dateLine.textContent = (rec.datePretty || '') + (rec.jobAddress ? '  ·  ' + rec.jobAddress : '');
+
+      info.appendChild(coNumLine);
+      info.appendChild(clientLine);
+      info.appendChild(dateLine);
+
+      var right = document.createElement('div');
+      right.className = 'text-right shrink-0';
+      var amt = document.createElement('p');
+      amt.className = 'text-lg font-black text-safety leading-tight tabular-nums';
+      amt.textContent = fmt(rec.grand || 0);
+      var st = document.createElement('p');
+      st.className = rec.signed ? 'text-[11px] font-extrabold text-green-400 tracking-wide' : 'text-[11px] font-extrabold text-safety tracking-wide';
+      st.textContent = rec.signed ? 'SIGNED' : 'DRAFT';
+      right.appendChild(amt);
+      right.appendChild(st);
+
+      top.appendChild(info);
+      top.appendChild(right);
+
+      var actions = document.createElement('div');
+      actions.className = 'grid grid-cols-3 gap-2 mt-3';
+
+      function actionBtn(label, cls, fn) {
+        var b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'h-12 px-4 rounded-lg border-2 font-extrabold text-xs tracking-wide ' + cls;
+        b.textContent = label;
+        b.addEventListener('click', fn);
+        return b;
+      }
+      actions.appendChild(actionBtn('REOPEN', 'border-blueprint text-blueprintsoft active:bg-blueprint active:text-white', function () { if (!confirmDiscardCurrent()) return; loadFromLog(rec, false); }));
+      actions.appendChild(actionBtn('COPY',   'border-safety text-safety active:bg-safety active:text-ink',               function () { if (!confirmDiscardCurrent()) return; loadFromLog(rec, true); }));
+      actions.appendChild(actionBtn('DELETE',    'border-slateline text-slate-400 active:border-red-500 active:text-red-400',       function () {
+        if (!window.confirm('Delete ' + rec.coNumber + ' from the log? The PDF you already downloaded is not affected.')) return;
+        coLog.splice(i, 1); persistLog(); renderLog();
+      }));
+
+      card.appendChild(top); card.appendChild(actions);
+      logList.appendChild(card);
+    });
+  }
+
+  function currentCOHasWork() {
+    return document.getElementById('clientName').value.trim().length > 0
+      || descBox.value.trim().length > 0
+      || computeTotals().subtotal > 0
+      || !clientPad.isEmpty() || !contractorPad.isEmpty();
+  }
+  function confirmDiscardCurrent() {
+    if (!currentCOHasWork()) return true;
+    return window.confirm('Load this CO from the log? Anything on the current screen that has not been saved as a PDF will be replaced.');
+  }
+  function loadFromLog(rec, asDuplicate) {
+    document.getElementById('clientName').value  = rec.client || '';
+    document.getElementById('jobAddress').value  = rec.jobAddress || '';
+    descBox.value = rec.description || '';
+    lineItemsEl.innerHTML = '';
+    var items = Array.isArray(rec.items) ? rec.items : [];
+    if (!items.length) { addLineItem(); }
+    else { items.forEach(function (it) { addLineItem(it.desc||'', it.qty, it.cost); }); }
+    markupInput.value = isFinite(rec.markupPct) ? rec.markupPct : 15;
+    taxInput.value    = isFinite(rec.taxPct)    ? rec.taxPct    : (settings.taxRate || 0);
+    days = isFinite(rec.days) ? rec.days : 0; renderDays();
+    if (asDuplicate) { coOverride = null; clientPad.clear(); contractorPad.clear(); }
+    else { coOverride = { number: rec.coNumber, datePretty: rec.datePretty || todayPretty() }; clientPad.loadStrokes(rec.sigClient||[]); contractorPad.loadStrokes(rec.sigContractor||[]); }
+    refreshHeader(); syncStatus(); recalc();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  /* ── BACKUP & RESTORE ── */
+  var backupFileInput = document.getElementById('backupFile');
+  document.getElementById('backupBtn').addEventListener('click', function () {
+    formToSettings();
+    var payload = { kind:'dfs-change-order-backup', version:1, exportedAt:new Date().toISOString(), settings:settings, coCounter:coCounter, favorites:favorites, coLog:coLog };
+    var blob = new Blob([JSON.stringify(payload)], { type:'application/json' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a'); a.href = url; a.download = 'DFS-Backup-' + todayStamp() + '.json';
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    setTimeout(function () { URL.revokeObjectURL(url); }, 2000);
+    flashSettingsStatus('✓ Backup downloaded. Keep it somewhere safe — it restores everything on a new device.', true);
+  });
+  document.getElementById('restoreBtn').addEventListener('click', function () { backupFileInput.click(); });
+  backupFileInput.addEventListener('change', function () {
+    var file = backupFileInput.files && backupFileInput.files[0]; backupFileInput.value = '';
+    if (!file) return;
+    var reader = new FileReader();
+    reader.onload = function () {
+      var data;
+      try { data = JSON.parse(reader.result); } catch (e) { flashSettingsStatus('That file is not a valid DFS backup.', false); return; }
+      if (!data || data.kind !== 'dfs-change-order-backup') { flashSettingsStatus('That file is not a valid DFS backup.', false); return; }
+      if (!window.confirm('Restore this backup? It will replace the settings, saved items, and CO log currently on this device.')) return;
+      if (data.settings) applySettingsObject(data.settings);
+      persistSettings(); settingsToForm(); taxInput.value = settings.taxRate || 0;
+      var c = parseInt(data.coCounter, 10);
+      if (isFinite(c) && c > 0) { coCounter = Math.max(coCounter, c); storageSet(COUNTER_KEY, String(coCounter)); }
+      favorites = Array.isArray(data.favorites) ? data.favorites : []; persistFavorites(); renderFavorites();
+      coLog = Array.isArray(data.coLog) ? data.coLog.slice(0, LOG_CAP) : []; persistLog(); renderLog();
+      refreshHeader(); recalc();
+      flashSettingsStatus('✓ Backup restored. Settings, saved items, and CO log are back.', true);
+    };
+    reader.onerror = function () { flashSettingsStatus('Could not read that file.', false); };
+    reader.readAsText(file);
+  });
+
+  /* ── PDF ENGINE ── */
+  document.getElementById('pdfBtn').addEventListener('click', function () {
+    var jsPDFCtor = (window.jspdf && window.jspdf.jsPDF) ? window.jspdf.jsPDF : null;
+    if (!jsPDFCtor) { alert('PDF library failed to load. Check your internet connection and reload the page.'); return; }
+    formToSettings();
+    persistSettings();
+
+    if (coOverride) {
+      var loggedRec = null;
+      for (var li = 0; li < coLog.length; li++) { if (coLog[li].coNumber === coOverride.number) { loggedRec = coLog[li]; break; } }
+      if (loggedRec) {
+        var currentClient = document.getElementById('clientName').value.trim();
+        if (currentClient && loggedRec.client && currentClient !== loggedRec.client) {
+          if (!window.confirm('Heads up: this CO is logged under "' + loggedRec.client + '" but the client name now reads "' + currentClient + '".\n\nIf this is a NEW job, tap Cancel and hit RESET / NEW CO first.\n\nTap OK only if you intentionally changed the client name on this same CO.')) return;
+        }
+      }
+    }
+
+    var t     = computeTotals();
+    var doc   = new jsPDFCtor({ unit:'pt', format:'letter' });
+    var pageW = doc.internal.pageSize.getWidth();
+    var pageH = doc.internal.pageSize.getHeight();
+    var margin = 48, contentW = pageW - margin * 2, y = 0;
+
+    var INK    = [15,  23,  42];
+    var GRAY   = [100, 116, 139];
+    var LIGHT  = [241, 245, 249];
+    var BLUE   = [30,  58,  138];
+    var ORANGE = [234, 88,  12];
+    var LINE   = [203, 213, 225];
+
+    var companyName    = settings.companyName || 'Contractor';
+    var companyPhone   = settings.phone;
+    var companyEmail   = settings.email;
+    var clientName     = document.getElementById('clientName').value.trim() || 'Client';
+    var jobAddress     = document.getElementById('jobAddress').value.trim();
+    var description    = descBox.value.trim();
+    var signedByClient = !clientPad.isEmpty();
+
+    function newPage()         { doc.addPage(); y = margin; }
+    function ensureSpace(need) { if (y + need > pageH - margin - 20) newPage(); }
+    function hr(color) {
+      doc.setDrawColor(color[0],color[1],color[2]); doc.setLineWidth(0.75);
+      doc.line(margin, y, pageW - margin, y);
+    }
+
+    /* Header band */
+    doc.setFillColor(INK[0],INK[1],INK[2]); doc.rect(0, 0, pageW, 96, 'F');
+    doc.setFillColor(ORANGE[0],ORANGE[1],ORANGE[2]); doc.rect(0, 96, pageW, 4, 'F');
+
+    var textX = margin;
+    if (isPro() && settings.logo && settings.logo.dataUrl) {
+      var maxLogoH = 56, maxLogoW = 120;
+      var ratio = settings.logo.w / settings.logo.h;
+      var lh = maxLogoH, lw = lh * ratio;
+      if (lw > maxLogoW) { lw = maxLogoW; lh = lw / ratio; }
+      var chipPad = 6;
+      doc.setFillColor(255,255,255);
+      if (typeof doc.roundedRect === 'function') { doc.roundedRect(margin, 48-lh/2-chipPad, lw+chipPad*2, lh+chipPad*2, 6, 6, 'F'); }
+      else { doc.rect(margin, 48-lh/2-chipPad, lw+chipPad*2, lh+chipPad*2, 'F'); }
+      try {
+        var logoImg = new Image(); logoImg.src = settings.logo.dataUrl;
+        var lc = document.createElement('canvas'); lc.width = settings.logo.w; lc.height = settings.logo.h;
+        var lctx = lc.getContext('2d'); lctx.fillStyle='#ffffff'; lctx.fillRect(0,0,lc.width,lc.height); lctx.drawImage(logoImg,0,0);
+        doc.addImage(lc.toDataURL('image/jpeg',0.85), 'JPEG', margin+chipPad, 48-lh/2, lw, lh);
+      } catch (imgErr) {}
+      textX = margin + lw + chipPad*2 + 16;
+    }
+
+    doc.setTextColor(255,255,255); doc.setFont('helvetica','bold'); doc.setFontSize(22);
+    doc.text('CHANGE ORDER', textX, 40);
+    doc.setFontSize(10); doc.setTextColor(147,197,253);
+    doc.text(companyName.toUpperCase(), textX, 58);
+    var contactBits = [];
+    if (companyPhone) contactBits.push(companyPhone);
+    if (companyEmail) contactBits.push(companyEmail);
+    if (contactBits.length) { doc.setTextColor(203,213,225); doc.setFont('helvetica','normal'); doc.text(contactBits.join('   ·   '), textX, 73); }
+
+    doc.setFont('helvetica','bold'); doc.setFontSize(13); doc.setTextColor(249,115,22);
+    doc.text(currentCONumber(), pageW-margin, 40, { align:'right' });
+    doc.setFont('helvetica','normal'); doc.setFontSize(10); doc.setTextColor(203,213,225);
+    doc.text(currentCODatePretty(), pageW-margin, 56, { align:'right' });
+    doc.text('Status: ' + (signedByClient ? 'SIGNED' : 'DRAFT'), pageW-margin, 70, { align:'right' });
+
+    y = 124;
+
+    /* Parties */
+    var colW = contentW/2 - 10;
+    doc.setFont('helvetica','bold'); doc.setFontSize(8.5); doc.setTextColor(GRAY[0],GRAY[1],GRAY[2]);
+    doc.text('CLIENT', margin, y); doc.text('JOB SITE', margin+colW+20, y); y += 14;
+    doc.setFont('helvetica','bold'); doc.setFontSize(11); doc.setTextColor(INK[0],INK[1],INK[2]);
+    doc.text(clientName, margin, y);
+    var addrLines = doc.splitTextToSize(jobAddress||'—', colW);
+    doc.setFont('helvetica','normal'); doc.text(addrLines, margin+colW+20, y);
+    y += Math.max(16, addrLines.length*13+4); y += 8; hr(LINE); y += 22;
+
+    /* Description */
+    doc.setFont('helvetica','bold'); doc.setFontSize(8.5); doc.setTextColor(BLUE[0],BLUE[1],BLUE[2]);
+    doc.text('DESCRIPTION OF CHANGE', margin, y); y += 14;
+    doc.setFont('helvetica','normal'); doc.setFontSize(10); doc.setTextColor(INK[0],INK[1],INK[2]);
+    var descLines = doc.splitTextToSize(description||'No description provided.', contentW);
+    for (var d = 0; d < descLines.length; d++) { ensureSpace(14); doc.text(descLines[d], margin, y); y += 13; }
+    y += 14;
+
+    /* Line items table */
+    var colDescW = contentW*0.50, colQtyW = contentW*0.12, colCostW = contentW*0.18;
+    var xDesc = margin+8, xQty = margin+colDescW+colQtyW, xCost = margin+colDescW+colQtyW+colCostW, xTot = margin+contentW-8;
+    function tableHeader() {
+      ensureSpace(26);
+      doc.setFillColor(INK[0],INK[1],INK[2]); doc.rect(margin, y, contentW, 22, 'F');
+      doc.setFont('helvetica','bold'); doc.setFontSize(8.5); doc.setTextColor(255,255,255);
+      doc.text('ITEM DESCRIPTION', xDesc, y+14.5);
+      doc.text('QTY',        xQty-8,  y+14.5, { align:'right' });
+      doc.text('UNIT COST',  xCost-8, y+14.5, { align:'right' });
+      doc.text('LINE TOTAL', xTot,    y+14.5, { align:'right' });
+      y += 22;
+    }
+    tableHeader();
+    doc.setFont('helvetica','normal'); doc.setFontSize(9.5);
+
+    var printableItems = t.items.filter(function (it) { return it.desc.length > 0 || it.qty > 0 || it.cost > 0; });
+    if (!printableItems.length) {
+      ensureSpace(22); doc.setTextColor(GRAY[0],GRAY[1],GRAY[2]); doc.text('No line items entered.', xDesc, y+14); y += 22;
+    } else {
+      printableItems.forEach(function (it, idx) {
+        var dLines = doc.splitTextToSize(it.desc||'—', colDescW-16);
+        var rowH   = Math.max(22, dLines.length*12+10);
+        if (y + rowH > pageH - margin - 20) { newPage(); tableHeader(); doc.setFont('helvetica','normal'); doc.setFontSize(9.5); }
+        if (idx % 2 === 1) { doc.setFillColor(LIGHT[0],LIGHT[1],LIGHT[2]); doc.rect(margin, y, contentW, rowH, 'F'); }
+        doc.setTextColor(INK[0],INK[1],INK[2]);
+        doc.text(dLines, xDesc, y+14);
+        doc.text(String(it.qty), xQty-8, y+14, { align:'right' });
+        doc.text(fmt(it.cost),   xCost-8, y+14, { align:'right' });
+        doc.setFont('helvetica','bold'); doc.text(fmt(it.total), xTot, y+14, { align:'right' }); doc.setFont('helvetica','normal');
+        y += rowH;
+        doc.setDrawColor(LINE[0],LINE[1],LINE[2]); doc.setLineWidth(0.5); doc.line(margin, y, pageW-margin, y);
+      });
+    }
+
+    /* Totals */
+    y += 14; ensureSpace(110);
+    var labelX = margin + contentW*0.55;
+    function totalRow(label, value, bold) {
+      doc.setFont('helvetica', bold?'bold':'normal'); doc.setFontSize(10);
+      doc.setTextColor(bold?INK[0]:GRAY[0], bold?INK[1]:GRAY[1], bold?INK[2]:GRAY[2]);
+      doc.text(label, labelX, y); doc.setTextColor(INK[0],INK[1],INK[2]);
+      doc.text(value, xTot, y, { align:'right' }); y += 17;
+    }
+    totalRow('Subtotal',              fmt(t.subtotal), false);
+    totalRow('Markup (' + t.markupPct + '%)', fmt(t.markup), false);
+    totalRow('Tax (' + t.taxPct + '%)',       fmt(t.tax),    false);
+    y += 2;
+    doc.setFillColor(ORANGE[0],ORANGE[1],ORANGE[2]);
+    doc.rect(labelX-10, y-12, (pageW-margin)-(labelX-10), 26, 'F');
+    doc.setFont('helvetica','bold'); doc.setFontSize(12); doc.setTextColor(255,255,255);
+    doc.text('GRAND TOTAL', labelX, y+5); doc.text(fmt(t.grand), xTot, y+5, { align:'right' }); y += 36;
+
+    /* Schedule */
+    ensureSpace(40);
+    doc.setFont('helvetica','bold'); doc.setFontSize(8.5); doc.setTextColor(BLUE[0],BLUE[1],BLUE[2]);
+    doc.text('SCHEDULE IMPACT', margin, y); y += 14;
+    doc.setFont('helvetica','normal'); doc.setFontSize(10); doc.setTextColor(INK[0],INK[1],INK[2]);
+    doc.text(days===0 ? 'No change to the project timeline.'
+      : 'The project substantial completion date is extended by ' + days + ' calendar day' + (days===1?'':'s') + '.', margin, y);
+    y += 24;
+
+    /* Signatures */
+    ensureSpace(170); hr(LINE); y += 18;
+    doc.setFont('helvetica','normal'); doc.setFontSize(8.5); doc.setTextColor(GRAY[0],GRAY[1],GRAY[2]);
+    var ack = 'By signing below, the Client authorizes the work described in this Change Order, agrees to the Grand Total shown above as an adjustment to the contract price, and accepts the stated schedule impact. This Change Order becomes part of the original construction agreement.';
+    var ackLines = doc.splitTextToSize(ack, contentW);
+    doc.text(ackLines, margin, y); y += ackLines.length*11 + 16;
+
+    ensureSpace(120);
+    var sigW = contentW/2 - 16, sigH = 56, sigDate = new Date().toLocaleDateString('en-US');
+    function placeSignature(pad, x, label, name) {
+      var exp = pad.exportForPDF();
+      if (exp) { var w=sigW, h=w/exp.ratio; if (h>sigH){h=sigH;w=h*exp.ratio;} doc.addImage(exp.dataUrl,'JPEG',x,y+(sigH-h),w,h); }
+      doc.setDrawColor(INK[0],INK[1],INK[2]); doc.setLineWidth(0.75); doc.line(x, y+sigH+6, x+sigW, y+sigH+6);
+      doc.setFont('helvetica','bold'); doc.setFontSize(8.5); doc.setTextColor(INK[0],INK[1],INK[2]); doc.text(label, x, y+sigH+18);
+      doc.setFont('helvetica','normal'); doc.setTextColor(GRAY[0],GRAY[1],GRAY[2]);
+      doc.text(name + (exp ? '  ·  Signed ' + sigDate : '  ·  Not signed'), x, y+sigH+29);
+    }
+    placeSignature(clientPad,     margin,           'CLIENT SIGNATURE',     clientName);
+    placeSignature(contractorPad, margin+sigW+32,   'CONTRACTOR SIGNATURE', companyName);
+    y += sigH + 44;
+
+    /* Draft watermark */
+    if (!signedByClient) {
+      var pages = doc.internal.getNumberOfPages();
+      for (var p = 1; p <= pages; p++) {
+        doc.setPage(p); doc.setFont('helvetica','bold'); doc.setFontSize(54); doc.setTextColor(226,232,240);
+        doc.text('DRAFT — NOT EXECUTED', pageW/2, pageH/2, { align:'center', angle:35 });
+      }
+    }
+
+    /* Footer */
+    var totalPages  = doc.internal.getNumberOfPages();
+    var footerBrand = settings.companyName || 'Digital Foreman Suite';
+    var pro = isPro();
+    for (var pg = 1; pg <= totalPages; pg++) {
+      doc.setPage(pg); doc.setFont('helvetica','normal'); doc.setFontSize(8); doc.setTextColor(GRAY[0],GRAY[1],GRAY[2]);
+      doc.text(currentCONumber() + '  ·  ' + footerBrand, margin, pageH-24);
+      if (!pro) { doc.text('Created with Digital Foreman Suite · digitalforemansuite.com', margin, pageH-13); }
+      doc.text('Page ' + pg + ' of ' + totalPages, pageW-margin, pageH-24, { align:'right' });
+    }
+
+    saveToLog(snapshotCO());
+    var pdfFilename = currentCONumber() + '.pdf';
+    /* Try native share sheet (Android/iOS PWA) — falls back to download */
+    var pdfBlob = doc.output('blob');
+    var shareFile = new File([pdfBlob], pdfFilename, { type: 'application/pdf' });
+    if (navigator.canShare && navigator.canShare({ files: [shareFile] })) {
+      navigator.share({
+        files: [shareFile],
+        title: pdfFilename,
+        text: 'Change Order ' + currentCONumber()
+      }).catch(function () {
+        /* User cancelled share sheet or error — fall back to download */
+        doc.save(pdfFilename);
+      });
+    } else {
+      doc.save(pdfFilename);
+    }
+  });
+
+  /* ── UPGRADE MODAL ── */
+  var upgradeModal = document.getElementById('upgradeModal');
+  document.getElementById('upgradeModalClose').addEventListener('click', function () {
+    upgradeModal.classList.add('hidden');
+  });
+  function showUpgradeModal() { upgradeModal.classList.remove('hidden'); }
+
+  /* ── PRO SECTION ── */
+  var proSection = document.getElementById('proSection');
+  var logoProBadge = document.getElementById('logoProBadge');
+
+  function renderProSection() {
+    if (isPro()) {
+      logoProBadge.classList.add('hidden');
+      proSection.innerHTML = [
+        '<div class="flex items-center gap-3">',
+        '  <span class="text-safety text-2xl">⚡</span>',
+        '  <div class="flex-1">',
+        '    <p class="text-sm font-extrabold text-white">Digital Foreman Suite <span class="text-safety">PRO</span></p>',
+        '    <p class="text-xs text-slate-400">Unlimited · Logo on PDFs · No footer branding</p>',
+        '  </div>',
+        '  <span class="px-3 py-1 rounded-full bg-safety/20 text-safety text-xs font-extrabold border border-safety">ACTIVE</span>',
+        '</div>'
+      ].join('');
+    } else {
+      logoProBadge.classList.remove('hidden');
+      proSection.innerHTML = [
+        '<p class="text-sm font-extrabold text-safety mb-1">⚡ Upgrade to Pro — $14.99 one-time</p>',
+        '<p class="text-xs text-slate-400 mb-3">Your logo on every PDF. No footer branding. One payment, yours forever.</p>',
+        '<input id="licenseKeyInput" type="text" placeholder="Enter license key" autocomplete="off" autocorrect="off" spellcheck="false"',
+        '  class="w-full h-12 px-3 rounded-xl bg-ink border-2 border-slateline text-white text-sm font-mono tracking-wider mb-2" />',
+        '<button id="activateProBtn" type="button"',
+        '  class="w-full h-12 rounded-xl bg-safety text-ink font-extrabold text-sm tracking-wide active:bg-safetydeep mb-2">ACTIVATE LICENSE KEY</button>',
+        '<p id="proActivateStatus" class="text-xs font-bold mb-3 text-center text-slate-500"></p>',
+        '<a href="https://digitalforemansuite.com/pro" target="_blank" rel="noopener"',
+        '   class="block text-center text-xs text-blueprintsoft font-bold underline">Get a license key at digitalforemansuite.com →</a>'
+      ].join('');
+
+      document.getElementById('activateProBtn').addEventListener('click', function () {
+        var key = (document.getElementById('licenseKeyInput').value || '').trim();
+        var statusEl = document.getElementById('proActivateStatus');
+        if (!key) { statusEl.textContent = 'Enter your license key first.'; statusEl.className = 'text-xs font-bold mb-3 text-center text-red-400'; return; }
+        statusEl.textContent = 'Verifying…'; statusEl.className = 'text-xs font-bold mb-3 text-center text-slate-400';
+        fetch('/api/verify', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ key: key })
+        })
+        .then(function (r) { return r.json(); })
+        .then(function (data) {
+          if (data && data.valid) {
+            activatePro(key);
+            renderProSection();
+            flashSettingsStatus('⚡ Pro activated! Your logo now prints on every PDF.', true);
+          } else {
+            statusEl.textContent = 'License key not recognized. Check for typos or visit digitalforemansuite.com for help.';
+            statusEl.className = 'text-xs font-bold mb-3 text-center text-red-400';
+          }
+        })
+        .catch(function () {
+          statusEl.textContent = 'Could not reach the license server. Check your connection and try again.';
+          statusEl.className = 'text-xs font-bold mb-3 text-center text-red-400';
+        });
+      });
+    }
+  }
+
+  /* ── HELP PANEL ── */
+  var helpChevron = document.getElementById('helpChevron');
+  var helpBody    = document.getElementById('helpBody');
+  helpBody.classList.add('hidden'); helpChevron.textContent = '▸';
+  document.getElementById('helpToggle').addEventListener('click', function () {
+    var hidden = helpBody.classList.toggle('hidden');
+    helpChevron.textContent = hidden ? '▸' : '▾';
+  });
+
+  /* ── BUG REPORT ── */
+  document.getElementById('bugReportBtn').addEventListener('click', function () {
+    var body = [
+      'Hi Digital Foreman Suite team,', '', 'I found an issue / have a request:',
+      '', '[DESCRIBE YOUR ISSUE OR REQUEST HERE]', '',
+      '--- App info (auto-filled) ---',
+      'CO currently open: ' + currentCONumber(),
+      'COs in log: ' + coLog.length,
+      'Device: ' + (navigator.userAgent || 'unknown'),
+      'App URL: ' + window.location.href
+    ].join('\n');
+    window.location.href = 'mailto:digitalforemansuite@gmail.com'
+      + '?subject=' + encodeURIComponent('DFS Bug Report / Feature Request — ' + currentCONumber())
+      + '&body='    + encodeURIComponent(body);
+  });
+
+  /* ── RESET ── */
+  document.getElementById('resetBtn').addEventListener('click', function () {
+    if (!window.confirm('Start a new Change Order? Client info, line items, and signatures will be cleared.\n\nYour Business Settings, saved items, and CO history are NOT affected.')) return;
+    document.getElementById('clientName').value = '';
+    document.getElementById('jobAddress').value = '';
+    descBox.value = '';
+    lineItemsEl.innerHTML = '';
+    markupInput.value = 15; taxInput.value = settings.taxRate || 0;
+    days = 0; renderDays();
+    clientPad.clear(); contractorPad.clear();
+    coOverride = null; coCounter++;
+    storageSet(COUNTER_KEY, String(coCounter));
+    refreshHeader(); addLineItem(); recalc();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+
+  /* ── BOOT ── */
+  var hasSavedSettings = loadSettings();
+  settingsToForm();
+  if (hasSavedSettings) {
+    settingsBody.classList.add('hidden'); settingsChevron.textContent = '▸';
+    taxInput.value = settings.taxRate || 0;
+  }
+  loadFavorites(); renderFavorites();
+  loadLog();       renderLog();
+  refreshHeader(); addLineItem(); recalc(); setStatus(false);
+  renderProSection();
+})();
+</script>
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function () {
+    navigator.serviceWorker.register('./service-worker.js').catch(function (err) {
+      console.warn('Service worker registration failed:', err);
+    });
+  });
+}
+</script>
+</body>
+</html>
