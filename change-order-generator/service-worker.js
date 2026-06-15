@@ -24,16 +24,16 @@
       the rest, and failures are logged to the console.
    =========================================================*/
 
-const CACHE_NAME = "change-order-cache-v10";
+const CACHE_NAME = "change-order-cache-v11";
 
 /* Files served from our own site. */
 const APP_SHELL = [
   "./",
   "./index.html",
   "./manifest.json",
-  "./icons/icon-192.png",
-  "./icons/icon-512.png",
-  "./icons/icon-512-maskable.png"
+  "/icons/icon-192.png",
+  "/icons/icon-512.png",
+  "/icons/icon-512-maskable.png"
 ];
 
 /* Third-party engines the app cannot run without.
