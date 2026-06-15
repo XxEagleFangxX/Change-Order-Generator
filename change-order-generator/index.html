@@ -377,7 +377,7 @@
 <!-- UPGRADE MODAL — must be in DOM before the main script runs -->
 <div id="upgradeModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-ink/90 p-4" role="dialog" aria-modal="true">
   <div class="bg-slatecard rounded-2xl border-2 border-safety p-6 max-w-sm w-full shadow-2xl">
-    <p class="text-safety font-extrabold text-lg mb-1">⚡ Go Pro — $14.99 one-time</p>
+    <p class="text-safety font-extrabold text-lg mb-1">⚡ Go Pro — $19.99 one-time</p>
     <p class="text-slate-300 text-sm mb-5">Your logo on every PDF. No footer branding. Pay once, yours forever — no subscription, no cloud, no account.</p>
     <div class="space-y-2 text-sm text-slate-300 mb-5">
       <p>✓ Custom company logo on all PDFs</p>
@@ -387,7 +387,7 @@
     </div>
     <a href="https://digitalforemansuite.com/pro" target="_blank" rel="noopener"
        class="block w-full h-14 rounded-xl bg-safety text-ink font-black text-center text-lg leading-[3.5rem] mb-3">
-      UPGRADE TO PRO — $14.99
+      UPGRADE TO PRO — $19.99
     </a>
     <button id="upgradeModalClose" type="button"
        class="w-full h-12 rounded-xl border-2 border-slateline text-slate-400 font-bold text-sm">
@@ -1268,146 +1268,4 @@
     if (navigator.canShare && navigator.canShare({ files: [shareFile] })) {
       navigator.share({
         files: [shareFile],
-        title: pdfFilename,
-        text: 'Change Order ' + currentCONumber()
-      }).catch(function () {
-        /* User cancelled share sheet or error — fall back to download */
-        doc.save(pdfFilename);
-      });
-    } else {
-      doc.save(pdfFilename);
-    }
-  });
-
-  /* ── UPGRADE MODAL ── */
-  var upgradeModal = document.getElementById('upgradeModal');
-  document.getElementById('upgradeModalClose').addEventListener('click', function () {
-    upgradeModal.classList.add('hidden');
-  });
-  function showUpgradeModal() { upgradeModal.classList.remove('hidden'); }
-
-  /* ── PRO SECTION ── */
-  var proSection = document.getElementById('proSection');
-  var logoProBadge = document.getElementById('logoProBadge');
-
-  function renderProSection() {
-    if (isPro()) {
-      logoProBadge.classList.add('hidden');
-      proSection.innerHTML = [
-        '<div class="flex items-center gap-3">',
-        '  <span class="text-safety text-2xl">⚡</span>',
-        '  <div class="flex-1">',
-        '    <p class="text-sm font-extrabold text-white">Digital Foreman Suite <span class="text-safety">PRO</span></p>',
-        '    <p class="text-xs text-slate-400">Unlimited · Logo on PDFs · No footer branding</p>',
-        '  </div>',
-        '  <span class="px-3 py-1 rounded-full bg-safety/20 text-safety text-xs font-extrabold border border-safety">ACTIVE</span>',
-        '</div>'
-      ].join('');
-    } else {
-      logoProBadge.classList.remove('hidden');
-      proSection.innerHTML = [
-        '<p class="text-sm font-extrabold text-safety mb-1">⚡ Upgrade to Pro — $14.99 one-time</p>',
-        '<p class="text-xs text-slate-400 mb-3">Your logo on every PDF. No footer branding. One payment, yours forever.</p>',
-        '<input id="licenseKeyInput" type="text" placeholder="Enter license key" autocomplete="off" autocorrect="off" spellcheck="false"',
-        '  class="w-full h-12 px-3 rounded-xl bg-ink border-2 border-slateline text-white text-sm font-mono tracking-wider mb-2" />',
-        '<button id="activateProBtn" type="button"',
-        '  class="w-full h-12 rounded-xl bg-safety text-ink font-extrabold text-sm tracking-wide active:bg-safetydeep mb-2">ACTIVATE LICENSE KEY</button>',
-        '<p id="proActivateStatus" class="text-xs font-bold mb-3 text-center text-slate-500"></p>',
-        '<a href="https://digitalforemansuite.com/pro" target="_blank" rel="noopener"',
-        '   class="block text-center text-xs text-blueprintsoft font-bold underline">Get a license key at digitalforemansuite.com →</a>'
-      ].join('');
-
-      document.getElementById('activateProBtn').addEventListener('click', function () {
-        var key = (document.getElementById('licenseKeyInput').value || '').trim();
-        var statusEl = document.getElementById('proActivateStatus');
-        if (!key) { statusEl.textContent = 'Enter your license key first.'; statusEl.className = 'text-xs font-bold mb-3 text-center text-red-400'; return; }
-        statusEl.textContent = 'Verifying…'; statusEl.className = 'text-xs font-bold mb-3 text-center text-slate-400';
-        fetch('/api/verify', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ key: key })
-        })
-        .then(function (r) { return r.json(); })
-        .then(function (data) {
-          if (data && data.valid) {
-            activatePro(key);
-            renderProSection();
-            flashSettingsStatus('⚡ Pro activated! Your logo now prints on every PDF.', true);
-          } else {
-            statusEl.textContent = 'License key not recognized. Check for typos or visit digitalforemansuite.com for help.';
-            statusEl.className = 'text-xs font-bold mb-3 text-center text-red-400';
-          }
-        })
-        .catch(function () {
-          statusEl.textContent = 'Could not reach the license server. Check your connection and try again.';
-          statusEl.className = 'text-xs font-bold mb-3 text-center text-red-400';
-        });
-      });
-    }
-  }
-
-  /* ── HELP PANEL ── */
-  var helpChevron = document.getElementById('helpChevron');
-  var helpBody    = document.getElementById('helpBody');
-  helpBody.classList.add('hidden'); helpChevron.textContent = '▸';
-  document.getElementById('helpToggle').addEventListener('click', function () {
-    var hidden = helpBody.classList.toggle('hidden');
-    helpChevron.textContent = hidden ? '▸' : '▾';
-  });
-
-  /* ── BUG REPORT ── */
-  document.getElementById('bugReportBtn').addEventListener('click', function () {
-    var body = [
-      'Hi Digital Foreman Suite team,', '', 'I found an issue / have a request:',
-      '', '[DESCRIBE YOUR ISSUE OR REQUEST HERE]', '',
-      '--- App info (auto-filled) ---',
-      'CO currently open: ' + currentCONumber(),
-      'COs in log: ' + coLog.length,
-      'Device: ' + (navigator.userAgent || 'unknown'),
-      'App URL: ' + window.location.href
-    ].join('\n');
-    window.location.href = 'mailto:digitalforemansuite@gmail.com'
-      + '?subject=' + encodeURIComponent('DFS Bug Report / Feature Request — ' + currentCONumber())
-      + '&body='    + encodeURIComponent(body);
-  });
-
-  /* ── RESET ── */
-  document.getElementById('resetBtn').addEventListener('click', function () {
-    if (!window.confirm('Start a new Change Order? Client info, line items, and signatures will be cleared.\n\nYour Business Settings, saved items, and CO history are NOT affected.')) return;
-    document.getElementById('clientName').value = '';
-    document.getElementById('jobAddress').value = '';
-    descBox.value = '';
-    lineItemsEl.innerHTML = '';
-    markupInput.value = 15; taxInput.value = settings.taxRate || 0;
-    days = 0; renderDays();
-    clientPad.clear(); contractorPad.clear();
-    coOverride = null; coCounter++;
-    storageSet(COUNTER_KEY, String(coCounter));
-    refreshHeader(); addLineItem(); recalc();
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  });
-
-  /* ── BOOT ── */
-  var hasSavedSettings = loadSettings();
-  settingsToForm();
-  if (hasSavedSettings) {
-    settingsBody.classList.add('hidden'); settingsChevron.textContent = '▸';
-    taxInput.value = settings.taxRate || 0;
-  }
-  loadFavorites(); renderFavorites();
-  loadLog();       renderLog();
-  refreshHeader(); addLineItem(); recalc(); setStatus(false);
-  renderProSection();
-})();
-</script>
-<script>
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', function () {
-    navigator.serviceWorker.register('./service-worker.js').catch(function (err) {
-      console.warn('Service worker registration failed:', err);
-    });
-  });
-}
-</script>
-</body>
-</html>
+        title: pdfFilena
