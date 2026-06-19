@@ -1416,5 +1416,15 @@ if ('serviceWorker' in navigator) {
   });
 }
 </script>
+<!-- Vercel Web Analytics — cookieless, no PII. Counts that the app was opened and (best-effort) installed.
+     It NEVER sees anything you enter; all your work stays on your device. Disclosed in /privacy. -->
+<script>window.va=window.va||function(){(window.vaq=window.vaq||[]).push(arguments);};</script>
+<script defer src="/_vercel/insights/script.js"></script>
+<script>
+/* Anonymous, cookieless "added to home screen" signal (best-effort; varies by browser). */
+window.addEventListener('appinstalled', function () {
+  try { window.va('event', { name: 'app_installed' }); } catch (e) {}
+});
+</script>
 </body>
 </html>
