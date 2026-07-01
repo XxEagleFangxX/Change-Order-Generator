@@ -377,6 +377,13 @@
           <p class="text-xs text-slate-500 font-semibold mt-2 text-center">Opens your email app · hello@digitalforemansuite.com</p>
         </div>
 
+        <div class="border-t-2 border-slateline pt-4">
+          <p class="text-sm font-extrabold text-white mb-1">★ Like the app? Leave a quick review</p>
+          <p class="text-sm text-slate-400 font-medium mb-3">A line about how it helped on the job means a lot — and helps other contractors find it.</p>
+          <a id="reviewLinkHelp" href="#" class="w-full h-14 rounded-xl bg-ink border-2 border-safety text-safety font-extrabold text-sm tracking-wide flex items-center justify-center active:bg-safety active:text-ink">★ LEAVE A REVIEW</a>
+          <p class="text-xs text-slate-500 font-semibold mt-2 text-center">Opens your email app · hello@digitalforemansuite.com</p>
+        </div>
+
       </div>
     </section>
 
@@ -395,6 +402,14 @@
       </button>
     </div>
   </footer>
+
+  <!-- Post-PDF review nudge — appears once after a change order is generated -->
+  <div id="reviewNudge" class="hidden fixed inset-x-0 bottom-24 z-50 px-4">
+    <div class="max-w-3xl mx-auto bg-slatecard border-2 border-safety rounded-xl px-4 py-3 flex items-center gap-3 shadow-2xl">
+      <p class="text-sm text-slate-100 font-semibold flex-1 leading-snug">Nice work. Was this handy on the job? <a id="reviewNudgeLink" href="#" class="text-safety font-extrabold underline">Leave a quick review →</a></p>
+      <button type="button" id="reviewNudgeClose" aria-label="Dismiss" class="shrink-0 text-slate-400 text-2xl leading-none font-extrabold px-1">×</button>
+    </div>
+  </div>
 
 <!-- UPGRADE MODAL — must be in DOM before the main script runs -->
 <div id="upgradeModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-ink/90 p-4" role="dialog" aria-modal="true">
@@ -1299,6 +1314,9 @@
     } else {
       doc.save(pdfFilename);
     }
+
+    /* They just generated a change order — gentle, one-time nudge to review */
+    showReviewNudge();
   });
 
   /* ── UPGRADE MODAL ── */
@@ -1392,6 +1410,37 @@
       + '?subject=' + encodeURIComponent('DFS Bug Report / Feature Request — ' + currentCONumber())
       + '&body='    + encodeURIComponent(body);
   });
+
+  /* ── LEAVE A REVIEW (mailto funnel) ── */
+  var REVIEW_BODY = [
+    'Here is how the app worked for me on the job:',
+    '',
+    '[write a sentence or two here]',
+    '',
+    '',
+    'OK to share this on your website? (yes / no):',
+    'First name:',
+    'Trade:',
+    'City / State (optional):',
+    ''
+  ].join('\n');
+  var REVIEW_MAILTO = 'mailto:hello@digitalforemansuite.com'
+    + '?subject=' + encodeURIComponent('My review of the Change Order Generator')
+    + '&body='    + encodeURIComponent(REVIEW_BODY);
+  ['reviewLinkHelp', 'reviewNudgeLink'].forEach(function (id) {
+    var el = document.getElementById(id);
+    if (el) el.href = REVIEW_MAILTO;
+  });
+  var reviewNudge = document.getElementById('reviewNudge');
+  var reviewNudgeClosed = false;
+  function showReviewNudge() {
+    if (reviewNudgeClosed || !reviewNudge) return;
+    reviewNudge.classList.remove('hidden');
+  }
+  var rnClose = document.getElementById('reviewNudgeClose');
+  if (rnClose) rnClose.addEventListener('click', function () { reviewNudge.classList.add('hidden'); reviewNudgeClosed = true; });
+  var rnLink = document.getElementById('reviewNudgeLink');
+  if (rnLink) rnLink.addEventListener('click', function () { reviewNudge.classList.add('hidden'); reviewNudgeClosed = true; });
 
   /* ── RESET ── */
   document.getElementById('resetBtn').addEventListener('click', function () {
