@@ -24,16 +24,19 @@
       the rest, and failures are logged to the console.
    =========================================================*/
 
-const CACHE_NAME = "change-order-cache-v9";
+/* This is the SITE / homepage service worker (scope "/"). It is separate from the
+   APP service worker at /change-order-generator/. Its cache name has its OWN prefix
+   ("dfs-home-cache-") and its activate step below only deletes caches with that prefix,
+   so it can NEVER wipe the app's "change-order-cache-*" offline cache (and vice-versa). */
+const CACHE_NAME = "dfs-home-cache-v1";
 
-/* Files served from our own site. */
+/* Files served from our own site (homepage shell + install icons). */
 const APP_SHELL = [
-  "./",
-  "./index.html",
-  "./manifest.json",
-  "./icons/icon-192.png",
-  "./icons/icon-512.png",
-  "./icons/icon-512-maskable.png"
+  "/",
+  "/index.html",
+  "/icons/icon-192.png",
+  "/icons/icon-512.png",
+  "/icons/icon-512-maskable.png"
 ];
 
 /* Third-party engines the app cannot run without.
@@ -84,7 +87,11 @@ self.addEventListener("activate", (event) => {
     caches
       .keys()
       .then((keys) =>
-        Promise.all(keys.filter((k) => k !== CACHE_NAME).map((k) => caches.delete(k)))
+        Promise.all(
+          keys
+            .filter((k) => k.startsWith("dfs-home-cache-") && k !== CACHE_NAME)
+            .map((k) => caches.delete(k))
+        )
       )
       .then(() => self.clients.claim())
   );
