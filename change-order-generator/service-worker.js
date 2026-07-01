@@ -24,7 +24,7 @@
       the rest, and failures are logged to the console.
    =========================================================*/
 
-const CACHE_NAME = "change-order-cache-v16";
+const CACHE_NAME = "change-order-cache-v17";
 
 /* Files served from our own site. */
 const APP_SHELL = [
@@ -84,7 +84,13 @@ self.addEventListener("activate", (event) => {
     caches
       .keys()
       .then((keys) =>
-        Promise.all(keys.filter((k) => k !== CACHE_NAME).map((k) => caches.delete(k)))
+        Promise.all(
+          // Only clean THIS app's own cache lineage — never touch the site
+          // homepage SW's "dfs-home-cache-*" caches.
+          keys
+            .filter((k) => k.startsWith("change-order-cache-") && k !== CACHE_NAME)
+            .map((k) => caches.delete(k))
+        )
       )
       .then(() => self.clients.claim())
   );
