@@ -20,6 +20,52 @@
   <meta name="twitter:description" content="Signed change order PDFs on your phone in under a minute. 100% offline, no account, no subscription. Free." />
   <meta name="twitter:image" content="https://digitalforemansuite.com/og-image.png" />
 
+  <!-- Structured data for search engines -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "On-The-Spot Change Order Generator",
+    "url": "https://digitalforemansuite.com/change-order-generator",
+    "applicationCategory": "BusinessApplication",
+    "operatingSystem": "Any (web app, works offline)",
+    "description": "Free change order generator for independent contractors. Create signed, professional change order PDFs on your phone in under a minute — works 100% offline, no account, no subscription.",
+    "offers": [
+      { "@type": "Offer", "name": "Free", "price": "0", "priceCurrency": "USD" },
+      { "@type": "Offer", "name": "Pro (your logo on every PDF)", "price": "19.99", "priceCurrency": "USD" }
+    ],
+    "author": { "@type": "Organization", "name": "Digital Foreman Suite", "url": "https://digitalforemansuite.com" }
+  }
+  </script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "Does the change order app work without cell service?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Yes. It works 100% offline — concrete basements, metal buildings, dead zones. Once installed, no signal is ever required to create, sign, or save change orders." }
+      },
+      {
+        "@type": "Question",
+        "name": "Is the Change Order Generator really free?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Yes. Creating, signing, and sharing change order PDFs is free forever, with no account and no subscription. A one-time $19.99 Pro upgrade adds your company logo to every PDF and removes our footer." }
+      },
+      {
+        "@type": "Question",
+        "name": "Where is my data stored?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Everything stays on your device. There is no cloud database, no server, and no account — your client list and job history never leave your phone." }
+      },
+      {
+        "@type": "Question",
+        "name": "How do signatures work?",
+        "acceptedAnswer": { "@type": "Answer", "text": "You and your client both sign right on the phone screen with a finger. Every copy stays stamped DRAFT until both signatures are in, so everyone is clear on what was agreed." }
+      }
+    ]
+  }
+  </script>
+
   <link rel="icon" type="image/png" href="/icons/icon-192.png" />
   <!-- PWA: links the Change Order Generator app manifest so the app can be installed straight from this page -->
   <link rel="manifest" href="/change-order-generator/manifest.json" />
@@ -222,7 +268,7 @@
               <li class="text-slate-600 text-xs flex items-center gap-2"><span class="text-slate-600">○</span> Exportable comparison PDF</li>
             </ul>
             <div class="border-t border-white/5 pt-4 text-center">
-              <p class="text-slate-600 text-xs">Notify me when available</p>
+              <a href="mailto:hello@digitalforemansuite.com?subject=Tell%20me%20when%20the%20Bid%20Leveler%20is%20ready&body=Let%20me%20know%20when%20the%20Bid%20Leveler%20ships.%0A%0ATrade%20(optional)%3A%0A" class="text-safety text-xs font-semibold hover:underline">✉ Notify me when available</a>
             </div>
           </div>
         </div>
@@ -243,7 +289,7 @@
               <li class="text-slate-600 text-xs flex items-center gap-2"><span class="text-slate-600">○</span> Works fully offline</li>
             </ul>
             <div class="border-t border-white/5 pt-4 text-center">
-              <p class="text-slate-600 text-xs">Notify me when available</p>
+              <a href="mailto:hello@digitalforemansuite.com?subject=Tell%20me%20when%20the%20Punch%20List%20Portal%20is%20ready&body=Let%20me%20know%20when%20the%20Punch%20List%20Portal%20ships.%0A%0ATrade%20(optional)%3A%0A" class="text-safety text-xs font-semibold hover:underline">✉ Notify me when available</a>
             </div>
           </div>
         </div>
@@ -328,12 +374,6 @@
         <a href="/privacy" class="hover:text-slate-400 transition-colors">Privacy &amp; Terms</a>
       </div>
       <div class="flex items-center gap-4">
-        <a href="https://x.com/dfsforeman" target="_blank" rel="noopener" aria-label="Digital Foreman Suite on X" class="text-slate-600 hover:text-safety transition-colors">
-          <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231 5.45-6.231zm-1.161 17.52h1.833L7.084 4.126H5.117L17.083 19.77z"/></svg>
-        </a>
-        <a href="https://instagram.com/dfsforeman" target="_blank" rel="noopener" aria-label="Digital Foreman Suite on Instagram" class="text-slate-600 hover:text-safety transition-colors">
-          <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.332.014 7.052.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>
-        </a>
         <a href="https://www.facebook.com/profile.php?id=61590772503553" target="_blank" rel="noopener" aria-label="Digital Foreman Suite on Facebook" class="text-slate-600 hover:text-safety transition-colors">
           <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
         </a>
