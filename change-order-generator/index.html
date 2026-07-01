@@ -76,6 +76,21 @@
 
   <main class="max-w-3xl mx-auto px-4 pt-5 space-y-5">
 
+    <!-- ============ INSTALL APP BANNER (hidden until installable) ============ -->
+    <section id="installBanner" class="hidden bg-slatecard rounded-2xl border-2 border-safety p-4 sm:p-5">
+      <div class="flex items-start justify-between gap-3">
+        <div class="min-w-0">
+          <p class="text-sm font-extrabold text-white leading-tight">📲 Install this app on your phone</p>
+          <p id="installSubtext" class="text-xs text-slate-300 font-semibold mt-1 leading-snug">Get a real app icon on your home screen — works offline and opens full-screen, no browser bar.</p>
+        </div>
+        <button type="button" id="installDismiss" aria-label="Dismiss install banner" class="shrink-0 text-slate-400 text-2xl leading-none font-extrabold px-1">×</button>
+      </div>
+      <button type="button" id="installBtn" class="mt-3 w-full h-14 rounded-xl bg-safety text-ink text-lg font-extrabold tracking-wide active:bg-safetydeep">Install App</button>
+      <div id="installHelp" class="hidden mt-3 text-sm text-slate-200 font-semibold bg-ink rounded-xl border-2 border-slateline p-3 leading-snug">
+        On iPhone/iPad: tap the <span class="text-safety font-extrabold">Share</span> button in Safari, then choose <span class="text-safety font-extrabold">“Add to Home Screen.”</span>
+      </div>
+    </section>
+
     <!-- ============ SECTION 1: BUSINESS SETTINGS ============ -->
     <section class="bg-slatecard rounded-2xl border-2 border-blueprint p-4 sm:p-5">
       <button type="button" id="settingsToggle" class="w-full flex items-center justify-between gap-3">
@@ -1415,6 +1430,71 @@ if ('serviceWorker' in navigator) {
     });
   });
 }
+</script>
+<script>
+/* ---- PWA install helper ----
+   Turns the ambiguous "Add to Home Screen" gesture (which can create a mere
+   browser SHORTCUT) into a real one-tap install. Captures the browser's own
+   install prompt on Chrome/Edge/Brave/Samsung; shows manual steps on iOS. */
+(function () {
+  var banner   = document.getElementById('installBanner');
+  var btn      = document.getElementById('installBtn');
+  var dismiss  = document.getElementById('installDismiss');
+  var help     = document.getElementById('installHelp');
+  var subtext  = document.getElementById('installSubtext');
+  if (!banner || !btn) return;
+
+  var deferredPrompt = null;
+
+  function isStandalone() {
+    return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+  }
+  function isIOS() {
+    return /iphone|ipad|ipod/i.test(navigator.userAgent) && !window.MSStream;
+  }
+  function dismissed() {
+    try { return localStorage.getItem('dfs.install.dismissed') === '1'; } catch (e) { return false; }
+  }
+  function hide() { banner.classList.add('hidden'); }
+  function show() { if (!dismissed()) banner.classList.remove('hidden'); }
+
+  // Already running as an installed app → never show.
+  if (isStandalone()) { hide(); return; }
+
+  // Chrome/Edge/Brave/Samsung: capture the REAL install prompt when it's offered.
+  window.addEventListener('beforeinstallprompt', function (e) {
+    e.preventDefault();
+    deferredPrompt = e;
+    show();
+  });
+
+  // iOS Safari never fires that event and can't auto-install → offer manual steps.
+  if (isIOS()) {
+    subtext.textContent = 'Add a real app icon to your home screen — works offline and opens full-screen.';
+    show();
+  }
+
+  btn.addEventListener('click', function () {
+    if (deferredPrompt) {
+      deferredPrompt.prompt();
+      deferredPrompt.userChoice.then(function () { deferredPrompt = null; hide(); });
+    } else if (isIOS()) {
+      help.classList.toggle('hidden');
+    } else {
+      // Installable prompt not offered yet (e.g. site data was just cleared, or an
+      // unsupported browser). Point them at the reliable path.
+      help.textContent = 'If no install prompt appears, open this page in Chrome, use it for a few seconds, then tap the ⋮ menu and choose “Install app” / “Add to Home screen.”';
+      help.classList.remove('hidden');
+    }
+  });
+
+  dismiss.addEventListener('click', function () {
+    try { localStorage.setItem('dfs.install.dismissed', '1'); } catch (e) {}
+    hide();
+  });
+
+  window.addEventListener('appinstalled', function () { deferredPrompt = null; hide(); });
+})();
 </script>
 <!-- Vercel Web Analytics — cookieless, no PII. Counts that the app was opened and (best-effort) installed.
      It NEVER sees anything you enter; all your work stays on your device. Disclosed in /privacy. -->
