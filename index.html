@@ -324,6 +324,7 @@
       <div class="flex items-center gap-6 text-slate-600 text-xs">
         <a href="/change-order-generator" class="hover:text-slate-400 transition-colors">Change Order Generator</a>
         <a href="/pro" class="hover:text-slate-400 transition-colors">Go Pro</a>
+        <a id="homeReviewLink" href="#" class="hover:text-slate-400 transition-colors">Leave a review</a>
         <a href="/privacy" class="hover:text-slate-400 transition-colors">Privacy &amp; Terms</a>
       </div>
       <div class="flex items-center gap-4">
@@ -408,6 +409,29 @@
       if (openLnk) openLnk.classList.add('hidden');
       showHelp('Installed! Open it any time from your home screen — it works with zero signal.');
     });
+  })();
+  </script>
+
+  <!-- Leave-a-review link: pre-filled email, no backend -->
+  <script>
+  (function () {
+    var el = document.getElementById('homeReviewLink');
+    if (!el) return;
+    var body = [
+      'Here is how the app worked for me on the job:',
+      '',
+      '[write a sentence or two here]',
+      '',
+      '',
+      'OK to share this on your website? (yes / no):',
+      'First name:',
+      'Trade:',
+      'City / State (optional):',
+      ''
+    ].join('\n');
+    el.href = 'mailto:hello@digitalforemansuite.com?subject='
+      + encodeURIComponent('My review of the Change Order Generator')
+      + '&body=' + encodeURIComponent(body);
   })();
   </script>
 
