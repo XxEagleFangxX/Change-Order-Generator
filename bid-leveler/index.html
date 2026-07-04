@@ -34,6 +34,15 @@ tailwind.config = { theme: { extend: { colors: {
   .cellstatus { min-width: 44px; }
   .num { -moz-appearance: textfield; }
   .num::-webkit-outer-spin-button, .num::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+  /* Desktop spreadsheet grid (≥1024px only — phone layout untouched) */
+  @media (min-width: 1024px) {
+    #scopeTable thead th { position: sticky; top: 0; background: #0d1424; z-index: 6; }
+    #scopeTable thead th.stickycol { z-index: 7; }
+    #scopeTable thead th::before { content: ''; position: absolute; left: 0; right: 0; top: -8px; height: 8px; background: #0d1424; }
+    #scopeTable thead th::after { content: ''; position: absolute; left: 0; right: 0; bottom: -6px; height: 6px; background: linear-gradient(#0d1424, rgba(13,20,36,0)); }
+    #scopeTable th:first-child, #scopeTable td.stickycol { min-width: 220px !important; }
+    #scopeTable input[data-price] { padding-top: 0.55rem; padding-bottom: 0.55rem; }
+  }
 </style>
 </head>
 <body class="text-white min-h-screen pb-28">
@@ -112,9 +121,9 @@ tailwind.config = { theme: { extend: { colors: {
       <h2 class="text-xs font-black tracking-widest text-safety uppercase">03 · Scope &amp; Prices</h2>
       <button id="addRow" type="button" class="text-safety text-sm font-bold">+ Add scope item</button>
     </div>
-    <p class="text-[11px] text-slate-500 mb-3">One row per scope line. For each bidder enter their price, or tap the tag to mark it <span class="text-slate-300 font-bold">EXC</span> (excluded from their bid) or <span class="text-slate-300 font-bold">NQ</span> (didn't quote it). Swipe sideways if the table is wider than your screen.</p>
+    <p class="text-[11px] text-slate-500 mb-3">One row per scope line. For each bidder enter their price, or tap the tag to mark it <span class="text-slate-300 font-bold">EXC</span> (excluded from their bid) or <span class="text-slate-300 font-bold">NQ</span> (didn't quote it). <span class="lg:hidden">Swipe sideways if the table is wider than your screen.</span><span class="hidden lg:inline">On a keyboard: <span class="text-slate-300 font-bold">Tab</span> moves across the row, <span class="text-slate-300 font-bold">Enter</span> or <span class="text-slate-300 font-bold">↓</span> moves down the column.</span></p>
     <div class="overflow-x-auto -mx-1 px-1">
-      <table class="w-full text-sm border-separate" style="border-spacing:0 6px; min-width:560px;">
+      <table id="scopeTable" class="w-full text-sm border-separate" style="border-spacing:0 6px; min-width:560px;">
         <thead id="scopeHead"></thead>
         <tbody id="scopeBody"></tbody>
       </table>
@@ -193,7 +202,7 @@ tailwind.config = { theme: { extend: { colors: {
       </details>
       <details class="border-b border-brand-border py-2">
         <summary class="cursor-pointer text-sm font-bold text-slate-200 min-h-[44px] flex items-center"><span class="text-safety font-extrabold mr-2">05</span> Can I use this on my computer?</summary>
-        <p class="text-sm text-slate-400 mt-2 leading-relaxed">Yes — open the same address in your computer's browser, and big bids are much faster with a keyboard. In Chrome or Edge, the install icon at the right end of the address bar puts it on your desktop like a regular app. Your data stays per-device, so use ⬇ Backup / ⬆ Restore below to move a job between phone and computer.</p>
+        <p class="text-sm text-slate-400 mt-2 leading-relaxed">Yes — open the same address in your computer's browser, and big bids are much faster with a keyboard: Tab moves across a row, Enter moves down a column, just like a spreadsheet. You can also tap 📊 Export spreadsheet below to get the whole leveling sheet as a file that opens in Excel or Google Sheets. Your data stays per-device, so use ⬇ Backup / ⬆ Restore below to move a job between phone and computer.</p>
       </details>
       <details class="border-b border-brand-border py-2">
         <summary class="cursor-pointer text-sm font-bold text-slate-200 min-h-[44px] flex items-center"><span class="text-safety font-extrabold mr-2">06</span> Does it work offline?</summary>
@@ -213,6 +222,7 @@ tailwind.config = { theme: { extend: { colors: {
       <p><span class="text-slate-200 font-bold">What "leveling" means:</span> three subs bid the same package but one left out cleanup and another skipped the hardware. Leveling plugs those holes with a fair number so you're comparing the same job — the cheapest-looking bid isn't always the cheapest bid.</p>
       <p><span class="text-slate-200 font-bold">Your data stays on your phone.</span> No account, no cloud — everything lives on this device. Use Backup before switching phones.</p>
       <div class="flex flex-wrap gap-3 pt-1">
+        <button id="csvBtn" type="button" class="bg-white/5 border border-white/10 text-slate-300 text-sm font-bold px-4 py-2 rounded-lg">📊 Export spreadsheet</button>
         <button id="backupBtn" type="button" class="bg-white/5 border border-white/10 text-slate-300 text-sm font-bold px-4 py-2 rounded-lg">⬇ Backup data</button>
         <label class="bg-white/5 border border-white/10 text-slate-300 text-sm font-bold px-4 py-2 rounded-lg cursor-pointer">⬆ Restore<input id="restoreInput" type="file" accept=".json,application/json" class="hidden" /></label>
         <a href="mailto:hello@digitalforemansuite.com?subject=Bid%20Leveler%20bug%20report" class="bg-white/5 border border-white/10 text-slate-300 text-sm font-bold px-4 py-2 rounded-lg">Report a bug</a>
@@ -317,6 +327,54 @@ tailwind.config = { theme: { extend: { colors: {
       activePriceInput = e.target;
       var hint = document.getElementById('pdfHint');
       if (activePdfTab >= 0) { hint.classList.remove('hidden'); hint.textContent = 'Price cell selected — tap a highlighted amount above to fill it.'; }
+    }
+  });
+
+  /* ---------- desktop spreadsheet keyboard flow (≥1024px; phone behavior untouched) ---------- */
+  var deskGridMQ = window.matchMedia('(min-width: 1024px)');
+  function gridCell(ri, bi) {
+    /* bi === -1 → the scope-item textarea; else the price input for bidder bi */
+    return document.querySelector(bi < 0 ? '[data-desc="' + ri + '"]' : '[data-price="' + ri + ':' + bi + '"]');
+  }
+  function focusGridCell(ri, bi) {
+    var t = gridCell(ri, bi);
+    if (!t || t.disabled) return null;   /* disabled = EXC/NQ cell */
+    t.focus();
+    if (t.tagName === 'INPUT' && t.select) t.select();
+    return t;
+  }
+  document.getElementById('scopeBody').addEventListener('keydown', function (e) {
+    var el = e.target;
+    if (!el || !el.hasAttribute) return;
+    var isPrice = el.hasAttribute('data-price');
+    var isDesc = el.hasAttribute('data-desc');
+    if (!isPrice && !isDesc) return;
+    var nb = state.bidders.length;
+    var nr = state.rows.length;
+    var ri, bi;
+    if (isPrice) { var p = el.dataset.price.split(':'); ri = +p[0]; bi = +p[1]; }
+    else { ri = +el.dataset.desc; bi = -1; }
+
+    /* Tab / Shift+Tab: move across the row cell-to-cell, skipping EXC/NQ, wrapping to the next/prev row (desktop only) */
+    if (e.key === 'Tab' && deskGridMQ.matches) {
+      var dir = e.shiftKey ? -1 : 1;
+      var nri = ri, nbi = bi;
+      for (var guard = 0; guard < (nb + 1) * nr + 2; guard++) {
+        nbi += dir;
+        if (nbi >= nb) { nri += 1; nbi = -1; }
+        if (nbi < -1) { nri -= 1; nbi = nb - 1; }
+        if (nri < 0 || nri >= nr) return;          /* edge of grid → let Tab leave normally */
+        if (focusGridCell(nri, nbi)) { e.preventDefault(); return; }
+      }
+      return;
+    }
+
+    /* Enter / ↓ / ↑ in a price cell: move down or up the same bidder's column, skipping EXC/NQ */
+    if (isPrice && (e.key === 'Enter' || e.key === 'ArrowDown' || e.key === 'ArrowUp')) {
+      var step = e.key === 'ArrowUp' ? -1 : 1;
+      for (var r2 = ri + step; r2 >= 0 && r2 < nr; r2 += step) {
+        if (focusGridCell(r2, bi)) { e.preventDefault(); return; }
+      }
     }
   });
 
@@ -799,6 +857,59 @@ tailwind.config = { theme: { extend: { colors: {
   document.getElementById('plugRule').addEventListener('change', function (e) { state.plugRule = e.target.value; renderResults(); saveDraft(); });
   document.getElementById('outlierPct').addEventListener('input', function (e) { state.outlierPct = e.target.value; renderResultsSoon(); saveDraft(); });
   document.getElementById('awardNotes').addEventListener('input', function (e) { state.awardNotes = e.target.value; saveDraft(); });
+
+  /* ---------- spreadsheet export (CSV — opens in Excel / Google Sheets; built on-device, nothing uploaded) ---------- */
+  function csvField(v) {
+    var s = String(v === null || v === undefined ? '' : v);
+    return /[",\n\r]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+  }
+  function csvNum(n) { return (n === null || n === undefined || isNaN(n)) ? '' : (Math.round(n * 100) / 100); }
+  document.getElementById('csvBtn').addEventListener('click', function () {
+    var nb = state.bidders.length;
+    var r = compute();
+    var rows = [];
+    rows.push(['BID LEVELING SHEET']);
+    rows.push(['Job', state.job.name || '']);
+    if (state.job.pkg) rows.push(['Bid package', state.job.pkg]);
+    if (state.job.location) rows.push(['Location', state.job.location]);
+    rows.push(['Date', state.job.date || today()]);
+    rows.push(['Plug rule', state.plugRule === 'none' ? 'None — raw totals only' : (state.plugRule === 'avg' ? 'Average of prices quoted' : 'Highest price quoted')]);
+    rows.push([]);
+    var head = ['Scope item'];
+    for (var i = 0; i < nb; i++) head.push(bidderName(i));
+    rows.push(head);
+    state.rows.forEach(function (row) {
+      if (!rowHasContent(row)) return;
+      var line = [row.desc || ''];
+      for (var bi = 0; bi < nb; bi++) {
+        var c = getCell(row, bi);
+        line.push(c.st === 'P' ? csvNum(c.v) : c.st);
+      }
+      rows.push(line);
+    });
+    rows.push([]);
+    var raw = ['Quoted subtotal']; var plugs = ['Plugged for missing scope']; var lev = ['LEVELED TOTAL'];
+    for (var j = 0; j < nb; j++) { raw.push(csvNum(r.raw[j])); plugs.push(csvNum(r.plugs[j])); lev.push(csvNum(r.leveled[j])); }
+    rows.push(raw);
+    if (state.plugRule !== 'none') { rows.push(plugs); rows.push(lev); }
+    var scopeLineCount = state.rows.filter(rowHasContent).length;
+    var flagLines = summarizeFlags(r.rowFlags, scopeLineCount);
+    if (r.uncovered.length || flagLines.length) {
+      rows.push([]);
+      rows.push(['FLAGS']);
+      if (r.uncovered.length) rows.push([r.uncovered.length + ' scope line' + (r.uncovered.length === 1 ? '' : 's') + ' nobody priced — totals don\'t include that work yet.']);
+      flagLines.forEach(function (t) { rows.push([t]); });
+    }
+    rows.push([]);
+    rows.push(['Created with the free bid leveling app for contractors — digitalforemansuite.com/bid-leveler']);
+    var csv = '﻿' + rows.map(function (line) { return line.map(csvField).join(','); }).join('\r\n');  /* BOM so Excel reads UTF-8 */
+    var blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'BidLeveling-' + ((state.job.name || 'job').replace(/[^\w\- ]+/g, '').trim().replace(/\s+/g, '_') || 'job') + '.csv';
+    a.click();
+    toast('Spreadsheet exported — opens in Excel or Sheets.');
+  });
 
   /* ---------- backup / restore ---------- */
   document.getElementById('backupBtn').addEventListener('click', function () {
