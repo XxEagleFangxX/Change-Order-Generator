@@ -824,7 +824,7 @@ tailwind.config = { theme: { extend: { colors: {
   renderAll();
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/bid-leveler/service-worker.js').catch(function () {});
+    navigator.serviceWorker.register('/bid-leveler/service-worker.js', { scope: '/bid-leveler' }).catch(function () {});
   }
   if (navigator.storage && navigator.storage.persist) {
     navigator.storage.persist().catch(function () {});
