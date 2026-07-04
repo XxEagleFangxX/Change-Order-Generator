@@ -1474,7 +1474,12 @@
 <script>
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function () {
-    navigator.serviceWorker.register('./service-worker.js').catch(function (err) {
+    /* Absolute path + explicit scope: under Vercel cleanUrls the app page lives at
+       /change-order-generator (no trailing slash), so a relative './service-worker.js'
+       resolved to the ROOT service worker and this app's own SW never controlled the page.
+       The no-slash scope (allowed via Service-Worker-Allowed in vercel.json) covers both
+       /change-order-generator and /change-order-generator/... */
+    navigator.serviceWorker.register('/change-order-generator/service-worker.js', { scope: '/change-order-generator' }).catch(function (err) {
       console.warn('Service worker registration failed:', err);
     });
   });
