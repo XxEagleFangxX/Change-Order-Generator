@@ -1293,7 +1293,7 @@
     for (var pg = 1; pg <= totalPages; pg++) {
       doc.setPage(pg); doc.setFont('helvetica','normal'); doc.setFontSize(8); doc.setTextColor(GRAY[0],GRAY[1],GRAY[2]);
       doc.text(currentCONumber() + '  ·  ' + footerBrand, margin, pageH-24);
-      if (!pro) { doc.text('Created with Digital Foreman Suite · digitalforemansuite.com', margin, pageH-13); }
+      if (!pro) { doc.text('Created with the free change order app for contractors · digitalforemansuite.com', margin, pageH-13); }
       doc.text('Page ' + pg + ' of ' + totalPages, pageW-margin, pageH-24, { align:'right' });
     }
 
