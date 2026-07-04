@@ -959,6 +959,7 @@ tailwind.config = { theme: { extend: { colors: {
 
     /* Mobile: native share sheet (text/email the PDF on the spot). Desktop: download straight
        to the Downloads folder — the desktop share sheet has no clean "just open it" path. */
+    try { doc.setProperties({ title: filename }); } catch (e) {}
     var isTouchMobile = (navigator.maxTouchPoints > 0) && window.matchMedia('(pointer: coarse)').matches;
     if (isTouchMobile) {
       try {
@@ -970,8 +971,17 @@ tailwind.config = { theme: { extend: { colors: {
           return;
         }
       } catch (e) {}
+      doc.save(filename);
+      return;
     }
-    doc.save(filename);
+    /* Desktop: open in the browser's own clean PDF viewer (new tab) instead of downloading into
+       whatever app is the OS default (e.g. Acrobat with its trial nag). View, print, save, or
+       email from there. Fall back to a plain download if a popup is blocked. */
+    try {
+      var url = doc.output('bloburl');
+      var win = window.open(url, '_blank');
+      if (!win) { doc.save(filename); }
+    } catch (e) { doc.save(filename); }
   }
 
   /* ---------- misc ---------- */
