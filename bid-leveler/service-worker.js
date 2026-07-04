@@ -5,7 +5,7 @@
    - individual fetch per asset so one bad path can't kill offline
    ========================================================= */
 
-const CACHE_NAME = "bid-leveler-cache-v2";
+const CACHE_NAME = "bid-leveler-cache-v3";
 
 const APP_SHELL = [
   "./",
@@ -18,7 +18,9 @@ const APP_SHELL = [
 
 const CDN_ASSETS = [
   "https://cdn.tailwindcss.com/",
-  "https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"
+  "https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js",
+  "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js",
+  "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js"
 ];
 
 self.addEventListener("install", (event) => {

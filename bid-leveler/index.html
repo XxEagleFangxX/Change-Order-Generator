@@ -24,6 +24,7 @@ tailwind.config = { theme: { extend: { colors: {
 } } } }
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <style>
   body { background: #080c14; }
   .orange-gradient { background: linear-gradient(135deg, #f97316, #ea580c); }
@@ -95,6 +96,16 @@ tailwind.config = { theme: { extend: { colors: {
     <p class="text-[11px] text-slate-500 mt-3">Up to 4 bidders. Tap a bidder's ✕ to remove them (their prices go too).</p>
   </section>
 
+  <!-- BID PDFs (assist) -->
+  <section class="bg-brand-navy border border-brand-border rounded-2xl p-5">
+    <h2 class="text-xs font-black tracking-widest text-safety uppercase mb-2">📄 Bid PDFs <span class="text-slate-500 normal-case tracking-normal font-bold">(optional helper — big time-saver on desktop)</span></h2>
+    <p class="text-[11px] text-slate-500 mb-3">Load each sub's quote PDF and its text shows up here with the dollar amounts highlighted. Tap a price cell in the scope table below, then tap an amount here to drop it straight in — no retyping. The PDF never leaves this device.</p>
+    <div id="pdfTabs" class="flex flex-wrap gap-2 mb-3"></div>
+    <div id="pdfViewer" class="hidden bg-brand-card border border-brand-border rounded-lg p-3 max-h-72 overflow-y-auto text-[13px] leading-relaxed text-slate-300 whitespace-pre-wrap"></div>
+    <p id="pdfHint" class="hidden text-[11px] text-safety mt-2 font-bold"></p>
+    <input id="pdfFileInput" type="file" accept="application/pdf,.pdf" class="hidden" />
+  </section>
+
   <!-- SCOPE & PRICES -->
   <section class="bg-brand-navy border border-brand-border rounded-2xl p-5">
     <div class="flex items-center justify-between mb-2">
@@ -158,6 +169,41 @@ tailwind.config = { theme: { extend: { colors: {
       <span id="jobCount" class="text-[11px] text-slate-500 font-bold"></span>
     </div>
     <div id="jobLog" class="space-y-2"></div>
+  </section>
+
+  <!-- FAQ -->
+  <section class="bg-brand-navy border border-brand-border rounded-2xl p-5">
+    <h2 class="text-xs font-black tracking-widest text-safety uppercase mb-3">FAQ · How-To</h2>
+    <div class="space-y-1">
+      <details class="border-b border-brand-border py-2">
+        <summary class="cursor-pointer text-sm font-bold text-slate-200 min-h-[44px] flex items-center"><span class="text-safety font-extrabold mr-2">01</span> What do EXC and NQ mean?</summary>
+        <p class="text-sm text-slate-400 mt-2 leading-relaxed">Tap the tag next to a price cell to cycle it. <b class="text-slate-200">EXC</b> = the sub excluded that work from their bid on purpose. <b class="text-slate-200">NQ</b> = they just didn't quote it. Either way they didn't price it, so the leveling rule fills the gap for comparison.</p>
+      </details>
+      <details class="border-b border-brand-border py-2">
+        <summary class="cursor-pointer text-sm font-bold text-slate-200 min-h-[44px] flex items-center"><span class="text-safety font-extrabold mr-2">02</span> Why does a bidder show a "plug" amount?</summary>
+        <p class="text-sm text-slate-400 mt-2 leading-relaxed">When a sub skips a scope line, their bid looks cheaper than it really is. The plug adds a fair stand-in (the highest or average price others quoted for that line) so every total covers the same job. You pick the rule in section 04.</p>
+      </details>
+      <details class="border-b border-brand-border py-2">
+        <summary class="cursor-pointer text-sm font-bold text-slate-200 min-h-[44px] flex items-center"><span class="text-safety font-extrabold mr-2">03</span> What does the low-price flag mean?</summary>
+        <p class="text-sm text-slate-400 mt-2 leading-relaxed">A line priced way under everyone else usually means that sub read the scope differently. The flag isn't an accusation — it's a "make a phone call before you award" reminder.</p>
+      </details>
+      <details class="border-b border-brand-border py-2">
+        <summary class="cursor-pointer text-sm font-bold text-slate-200 min-h-[44px] flex items-center"><span class="text-safety font-extrabold mr-2">04</span> How do the Bid PDFs work?</summary>
+        <p class="text-sm text-slate-400 mt-2 leading-relaxed">Load each sub's quote PDF up top and the text appears with dollar amounts highlighted. Tap a price cell in the scope table, then tap an amount to fill it. Heads up: a PDF that's a photo or scan has no text inside — those you enter by hand. PDF text isn't saved with the job; it's just a helper while you work.</p>
+      </details>
+      <details class="border-b border-brand-border py-2">
+        <summary class="cursor-pointer text-sm font-bold text-slate-200 min-h-[44px] flex items-center"><span class="text-safety font-extrabold mr-2">05</span> Can I use this on my computer?</summary>
+        <p class="text-sm text-slate-400 mt-2 leading-relaxed">Yes — open the same address in your computer's browser, and big bids are much faster with a keyboard. In Chrome or Edge, the install icon at the right end of the address bar puts it on your desktop like a regular app. Your data stays per-device, so use ⬇ Backup / ⬆ Restore below to move a job between phone and computer.</p>
+      </details>
+      <details class="border-b border-brand-border py-2">
+        <summary class="cursor-pointer text-sm font-bold text-slate-200 min-h-[44px] flex items-center"><span class="text-safety font-extrabold mr-2">06</span> Does it work offline?</summary>
+        <p class="text-sm text-slate-400 mt-2 leading-relaxed">Yes. After the first visit it works with zero signal — concrete basement, metal building, no problem. Everything runs and saves on your device.</p>
+      </details>
+      <details class="py-2">
+        <summary class="cursor-pointer text-sm font-bold text-slate-200 min-h-[44px] flex items-center"><span class="text-safety font-extrabold mr-2">07</span> Where is my data? What if I switch phones?</summary>
+        <p class="text-sm text-slate-400 mt-2 leading-relaxed">Everything lives on this device — no account, no cloud, nothing sent anywhere. Before switching devices, tap ⬇ Backup to save a file, then ⬆ Restore it on the new one.</p>
+      </details>
+    </div>
   </section>
 
   <!-- HELP -->
@@ -255,6 +301,121 @@ tailwind.config = { theme: { extend: { colors: {
     } catch (imgErr) {}
     return margin + lw + chipPad * 2 + 14;
   }
+
+  /* ---------- Bid PDF assist (on-device pdf.js text extraction; nothing uploaded) ---------- */
+  var pdfTexts = [null, null, null, null];   /* per bidder index; session-only, not saved with the job */
+  var activePdfTab = -1;
+  var pendingLoadIdx = -1;
+  var activePriceInput = null;
+
+  if (window.pdfjsLib) {
+    window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+  }
+
+  document.getElementById('scopeBody').addEventListener('focusin', function (e) {
+    if (e.target && e.target.hasAttribute && e.target.hasAttribute('data-price')) {
+      activePriceInput = e.target;
+      var hint = document.getElementById('pdfHint');
+      if (activePdfTab >= 0) { hint.classList.remove('hidden'); hint.textContent = 'Price cell selected — tap a highlighted amount above to fill it.'; }
+    }
+  });
+
+  function renderPdfTabs() {
+    var box = document.getElementById('pdfTabs');
+    box.innerHTML = '';
+    state.bidders.forEach(function (b, i) {
+      var name = esc(bidderName(i) || ('Bidder ' + (i + 1)));
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      if (pdfTexts[i]) {
+        btn.className = 'text-xs font-bold px-3 py-2 rounded-lg border ' + (activePdfTab === i ? 'border-safety text-safety bg-safety/10' : 'border-brand-border text-slate-300 bg-brand-card');
+        btn.innerHTML = '📄 ' + name + ' <span class="text-slate-500 font-black ml-1" data-clearpdf="' + i + '">✕</span>';
+        btn.addEventListener('click', function (e) {
+          if (e.target && e.target.hasAttribute('data-clearpdf')) { pdfTexts[i] = null; if (activePdfTab === i) activePdfTab = -1; renderPdfTabs(); showPdfTab(activePdfTab); return; }
+          activePdfTab = i; renderPdfTabs(); showPdfTab(i);
+        });
+      } else {
+        btn.className = 'text-xs font-bold px-3 py-2 rounded-lg border border-dashed border-brand-border text-slate-400 bg-transparent';
+        btn.textContent = '📄 Load PDF — ' + (bidderName(i) || ('Bidder ' + (i + 1)));
+        btn.addEventListener('click', function () { pendingLoadIdx = i; document.getElementById('pdfFileInput').click(); });
+      }
+      box.appendChild(btn);
+    });
+  }
+
+  function showPdfTab(i) {
+    var viewer = document.getElementById('pdfViewer');
+    var hint = document.getElementById('pdfHint');
+    if (i < 0 || !pdfTexts[i]) { viewer.classList.add('hidden'); hint.classList.add('hidden'); return; }
+    viewer.classList.remove('hidden');
+    var moneyRe = /\$\s?\d[\d,]*(?:\.\d{1,2})?|\b\d{1,3}(?:,\d{3})+(?:\.\d{1,2})?\b|\b\d+\.\d{2}\b/g;
+    var html = esc(pdfTexts[i]).replace(moneyRe, function (m) {
+      return '<button type="button" data-money="' + m.replace(/"/g, '') + '" class="inline-block bg-safety/20 text-safety font-black rounded px-1 mx-0.5 border border-safety/40">' + m + '</button>';
+    });
+    viewer.innerHTML = html;
+    hint.classList.remove('hidden');
+    hint.textContent = 'Tap a price cell in the scope table, then tap a highlighted amount to fill it.';
+  }
+
+  document.getElementById('pdfViewer').addEventListener('click', function (e) {
+    var t = e.target;
+    if (!(t && t.hasAttribute && t.hasAttribute('data-money'))) return;
+    if (!activePriceInput || !document.body.contains(activePriceInput) || activePriceInput.disabled) {
+      var hint = document.getElementById('pdfHint');
+      hint.classList.remove('hidden');
+      hint.textContent = 'Tap the price cell you want to fill first (in the scope table), then tap the amount.';
+      return;
+    }
+    var clean = t.getAttribute('data-money').replace(/[^0-9.]/g, '');
+    activePriceInput.value = clean;
+    activePriceInput.dispatchEvent(new Event('input', { bubbles: true }));
+    activePriceInput.classList.add('border-safety');
+    (function (elRef) { setTimeout(function () { elRef.classList.remove('border-safety'); }, 900); })(activePriceInput);
+  });
+
+  document.getElementById('pdfFileInput').addEventListener('change', function (e) {
+    var file = e.target.files && e.target.files[0];
+    e.target.value = '';
+    if (!file || pendingLoadIdx < 0) return;
+    var idx = pendingLoadIdx; pendingLoadIdx = -1;
+    if (!window.pdfjsLib) { alert('PDF reader needs one first load with internet — connect once and try again.'); return; }
+    var reader = new FileReader();
+    reader.onload = function () {
+      window.pdfjsLib.getDocument({ data: reader.result }).promise.then(function (doc) {
+        var pages = [];
+        var chain = Promise.resolve();
+        for (var p = 1; p <= doc.numPages; p++) {
+          (function (pn) {
+            chain = chain.then(function () {
+              return doc.getPage(pn).then(function (page) { return page.getTextContent(); }).then(function (tc) {
+                var lines = {}, order = [];
+                tc.items.forEach(function (it) {
+                  var y = Math.round(it.transform[5]);
+                  if (!(y in lines)) { lines[y] = []; order.push(y); }
+                  lines[y].push(it.str);
+                });
+                pages.push(order.map(function (y) { return lines[y].join(' '); }).join('\n'));
+              });
+            });
+          })(p);
+        }
+        return chain.then(function () {
+          var text = pages.join('\n\n— page break —\n\n').replace(/[ \t]+/g, ' ').trim();
+          if (text.length < 40) {
+            pdfTexts[idx] = '(This PDF looks like a photo or scan — there\'s no text inside it to read. Enter this bid\'s prices by hand.)';
+          } else {
+            pdfTexts[idx] = text;
+          }
+          activePdfTab = idx; renderPdfTabs(); showPdfTab(idx);
+        });
+      }).catch(function (err) {
+        alert('Couldn\'t read that PDF: ' + err.message);
+      });
+    };
+    reader.readAsArrayBuffer(file);
+  });
+
+  new MutationObserver(function () { renderPdfTabs(); }).observe(document.getElementById('bidderList'), { childList: true, subtree: true });
 
   function saveDraft() { try { localStorage.setItem(K_DRAFT, JSON.stringify(state)); } catch (e) {} }
   function loadDraft() {
