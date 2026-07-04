@@ -607,6 +607,7 @@ tailwind.config = { theme: { extend: { colors: {
     }
 
     var filename = 'PunchList-' + (state.job.name || 'job').replace(/[^a-z0-9]+/gi, '-').slice(0, 40) + '.pdf';
+    try { doc.setProperties({ title: filename }); } catch (e) {}
     var isTouchMobile = (navigator.maxTouchPoints > 0) && window.matchMedia('(pointer: coarse)').matches;
     if (isTouchMobile) {
       try {
@@ -618,8 +619,16 @@ tailwind.config = { theme: { extend: { colors: {
           return;
         }
       } catch (e) {}
+      doc.save(filename);
+      return;
     }
-    doc.save(filename);
+    /* Desktop: open in the browser's own clean PDF viewer (new tab) instead of the OS default app.
+       Fall back to a plain download if a popup is blocked. */
+    try {
+      var url = doc.output('bloburl');
+      var win = window.open(url, '_blank');
+      if (!win) { doc.save(filename); }
+    } catch (e) { doc.save(filename); }
   }
 
   /* ---------- misc ---------- */
