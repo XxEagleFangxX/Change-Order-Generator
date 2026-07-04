@@ -606,7 +606,7 @@ tailwind.config = { theme: { extend: { colors: {
   renderAll();
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/punch-list/service-worker.js').catch(function () {});
+    navigator.serviceWorker.register('/punch-list/service-worker.js', { scope: '/punch-list' }).catch(function () {});
   }
   if (navigator.storage && navigator.storage.persist) {
     navigator.storage.persist().catch(function () {});
