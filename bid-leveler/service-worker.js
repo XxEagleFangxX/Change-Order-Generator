@@ -5,7 +5,7 @@
    - individual fetch per asset so one bad path can't kill offline
    ========================================================= */
 
-const CACHE_NAME = "bid-leveler-cache-v3";
+const CACHE_NAME = "bid-leveler-cache-v4";
 
 const APP_SHELL = [
   "./",

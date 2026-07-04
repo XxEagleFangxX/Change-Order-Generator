@@ -957,16 +957,20 @@ tailwind.config = { theme: { extend: { colors: {
 
     var filename = 'BidLeveling-' + (state.job.name || 'job').replace(/[^a-z0-9]+/gi, '-').slice(0, 40) + '.pdf';
 
-    /* native share sheet first (Android/iOS PWA), fallback to download */
-    try {
-      var blob = doc.output('blob');
-      var file = new File([blob], filename, { type: 'application/pdf' });
-      if (navigator.canShare && navigator.canShare({ files: [file] })) {
-        navigator.share({ files: [file], title: filename, text: 'Bid leveling sheet — ' + (state.job.name || '') })
-          .catch(function () { doc.save(filename); });
-        return;
-      }
-    } catch (e) {}
+    /* Mobile: native share sheet (text/email the PDF on the spot). Desktop: download straight
+       to the Downloads folder — the desktop share sheet has no clean "just open it" path. */
+    var isTouchMobile = (navigator.maxTouchPoints > 0) && window.matchMedia('(pointer: coarse)').matches;
+    if (isTouchMobile) {
+      try {
+        var blob = doc.output('blob');
+        var file = new File([blob], filename, { type: 'application/pdf' });
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+          navigator.share({ files: [file], title: filename, text: 'Bid leveling sheet — ' + (state.job.name || '') })
+            .catch(function () { doc.save(filename); });
+          return;
+        }
+      } catch (e) {}
+    }
     doc.save(filename);
   }
 
