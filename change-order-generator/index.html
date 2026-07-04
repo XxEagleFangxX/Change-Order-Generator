@@ -1301,20 +1301,28 @@
     var pdfFilename = currentCONumber() + '.pdf';
     /* Mobile: native share sheet to text/email it on the spot. Desktop: download straight
        to Downloads — the desktop share sheet has no clean "just open it" path. */
+    try { doc.setProperties({ title: pdfFilename }); } catch (e) {}
     var isTouchMobile = (navigator.maxTouchPoints > 0) && window.matchMedia('(pointer: coarse)').matches;
-    var pdfBlob = doc.output('blob');
-    var shareFile = new File([pdfBlob], pdfFilename, { type: 'application/pdf' });
-    if (isTouchMobile && navigator.canShare && navigator.canShare({ files: [shareFile] })) {
-      navigator.share({
-        files: [shareFile],
-        title: pdfFilename,
-        text: 'Change Order ' + currentCONumber()
-      }).catch(function () {
-        /* User cancelled share sheet or error — fall back to download */
+    if (isTouchMobile) {
+      var pdfBlob = doc.output('blob');
+      var shareFile = new File([pdfBlob], pdfFilename, { type: 'application/pdf' });
+      if (navigator.canShare && navigator.canShare({ files: [shareFile] })) {
+        navigator.share({
+          files: [shareFile],
+          title: pdfFilename,
+          text: 'Change Order ' + currentCONumber()
+        }).catch(function () { doc.save(pdfFilename); });
+      } else {
         doc.save(pdfFilename);
-      });
+      }
     } else {
-      doc.save(pdfFilename);
+      /* Desktop: open in the browser's own clean PDF viewer (new tab) instead of the OS default
+         app (e.g. Acrobat with its trial nag). Fall back to download if a popup is blocked. */
+      try {
+        var coUrl = doc.output('bloburl');
+        var coWin = window.open(coUrl, '_blank');
+        if (!coWin) { doc.save(pdfFilename); }
+      } catch (e) { doc.save(pdfFilename); }
     }
 
     /* They just generated a change order — gentle, one-time nudge to review */
