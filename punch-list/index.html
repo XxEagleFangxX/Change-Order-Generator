@@ -607,15 +607,18 @@ tailwind.config = { theme: { extend: { colors: {
     }
 
     var filename = 'PunchList-' + (state.job.name || 'job').replace(/[^a-z0-9]+/gi, '-').slice(0, 40) + '.pdf';
-    try {
-      var blob = doc.output('blob');
-      var file = new File([blob], filename, { type: 'application/pdf' });
-      if (navigator.canShare && navigator.canShare({ files: [file] })) {
-        navigator.share({ files: [file], title: filename, text: 'Punch list — ' + (state.job.name || '') })
-          .catch(function () { doc.save(filename); });
-        return;
-      }
-    } catch (e) {}
+    var isTouchMobile = (navigator.maxTouchPoints > 0) && window.matchMedia('(pointer: coarse)').matches;
+    if (isTouchMobile) {
+      try {
+        var blob = doc.output('blob');
+        var file = new File([blob], filename, { type: 'application/pdf' });
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+          navigator.share({ files: [file], title: filename, text: 'Punch list — ' + (state.job.name || '') })
+            .catch(function () { doc.save(filename); });
+          return;
+        }
+      } catch (e) {}
+    }
     doc.save(filename);
   }
 
