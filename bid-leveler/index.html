@@ -223,6 +223,39 @@ tailwind.config = { theme: { extend: { colors: {
   /* ---------- persistence ---------- */
   var K_DRAFT = 'dfs.bl.draft', K_JOBS = 'dfs.bl.jobs';
 
+  /* ---------- Suite Pro (shared-origin license + branding; dormant — no UI here) ----------
+     One dfs.pro.v1 key (activated in the Change Order Generator) brands PDFs
+     and removes the free footer across all three apps. Business settings
+     (company name/logo) are read from the CO app's dfs.businessSettings.v1. */
+  var PRO_KEY = 'dfs.pro.v1', BIZ_KEY = 'dfs.businessSettings.v1';
+  function isPro() {
+    try { var p = JSON.parse(localStorage.getItem(PRO_KEY) || 'null'); return !!(p && p.verified === true); } catch (e) { return false; }
+  }
+  function bizSettings() {
+    try { return JSON.parse(localStorage.getItem(BIZ_KEY) || 'null') || {}; } catch (e) { return {}; }
+  }
+  function drawProLogo(doc, margin, bandH) {
+    /* Draws the CO-app-saved logo as a white chip in the header band.
+       Returns the x where header text should start. */
+    var biz = bizSettings();
+    if (!(isPro() && biz.logo && biz.logo.dataUrl && biz.logo.w && biz.logo.h)) return margin;
+    var maxLogoH = bandH - 24, maxLogoW = 100, chipPad = 5;
+    var ratio = biz.logo.w / biz.logo.h;
+    var lh = maxLogoH, lw = lh * ratio;
+    if (lw > maxLogoW) { lw = maxLogoW; lh = lw / ratio; }
+    var cy = bandH / 2;
+    doc.setFillColor(255, 255, 255);
+    if (typeof doc.roundedRect === 'function') { doc.roundedRect(margin, cy - lh / 2 - chipPad, lw + chipPad * 2, lh + chipPad * 2, 5, 5, 'F'); }
+    else { doc.rect(margin, cy - lh / 2 - chipPad, lw + chipPad * 2, lh + chipPad * 2, 'F'); }
+    try {
+      var logoImg = new Image(); logoImg.src = biz.logo.dataUrl;
+      var lc = document.createElement('canvas'); lc.width = biz.logo.w; lc.height = biz.logo.h;
+      var lctx = lc.getContext('2d'); lctx.fillStyle = '#ffffff'; lctx.fillRect(0, 0, lc.width, lc.height); lctx.drawImage(logoImg, 0, 0);
+      doc.addImage(lc.toDataURL('image/jpeg', 0.85), 'JPEG', margin + chipPad, cy - lh / 2, lw, lh);
+    } catch (imgErr) {}
+    return margin + lw + chipPad * 2 + 14;
+  }
+
   function saveDraft() { try { localStorage.setItem(K_DRAFT, JSON.stringify(state)); } catch (e) {} }
   function loadDraft() {
     try { var s = localStorage.getItem(K_DRAFT); return s ? JSON.parse(s) : null; } catch (e) { return null; }
@@ -625,14 +658,20 @@ tailwind.config = { theme: { extend: { colors: {
     /* header band */
     doc.setFillColor(NAVY[0], NAVY[1], NAVY[2]);
     doc.rect(0, 0, pageW, 64, 'F');
+    var textX = drawProLogo(doc, margin, 64);
     doc.setTextColor(255, 255, 255);
     doc.setFont('helvetica', 'bold'); doc.setFontSize(18);
-    doc.text('BID LEVELING SHEET', margin, 32);
+    doc.text('BID LEVELING SHEET', textX, 32);
     doc.setFontSize(10); doc.setFont('helvetica', 'normal');
     doc.setTextColor(ORANGE[0], ORANGE[1], ORANGE[2]);
-    doc.text((state.job.name || 'Untitled job') + (state.job.pkg ? '  ·  ' + state.job.pkg : ''), margin, 50);
+    doc.text((state.job.name || 'Untitled job') + (state.job.pkg ? '  ·  ' + state.job.pkg : ''), textX, 50);
     doc.setTextColor(200, 205, 215);
     doc.text((state.job.location ? state.job.location + '  ·  ' : '') + (state.job.date || ''), pageW - margin, 32, { align: 'right' });
+    var proBrand = bizSettings().companyName || '';
+    if (isPro() && proBrand) {
+      doc.setTextColor(147, 197, 253);
+      doc.text(proBrand.toUpperCase(), pageW - margin, 50, { align: 'right' });
+    }
 
     var y = 84;
     /* column layout */
@@ -743,12 +782,15 @@ tailwind.config = { theme: { extend: { colors: {
       doc.text(an.slice(0, 8), margin, y);
     }
 
-    /* footer on every page */
+    /* footer on every page (Pro: company brand replaces the free-app line) */
+    var pro = isPro();
+    var footerBrand = bizSettings().companyName || 'Digital Foreman Suite';
     var totalPages = doc.internal.getNumberOfPages();
     for (var pg = 1; pg <= totalPages; pg++) {
       doc.setPage(pg);
       doc.setFont('helvetica', 'normal'); doc.setFontSize(8); doc.setTextColor(GRAY[0], GRAY[1], GRAY[2]);
-      doc.text('Created with the free Bid Leveler for contractors · digitalforemansuite.com', margin, pageH - 18);
+      if (pro) { doc.text(footerBrand, margin, pageH - 18); }
+      else { doc.text('Created with the free Bid Leveler for contractors · digitalforemansuite.com', margin, pageH - 18); }
       doc.text('Page ' + pg + ' of ' + totalPages, pageW - margin, pageH - 18, { align: 'right' });
     }
 
