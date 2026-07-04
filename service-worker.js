@@ -28,7 +28,7 @@
    APP service worker at /change-order-generator/. Its cache name has its OWN prefix
    ("dfs-home-cache-") and its activate step below only deletes caches with that prefix,
    so it can NEVER wipe the app's "change-order-cache-*" offline cache (and vice-versa). */
-const CACHE_NAME = "dfs-home-cache-v1";
+const CACHE_NAME = "dfs-home-cache-v2";
 
 /* Files served from our own site (homepage shell + install icons). */
 const APP_SHELL = [
@@ -110,14 +110,22 @@ self.addEventListener("fetch", (event) => {
         .then((resp) => {
           if (resp && resp.ok) {
             const copy = resp.clone();
+            const path = new URL(event.request.url).pathname;
             caches.open(CACHE_NAME).then((c) => {
-              c.put("./index.html", copy.clone());
-              c.put("./", copy);
+              /* v2 FIX: cache each page under its OWN URL. v1 wrote every visited
+                 page into "./index.html", so browsing /bid-leveler (or any page)
+                 overwrote the cached HOMEPAGE and offline fallback served the
+                 wrong page. Only "/" refreshes the homepage shell entry. */
+              c.put(event.request, copy.clone());
+              if (path === "/" || path === "/index.html") c.put("./index.html", copy);
             });
           }
           return resp;
         })
-        .catch(() => caches.match("./index.html"))
+        .catch(() =>
+          caches.match(event.request, { ignoreSearch: true })
+            .then((hit) => hit || caches.match("./index.html"))
+        )
     );
     return;
   }
