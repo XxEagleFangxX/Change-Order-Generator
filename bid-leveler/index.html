@@ -480,7 +480,8 @@ tailwind.config = { theme: { extend: { colors: {
             var sum = quoted.reduce(function (a, b) { return a + b; }, 0);
             var avgOthers = (sum - cell.v) / (quoted.length - 1);
             if (avgOthers > 0 && cell.v < avgOthers * (1 - thr)) {
-              out.rowFlags.push({ row: ri, text: '"' + (row.desc || 'Line ' + (ri + 1)) + '" — ' + bidderName(bj) + ' is ' + Math.round((1 - cell.v / avgOthers) * 100) + '% under the others. Worth a call to confirm the scope matched.' });
+              var pct = Math.round((1 - cell.v / avgOthers) * 100);
+              out.rowFlags.push({ row: ri, bidder: bj, desc: (row.desc || 'Line ' + (ri + 1)), pct: pct, text: '"' + (row.desc || 'Line ' + (ri + 1)) + '" — ' + bidderName(bj) + ' is ' + pct + '% under the others. Worth a call to confirm the scope matched.' });
             }
           }
         } else {
@@ -496,6 +497,28 @@ tailwind.config = { theme: { extend: { colors: {
   function rowHasContent(row) {
     if ((row.desc || '').trim()) return true;
     return row.cells.some(function (c) { return c && c.st === 'P' && c.v !== null; });
+  }
+  /* Collapse the flat rowFlags into readable lines. A bidder under on 3+ lines gets ONE grouped
+     line (keeps big jobs from drowning in flags); 1–2 lines stay itemized. Returns array of strings. */
+  function summarizeFlags(rowFlags, totalScopeLines) {
+    var byBidder = {};
+    rowFlags.forEach(function (f) {
+      if (f.bidder === undefined) return;
+      (byBidder[f.bidder] = byBidder[f.bidder] || []).push(f);
+    });
+    var out = [];
+    Object.keys(byBidder).forEach(function (k) {
+      var list = byBidder[k];
+      if (list.length >= 3) {
+        var worst = list.reduce(function (a, b) { return b.pct > a.pct ? b : a; }, list[0]);
+        var denom = totalScopeLines || list.length;
+        out.push(bidderName(+k) + ' is under the others on ' + list.length + ' of ' + denom +
+          ' scope lines (up to ' + worst.pct + '% low). Worth a call to confirm they read the scope the same way.');
+      } else {
+        list.forEach(function (f) { out.push(f.text); });
+      }
+    });
+    return out;
   }
   function bidderName(i) { return (state.bidders[i].name || 'Bidder ' + (i + 1)); }
 
@@ -643,8 +666,9 @@ tailwind.config = { theme: { extend: { colors: {
     if (r.uncovered.length) {
       flags += '<p class="text-yellow-300 text-sm font-semibold mb-1">⚠ ' + r.uncovered.length + ' scope line' + (r.uncovered.length === 1 ? '' : 's') + ' nobody priced — the totals don\'t include that work yet.</p>';
     }
-    r.rowFlags.forEach(function (f) {
-      flags += '<p class="text-yellow-200/90 text-sm mb-1">⚑ ' + esc(f.text) + '</p>';
+    var scopeLineCount = state.rows.filter(rowHasContent).length;
+    summarizeFlags(r.rowFlags, scopeLineCount).forEach(function (line) {
+      flags += '<p class="text-yellow-200/90 text-sm mb-1">⚑ ' + esc(line) + '</p>';
     });
     fb.innerHTML = flags;
   }
@@ -910,8 +934,9 @@ tailwind.config = { theme: { extend: { colors: {
       if (r.uncovered.length) {
         doc.text('- ' + r.uncovered.length + ' scope line(s) priced by nobody; totals exclude that work.', margin, y); y += 11;
       }
-      r.rowFlags.slice(0, 6).forEach(function (f) {
-        var fl = doc.splitTextToSize('- ' + f.text, pageW - margin * 2);
+      var pdfScopeLines = state.rows.filter(rowHasContent).length;
+      summarizeFlags(r.rowFlags, pdfScopeLines).slice(0, 8).forEach(function (line) {
+        var fl = doc.splitTextToSize('- ' + line, pageW - margin * 2);
         doc.text(fl, margin, y); y += fl.length * 10 + 2;
       });
       y += 4;
