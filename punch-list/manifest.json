@@ -1,0 +1,15 @@
+{
+  "name": "Punch List — Digital Foreman Suite",
+  "short_name": "Punch List",
+  "description": "Walk the job, punch the list, get it signed off. 100% offline, no account, no subscription.",
+  "start_url": "/punch-list/",
+  "scope": "/punch-list/",
+  "display": "standalone",
+  "background_color": "#080c14",
+  "theme_color": "#f97316",
+  "icons": [
+    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "/icons/icon-512-maskable.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
