@@ -1299,10 +1299,12 @@
 
     saveToLog(snapshotCO());
     var pdfFilename = currentCONumber() + '.pdf';
-    /* Try native share sheet (Android/iOS PWA) — falls back to download */
+    /* Mobile: native share sheet to text/email it on the spot. Desktop: download straight
+       to Downloads — the desktop share sheet has no clean "just open it" path. */
+    var isTouchMobile = (navigator.maxTouchPoints > 0) && window.matchMedia('(pointer: coarse)').matches;
     var pdfBlob = doc.output('blob');
     var shareFile = new File([pdfBlob], pdfFilename, { type: 'application/pdf' });
-    if (navigator.canShare && navigator.canShare({ files: [shareFile] })) {
+    if (isTouchMobile && navigator.canShare && navigator.canShare({ files: [shareFile] })) {
       navigator.share({
         files: [shareFile],
         title: pdfFilename,
