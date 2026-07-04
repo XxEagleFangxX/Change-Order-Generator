@@ -150,7 +150,7 @@ tailwind.config = { theme: { extend: { colors: {
       </details>
       <details class="border-b border-brand-border py-2">
         <summary class="cursor-pointer text-sm font-bold text-slate-200 min-h-[44px] flex items-center"><span class="text-safety font-extrabold mr-2">04</span> Can I use this on my computer?</summary>
-        <p class="text-sm text-slate-400 mt-2 leading-relaxed">Yes — open the same address in your computer's browser. In Chrome or Edge, the install icon at the right end of the address bar puts it on your desktop like a regular app. Data stays per-device; use ⬇ Backup / ⬆ Restore below to move a job between phone and computer.</p>
+        <p class="text-sm text-slate-400 mt-2 leading-relaxed">Yes — open the same address in your computer's browser. In Chrome or Edge, the install icon at the right end of the address bar puts it on your desktop like a regular app. You can also tap 📊 Export spreadsheet below to get the whole list as a file that opens in Excel or Google Sheets — handy for sending a sub just their items. Data stays per-device; use ⬇ Backup / ⬆ Restore below to move a job between phone and computer.</p>
       </details>
       <details class="border-b border-brand-border py-2">
         <summary class="cursor-pointer text-sm font-bold text-slate-200 min-h-[44px] flex items-center"><span class="text-safety font-extrabold mr-2">05</span> Does it work offline?</summary>
@@ -170,6 +170,7 @@ tailwind.config = { theme: { extend: { colors: {
       <p><span class="text-slate-200 font-bold">How it works:</span> walk the job with the client, add each area, punch in the items as you spot them, and tag the trade responsible. Check items off as they close. When it's all done, both of you sign and the PDF is your completion record — nobody's arguing later about what was on the list.</p>
       <p><span class="text-slate-200 font-bold">Your data stays on your phone.</span> No account, no cloud. Use Backup before switching phones.</p>
       <div class="flex flex-wrap gap-3 pt-1">
+        <button id="csvBtn" type="button" class="bg-white/5 border border-white/10 text-slate-300 text-sm font-bold px-4 py-2 rounded-lg">📊 Export spreadsheet</button>
         <button id="backupBtn" type="button" class="bg-white/5 border border-white/10 text-slate-300 text-sm font-bold px-4 py-2 rounded-lg">⬇ Backup data</button>
         <label class="bg-white/5 border border-white/10 text-slate-300 text-sm font-bold px-4 py-2 rounded-lg cursor-pointer">⬆ Restore<input id="restoreInput" type="file" accept=".json,application/json" class="hidden" /></label>
         <a href="mailto:hello@digitalforemansuite.com?subject=Punch%20List%20bug%20report" class="bg-white/5 border border-white/10 text-slate-300 text-sm font-bold px-4 py-2 rounded-lg">Report a bug</a>
@@ -486,6 +487,41 @@ tailwind.config = { theme: { extend: { colors: {
   /* ---------- job inputs ---------- */
   [['jobName', 'name'], ['jobClient', 'client'], ['jobLocation', 'location'], ['jobDate', 'date']].forEach(function (pair) {
     document.getElementById(pair[0]).addEventListener('input', function (e) { state.job[pair[1]] = e.target.value; saveDraft(); });
+  });
+
+  /* ---------- spreadsheet export (CSV — opens in Excel / Google Sheets; built on-device, nothing uploaded) ---------- */
+  function csvField(v) {
+    var s = String(v === null || v === undefined ? '' : v);
+    return /[",\n\r]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+  }
+  document.getElementById('csvBtn').addEventListener('click', function () {
+    var c = counts();
+    var pct = c.total ? Math.round(c.done / c.total * 100) : 0;
+    var rows = [];
+    rows.push(['PUNCH LIST']);
+    rows.push(['Job', state.job.name || '']);
+    if (state.job.client) rows.push(['Client', state.job.client]);
+    if (state.job.location) rows.push(['Location', state.job.location]);
+    rows.push(['Date', state.job.date || today()]);
+    rows.push(['Status', c.total && c.done === c.total ? 'COMPLETE' : 'ITEMS OPEN']);
+    rows.push(['Progress', c.done + ' of ' + c.total + ' closed (' + pct + '%)']);
+    rows.push([]);
+    rows.push(['Area', 'Item', 'Trade', 'Status', 'Notes']);
+    state.areas.forEach(function (a) {
+      a.items.forEach(function (it) {
+        if (!(it.desc || '').trim()) return;
+        rows.push([a.name || 'General', it.desc, it.trade || '', it.done ? 'DONE' : 'OPEN', it.note || '']);
+      });
+    });
+    rows.push([]);
+    rows.push(['Created with the free punch list app for contractors — digitalforemansuite.com/punch-list']);
+    var csv = '﻿' + rows.map(function (line) { return line.map(csvField).join(','); }).join('\r\n');  /* BOM so Excel reads UTF-8 */
+    var blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'PunchList-' + ((state.job.name || 'job').replace(/[^\w\- ]+/g, '').trim().replace(/\s+/g, '_') || 'job') + '.csv';
+    a.click();
+    toast('Spreadsheet exported — opens in Excel or Sheets.');
   });
 
   /* ---------- backup / restore ---------- */
