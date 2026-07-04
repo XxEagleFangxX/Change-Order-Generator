@@ -13,7 +13,21 @@
       "source": "/change-order-generator/service-worker.js",
       "headers": [
         { "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" },
-        { "key": "Service-Worker-Allowed", "value": "/change-order-generator/" }
+        { "key": "Service-Worker-Allowed", "value": "/change-order-generator" }
+      ]
+    },
+    {
+      "source": "/bid-leveler/service-worker.js",
+      "headers": [
+        { "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" },
+        { "key": "Service-Worker-Allowed", "value": "/bid-leveler" }
+      ]
+    },
+    {
+      "source": "/punch-list/service-worker.js",
+      "headers": [
+        { "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" },
+        { "key": "Service-Worker-Allowed", "value": "/punch-list" }
       ]
     },
     {
