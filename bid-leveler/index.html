@@ -1,0 +1,838 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Free Bid Leveling Tool for Contractors — Compare Sub Bids, Works Offline</title>
+<meta name="description" content="Level sub bids apples-to-apples on your phone. Spot missing scope, plug the gaps, and see the true low bid — 100% offline, no account, no subscription. Built by a 30-year contractor." />
+<link rel="canonical" href="https://digitalforemansuite.com/bid-leveler" />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://digitalforemansuite.com/bid-leveler" />
+<meta property="og:title" content="Bid Leveler — Compare Sub Bids Apples-to-Apples, Free &amp; Offline" />
+<meta property="og:description" content="Spot missing scope, plug the gaps, and see the true low bid. Free, offline, no account." />
+<meta property="og:image" content="https://digitalforemansuite.com/og-image.png" />
+<link rel="manifest" href="/bid-leveler/manifest.json" />
+<meta name="theme-color" content="#f97316" />
+<link rel="icon" type="image/png" href="/icons/icon-192.png" />
+<link rel="apple-touch-icon" href="/icons/icon-192.png" />
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config = { theme: { extend: { colors: {
+  'brand-dark': '#080c14', 'brand-navy': '#0d1424', 'brand-card': '#111827',
+  'brand-border': '#1e2a3a', 'safety': '#f97316', 'safety-dark': '#ea580c',
+  'blueprintsoft': '#93c5fd'
+} } } }
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+  body { background: #080c14; }
+  .orange-gradient { background: linear-gradient(135deg, #f97316, #ea580c); }
+  .stickycol { position: sticky; left: 0; background: #0d1424; z-index: 5; }
+  input, select, textarea { color-scheme: dark; }
+  input::placeholder, textarea::placeholder { color: #475569; }
+  .cellstatus { min-width: 44px; }
+  .num { -moz-appearance: textfield; }
+  .num::-webkit-outer-spin-button, .num::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+</style>
+</head>
+<body class="text-white min-h-screen pb-28">
+
+<!-- HEADER -->
+<header class="border-b border-brand-border bg-brand-navy/60 px-4 py-4">
+  <div class="max-w-5xl mx-auto flex items-center justify-between">
+    <div>
+      <p class="text-[10px] font-bold tracking-widest text-slate-500 uppercase">Digital Foreman Suite</p>
+      <h1 class="text-2xl font-black tracking-tight">BID <span class="text-safety">LEVELER</span></h1>
+    </div>
+    <div class="text-right">
+      <p class="text-[10px] text-slate-500 font-semibold uppercase tracking-widest">Compare bids</p>
+      <p class="text-[10px] text-slate-500 font-semibold uppercase tracking-widest">apples-to-apples</p>
+    </div>
+  </div>
+</header>
+
+<main class="max-w-5xl mx-auto px-4 pt-5 space-y-5">
+
+  <!-- INSTALL -->
+  <div id="installCard" class="hidden bg-brand-navy border border-safety/40 rounded-2xl p-4 flex items-center justify-between gap-4">
+    <p class="text-sm text-slate-300 font-semibold">Put Bid Leveler on your home screen — works with zero signal.</p>
+    <div class="flex items-center gap-2">
+      <button id="installBtn" type="button" class="orange-gradient text-white text-sm font-bold px-4 py-2 rounded-lg">📲 Install</button>
+      <button id="installDismiss" type="button" class="text-slate-500 text-xs font-bold px-2 py-2">Not now</button>
+    </div>
+  </div>
+
+  <!-- JOB INFO -->
+  <section class="bg-brand-navy border border-brand-border rounded-2xl p-5">
+    <h2 class="text-xs font-black tracking-widest text-safety uppercase mb-4">01 · Job Info</h2>
+    <div class="grid sm:grid-cols-2 gap-3">
+      <div>
+        <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">Job Name</label>
+        <input id="jobName" type="text" placeholder="Smith Kitchen Remodel" class="w-full bg-brand-card border border-brand-border rounded-lg px-3 py-2.5 text-base" />
+      </div>
+      <div>
+        <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">Bid Package / Trade</label>
+        <input id="jobPackage" type="text" placeholder="Framing · Electrical · Concrete…" class="w-full bg-brand-card border border-brand-border rounded-lg px-3 py-2.5 text-base" />
+      </div>
+      <div>
+        <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">Location</label>
+        <input id="jobLocation" type="text" placeholder="Little Rock, AR" class="w-full bg-brand-card border border-brand-border rounded-lg px-3 py-2.5 text-base" />
+      </div>
+      <div>
+        <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">Date</label>
+        <input id="jobDate" type="date" class="w-full bg-brand-card border border-brand-border rounded-lg px-3 py-2.5 text-base" />
+      </div>
+    </div>
+  </section>
+
+  <!-- BIDDERS -->
+  <section class="bg-brand-navy border border-brand-border rounded-2xl p-5">
+    <div class="flex items-center justify-between mb-4">
+      <h2 class="text-xs font-black tracking-widest text-safety uppercase">02 · Bidders</h2>
+      <button id="addBidder" type="button" class="text-safety text-sm font-bold">+ Add bidder</button>
+    </div>
+    <div id="bidderList" class="grid sm:grid-cols-2 gap-3"></div>
+    <p class="text-[11px] text-slate-500 mt-3">Up to 4 bidders. Tap a bidder's ✕ to remove them (their prices go too).</p>
+  </section>
+
+  <!-- SCOPE & PRICES -->
+  <section class="bg-brand-navy border border-brand-border rounded-2xl p-5">
+    <div class="flex items-center justify-between mb-2">
+      <h2 class="text-xs font-black tracking-widest text-safety uppercase">03 · Scope &amp; Prices</h2>
+      <button id="addRow" type="button" class="text-safety text-sm font-bold">+ Add scope item</button>
+    </div>
+    <p class="text-[11px] text-slate-500 mb-3">One row per scope line. For each bidder enter their price, or tap the tag to mark it <span class="text-slate-300 font-bold">EXC</span> (excluded from their bid) or <span class="text-slate-300 font-bold">NQ</span> (didn't quote it). Swipe sideways if the table is wider than your screen.</p>
+    <div class="overflow-x-auto -mx-1 px-1">
+      <table class="w-full text-sm border-separate" style="border-spacing:0 6px; min-width:560px;">
+        <thead id="scopeHead"></thead>
+        <tbody id="scopeBody"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- LEVELING RULES -->
+  <section class="bg-brand-navy border border-brand-border rounded-2xl p-5">
+    <h2 class="text-xs font-black tracking-widest text-safety uppercase mb-4">04 · Leveling Rules</h2>
+    <div class="grid sm:grid-cols-2 gap-3">
+      <div>
+        <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">Plug missing scope with</label>
+        <select id="plugRule" class="w-full bg-brand-card border border-brand-border rounded-lg px-3 py-2.5 text-base">
+          <option value="high">Highest price quoted for that line (safest)</option>
+          <option value="avg">Average of the prices quoted</option>
+          <option value="none">Nothing — compare raw totals only</option>
+        </select>
+        <p class="text-[11px] text-slate-500 mt-1">When a bidder skips a line, this is the value added to their total so a thinner bid doesn't look cheaper than it really is.</p>
+      </div>
+      <div>
+        <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">Flag a line price this far below the others (%)</label>
+        <input id="outlierPct" type="number" inputmode="decimal" value="25" min="5" max="90" class="num w-full bg-brand-card border border-brand-border rounded-lg px-3 py-2.5 text-base" />
+        <p class="text-[11px] text-slate-500 mt-1">A price way under the rest usually means the scope wasn't understood the same way — worth a phone call before you award.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- RESULTS -->
+  <section class="bg-brand-navy border-2 border-safety/50 rounded-2xl p-5">
+    <h2 class="text-xs font-black tracking-widest text-safety uppercase mb-4">05 · Leveled Comparison</h2>
+    <div id="results" class="space-y-3"></div>
+    <div id="flagsBox" class="mt-4"></div>
+  </section>
+
+  <!-- QUALIFICATIONS -->
+  <section class="bg-brand-navy border border-brand-border rounded-2xl p-5">
+    <h2 class="text-xs font-black tracking-widest text-safety uppercase mb-1">06 · Qualifications</h2>
+    <p class="text-[11px] text-slate-500 mb-4">Price is half the story — the checkboxes keep the rest of it in front of you.</p>
+    <div id="qualsList" class="space-y-3"></div>
+  </section>
+
+  <!-- NOTES -->
+  <section class="bg-brand-navy border border-brand-border rounded-2xl p-5">
+    <h2 class="text-xs font-black tracking-widest text-safety uppercase mb-3">07 · Award Notes</h2>
+    <textarea id="awardNotes" rows="3" placeholder="Who you're leaning toward and why — schedule, past work, gut read…" class="w-full bg-brand-card border border-brand-border rounded-lg px-3 py-2.5 text-base"></textarea>
+  </section>
+
+  <!-- SAVED JOBS -->
+  <section class="bg-brand-navy border border-brand-border rounded-2xl p-5">
+    <div class="flex items-center justify-between mb-3">
+      <h2 class="text-xs font-black tracking-widest text-safety uppercase">08 · Saved Jobs</h2>
+      <span id="jobCount" class="text-[11px] text-slate-500 font-bold"></span>
+    </div>
+    <div id="jobLog" class="space-y-2"></div>
+  </section>
+
+  <!-- HELP -->
+  <section class="bg-brand-navy border border-brand-border rounded-2xl p-5">
+    <h2 class="text-xs font-black tracking-widest text-safety uppercase mb-3">Help &amp; Backup</h2>
+    <div class="text-sm text-slate-400 space-y-3 leading-relaxed">
+      <p><span class="text-slate-200 font-bold">What "leveling" means:</span> three subs bid the same package but one left out cleanup and another skipped the hardware. Leveling plugs those holes with a fair number so you're comparing the same job — the cheapest-looking bid isn't always the cheapest bid.</p>
+      <p><span class="text-slate-200 font-bold">Your data stays on your phone.</span> No account, no cloud — everything lives on this device. Use Backup before switching phones.</p>
+      <div class="flex flex-wrap gap-3 pt-1">
+        <button id="backupBtn" type="button" class="bg-white/5 border border-white/10 text-slate-300 text-sm font-bold px-4 py-2 rounded-lg">⬇ Backup data</button>
+        <label class="bg-white/5 border border-white/10 text-slate-300 text-sm font-bold px-4 py-2 rounded-lg cursor-pointer">⬆ Restore<input id="restoreInput" type="file" accept=".json,application/json" class="hidden" /></label>
+        <a href="mailto:hello@digitalforemansuite.com?subject=Bid%20Leveler%20bug%20report" class="bg-white/5 border border-white/10 text-slate-300 text-sm font-bold px-4 py-2 rounded-lg">Report a bug</a>
+      </div>
+    </div>
+  </section>
+
+  <p class="text-center text-[11px] text-slate-600 pt-2">Created with Digital Foreman Suite · <a href="https://digitalforemansuite.com" class="underline">digitalforemansuite.com</a></p>
+</main>
+
+<!-- ACTION BAR -->
+<div class="fixed bottom-0 left-0 right-0 bg-brand-navy/95 border-t border-brand-border px-4 py-3" style="backdrop-filter: blur(8px);">
+  <div class="max-w-5xl mx-auto grid grid-cols-5 gap-2">
+    <button id="resetBtn" type="button" class="col-span-1 bg-white/5 border border-white/10 text-slate-300 text-xs font-black px-2 py-3 rounded-xl">RESET</button>
+    <button id="saveBtn" type="button" class="col-span-1 bg-white/5 border border-white/10 text-slate-200 text-xs font-black px-2 py-3 rounded-xl">SAVE</button>
+    <button id="pdfBtn" type="button" class="col-span-3 orange-gradient text-white text-sm font-black px-4 py-3 rounded-xl">GENERATE LEVELING SHEET (PDF)</button>
+  </div>
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  /* ---------- state ---------- */
+  var MAXB = 4;
+  var state = null;
+
+  function blankState() {
+    return {
+      job: { name: '', pkg: '', location: '', date: today() },
+      bidders: [blankBidder(), blankBidder()],
+      rows: [blankRow(), blankRow(), blankRow()],
+      plugRule: 'high',
+      outlierPct: 25,
+      quals: {},
+      awardNotes: '',
+      savedAt: null,
+      id: null
+    };
+  }
+  function blankBidder() { return { name: '', contact: '' }; }
+  function blankRow() { return { desc: '', cells: [] }; }
+  function today() {
+    var d = new Date();
+    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+  }
+
+  /* cell = { v: number|null, st: 'P'|'EXC'|'NQ' }  (st 'P' means priced/blank input) */
+  function getCell(row, bi) {
+    if (!row.cells[bi]) row.cells[bi] = { v: null, st: 'P' };
+    return row.cells[bi];
+  }
+
+  /* ---------- persistence ---------- */
+  var K_DRAFT = 'dfs.bl.draft', K_JOBS = 'dfs.bl.jobs';
+
+  function saveDraft() { try { localStorage.setItem(K_DRAFT, JSON.stringify(state)); } catch (e) {} }
+  function loadDraft() {
+    try { var s = localStorage.getItem(K_DRAFT); return s ? JSON.parse(s) : null; } catch (e) { return null; }
+  }
+  function loadJobs() {
+    try { var s = localStorage.getItem(K_JOBS); return s ? JSON.parse(s) : []; } catch (e) { return []; }
+  }
+  function saveJobs(jobs) { try { localStorage.setItem(K_JOBS, JSON.stringify(jobs)); } catch (e) {} }
+
+  /* ---------- money ---------- */
+  function fmt(n) {
+    if (n === null || isNaN(n)) return '—';
+    return '$' + n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+  function parseMoney(s) {
+    if (s === undefined || s === null) return null;
+    var v = parseFloat(String(s).replace(/[^0-9.\-]/g, ''));
+    return isNaN(v) ? null : v;
+  }
+
+  /* ---------- leveling math ---------- */
+  function compute() {
+    var nb = state.bidders.length;
+    var out = {
+      raw: new Array(nb).fill(0),
+      plugs: new Array(nb).fill(0),
+      leveled: new Array(nb).fill(0),
+      missing: new Array(nb).fill(0),
+      pricedAny: new Array(nb).fill(false),
+      rowFlags: [],   /* {row, text} */
+      uncovered: []   /* row indices nobody priced */
+    };
+    var thr = Math.max(5, Math.min(90, parseFloat(state.outlierPct) || 25)) / 100;
+
+    state.rows.forEach(function (row, ri) {
+      if (!rowHasContent(row)) return;
+      var quoted = [];
+      for (var bi = 0; bi < nb; bi++) {
+        var c = getCell(row, bi);
+        if (c.st === 'P' && c.v !== null) { quoted.push(c.v); out.pricedAny[bi] = true; }
+      }
+      var plug = null;
+      if (quoted.length) {
+        plug = state.plugRule === 'avg'
+          ? quoted.reduce(function (a, b) { return a + b; }, 0) / quoted.length
+          : Math.max.apply(null, quoted);
+      }
+      if (!quoted.length) out.uncovered.push(ri);
+
+      for (var bj = 0; bj < nb; bj++) {
+        var cell = getCell(row, bj);
+        var priced = (cell.st === 'P' && cell.v !== null);
+        if (priced) {
+          out.raw[bj] += cell.v;
+          /* outlier check vs others */
+          var others = quoted.filter(function (v, k) {
+            /* remove one instance of this bidder's value */
+            return true;
+          });
+          if (quoted.length >= 2) {
+            var sum = quoted.reduce(function (a, b) { return a + b; }, 0);
+            var avgOthers = (sum - cell.v) / (quoted.length - 1);
+            if (avgOthers > 0 && cell.v < avgOthers * (1 - thr)) {
+              out.rowFlags.push({ row: ri, text: '"' + (row.desc || 'Line ' + (ri + 1)) + '" — ' + bidderName(bj) + ' is ' + Math.round((1 - cell.v / avgOthers) * 100) + '% under the others. Worth a call to confirm the scope matched.' });
+            }
+          }
+        } else {
+          out.missing[bj]++;
+          if (state.plugRule !== 'none' && plug !== null) out.plugs[bj] += plug;
+        }
+      }
+    });
+
+    for (var i = 0; i < nb; i++) out.leveled[i] = out.raw[i] + out.plugs[i];
+    return out;
+  }
+  function rowHasContent(row) {
+    if ((row.desc || '').trim()) return true;
+    return row.cells.some(function (c) { return c && c.st === 'P' && c.v !== null; });
+  }
+  function bidderName(i) { return (state.bidders[i].name || 'Bidder ' + (i + 1)); }
+
+  /* ---------- render: bidders ---------- */
+  function renderBidders() {
+    var box = document.getElementById('bidderList');
+    box.innerHTML = '';
+    state.bidders.forEach(function (b, i) {
+      var div = document.createElement('div');
+      div.className = 'bg-brand-card border border-brand-border rounded-xl p-3';
+      div.innerHTML =
+        '<div class="flex items-center justify-between mb-2">' +
+          '<span class="text-[11px] font-black text-slate-500 uppercase tracking-wider">Bidder ' + (i + 1) + '</span>' +
+          (state.bidders.length > 1 ? '<button type="button" data-del="' + i + '" class="text-slate-500 text-sm font-bold px-1">✕</button>' : '') +
+        '</div>' +
+        '<input data-bn="' + i + '" type="text" placeholder="Company / name" value="' + esc(b.name) + '" class="w-full bg-brand-navy border border-brand-border rounded-lg px-3 py-2 text-sm mb-2" />' +
+        '<input data-bc="' + i + '" type="text" placeholder="Phone or email (optional)" value="' + esc(b.contact) + '" class="w-full bg-brand-navy border border-brand-border rounded-lg px-3 py-2 text-sm" />';
+      box.appendChild(div);
+    });
+    document.getElementById('addBidder').style.display = state.bidders.length >= MAXB ? 'none' : '';
+
+    box.querySelectorAll('[data-bn]').forEach(function (el) {
+      el.addEventListener('input', function () { state.bidders[+el.dataset.bn].name = el.value; renderScope(); renderResults(); renderQuals(); saveDraft(); });
+    });
+    box.querySelectorAll('[data-bc]').forEach(function (el) {
+      el.addEventListener('input', function () { state.bidders[+el.dataset.bc].contact = el.value; saveDraft(); });
+    });
+    box.querySelectorAll('[data-del]').forEach(function (el) {
+      el.addEventListener('click', function () {
+        var i = +el.dataset.del;
+        state.bidders.splice(i, 1);
+        state.rows.forEach(function (r) { r.cells.splice(i, 1); });
+        renderAll(); saveDraft();
+      });
+    });
+  }
+
+  /* ---------- render: scope table ---------- */
+  function renderScope() {
+    var head = document.getElementById('scopeHead');
+    var body = document.getElementById('scopeBody');
+    var nb = state.bidders.length;
+
+    var h = '<tr>' +
+      '<th class="stickycol text-left text-[11px] font-black text-slate-500 uppercase tracking-wider px-2 py-1" style="min-width:170px;">Scope item</th>';
+    for (var i = 0; i < nb; i++) {
+      h += '<th class="text-left text-[11px] font-black text-slate-400 uppercase tracking-wider px-2 py-1" style="min-width:128px;">' + esc(shortName(bidderName(i))) + '</th>';
+    }
+    h += '<th style="width:34px;"></th></tr>';
+    head.innerHTML = h;
+
+    body.innerHTML = '';
+    state.rows.forEach(function (row, ri) {
+      var tr = document.createElement('tr');
+      var cellsHtml =
+        '<td class="stickycol align-top px-1 py-1" style="min-width:170px;">' +
+          '<textarea data-desc="' + ri + '" rows="2" placeholder="e.g. Frame deck &amp; stairs" class="w-full bg-brand-card border border-brand-border rounded-lg px-2 py-1.5 text-sm resize-none">' + esc(row.desc) + '</textarea>' +
+        '</td>';
+      for (var bi = 0; bi < nb; bi++) {
+        var c = getCell(row, bi);
+        var isP = c.st === 'P';
+        cellsHtml +=
+          '<td class="align-top px-1 py-1">' +
+            '<div class="flex gap-1">' +
+              '<input data-price="' + ri + ':' + bi + '" type="text" inputmode="decimal" placeholder="$" value="' + (isP && c.v !== null ? c.v : '') + '" ' + (isP ? '' : 'disabled') + ' class="num w-full bg-brand-card border border-brand-border rounded-lg px-2 py-1.5 text-sm ' + (isP ? '' : 'opacity-30') + '" />' +
+              '<button type="button" data-st="' + ri + ':' + bi + '" class="cellstatus text-[10px] font-black rounded-lg px-1 ' + stClass(c.st) + '">' + stLabel(c.st) + '</button>' +
+            '</div>' +
+          '</td>';
+      }
+      cellsHtml += '<td class="align-top py-1"><button type="button" data-delrow="' + ri + '" class="text-slate-600 font-bold px-1">✕</button></td>';
+      tr.innerHTML = cellsHtml;
+      body.appendChild(tr);
+    });
+
+    body.querySelectorAll('[data-desc]').forEach(function (el) {
+      el.addEventListener('input', function () { state.rows[+el.dataset.desc].desc = el.value; saveDraft(); renderResultsSoon(); });
+    });
+    body.querySelectorAll('[data-price]').forEach(function (el) {
+      el.addEventListener('input', function () {
+        var p = el.dataset.price.split(':');
+        getCell(state.rows[+p[0]], +p[1]).v = parseMoney(el.value);
+        saveDraft(); renderResultsSoon();
+      });
+    });
+    body.querySelectorAll('[data-st]').forEach(function (el) {
+      el.addEventListener('click', function () {
+        var p = el.dataset.st.split(':');
+        var c = getCell(state.rows[+p[0]], +p[1]);
+        c.st = c.st === 'P' ? 'EXC' : (c.st === 'EXC' ? 'NQ' : 'P');
+        if (c.st !== 'P') c.v = null;
+        renderScope(); renderResults(); saveDraft();
+      });
+    });
+    body.querySelectorAll('[data-delrow]').forEach(function (el) {
+      el.addEventListener('click', function () {
+        state.rows.splice(+el.dataset.delrow, 1);
+        if (!state.rows.length) state.rows.push(blankRow());
+        renderScope(); renderResults(); saveDraft();
+      });
+    });
+  }
+  function stLabel(st) { return st === 'P' ? '$' : st; }
+  function stClass(st) {
+    if (st === 'P') return 'bg-white/5 border border-white/10 text-slate-400';
+    if (st === 'EXC') return 'bg-red-500/15 border border-red-500/40 text-red-300';
+    return 'bg-yellow-500/15 border border-yellow-500/40 text-yellow-300';
+  }
+  function shortName(n) { return n.length > 14 ? n.slice(0, 13) + '…' : n; }
+
+  var resultTimer = null;
+  function renderResultsSoon() { clearTimeout(resultTimer); resultTimer = setTimeout(renderResults, 250); }
+
+  /* ---------- render: results ---------- */
+  function renderResults() {
+    var r = compute();
+    var box = document.getElementById('results');
+    var nb = state.bidders.length;
+    var best = null, bestVal = Infinity;
+    for (var i = 0; i < nb; i++) {
+      if (r.pricedAny[i] && r.leveled[i] < bestVal) { bestVal = r.leveled[i]; best = i; }
+    }
+    var html = '';
+    for (var j = 0; j < nb; j++) {
+      var isBest = (j === best && state.plugRule !== 'none');
+      var isBestRaw = (state.plugRule === 'none' && j === lowestRaw(r));
+      var highlight = (isBest || isBestRaw);
+      html +=
+        '<div class="rounded-xl border p-4 ' + (highlight ? 'border-safety bg-safety/10' : 'border-brand-border bg-brand-card') + '">' +
+          '<div class="flex items-center justify-between mb-1">' +
+            '<span class="font-black text-base">' + esc(bidderName(j)) + (highlight ? ' <span class="text-safety text-xs font-black align-middle">★ TRUE LOW</span>' : '') + '</span>' +
+            '<span class="text-xl font-black ' + (highlight ? 'text-safety' : 'text-slate-200') + '">' + fmt(state.plugRule === 'none' ? r.raw[j] : r.leveled[j]) + '</span>' +
+          '</div>' +
+          '<div class="text-[11px] text-slate-500 font-semibold flex flex-wrap gap-x-4">' +
+            '<span>Bid as written: ' + fmt(r.raw[j]) + '</span>' +
+            (state.plugRule !== 'none' ? '<span>Plugged for gaps: +' + fmt(r.plugs[j]).replace('$', '$') + '</span>' : '') +
+            '<span>' + r.missing[j] + ' line' + (r.missing[j] === 1 ? '' : 's') + ' not priced</span>' +
+          '</div>' +
+        '</div>';
+    }
+    if (!html) html = '<p class="text-slate-500 text-sm">Add bidders and prices above — the leveled totals show up here.</p>';
+    box.innerHTML = html;
+
+    var fb = document.getElementById('flagsBox');
+    var flags = '';
+    if (r.uncovered.length) {
+      flags += '<p class="text-yellow-300 text-sm font-semibold mb-1">⚠ ' + r.uncovered.length + ' scope line' + (r.uncovered.length === 1 ? '' : 's') + ' nobody priced — the totals don\'t include that work yet.</p>';
+    }
+    r.rowFlags.forEach(function (f) {
+      flags += '<p class="text-yellow-200/90 text-sm mb-1">⚑ ' + esc(f.text) + '</p>';
+    });
+    fb.innerHTML = flags;
+  }
+  function lowestRaw(r) {
+    var best = null, v = Infinity;
+    for (var i = 0; i < r.raw.length; i++) if (r.pricedAny[i] && r.raw[i] < v) { v = r.raw[i]; best = i; }
+    return best;
+  }
+
+  /* ---------- render: qualifications ---------- */
+  var QUAL_KEYS = [
+    ['lic', 'Licensed'], ['ins', 'Insured'], ['bond', 'Can bond'], ['ref', 'References checked']
+  ];
+  function renderQuals() {
+    var box = document.getElementById('qualsList');
+    box.innerHTML = '';
+    state.bidders.forEach(function (b, i) {
+      var q = state.quals[i] || (state.quals[i] = { lic: false, ins: false, bond: false, ref: false, schedule: '', terms: '' });
+      var div = document.createElement('div');
+      div.className = 'bg-brand-card border border-brand-border rounded-xl p-3';
+      var checks = QUAL_KEYS.map(function (k) {
+        return '<label class="flex items-center gap-1.5 text-sm text-slate-300"><input type="checkbox" data-q="' + i + ':' + k[0] + '" ' + (q[k[0]] ? 'checked' : '') + ' class="accent-orange-500 w-4 h-4" />' + k[1] + '</label>';
+      }).join('');
+      div.innerHTML =
+        '<p class="font-black text-sm mb-2">' + esc(bidderName(i)) + '</p>' +
+        '<div class="flex flex-wrap gap-x-5 gap-y-2 mb-2">' + checks + '</div>' +
+        '<div class="grid sm:grid-cols-2 gap-2">' +
+          '<input data-qs="' + i + '" type="text" placeholder="Can start / schedule" value="' + esc(q.schedule) + '" class="w-full bg-brand-navy border border-brand-border rounded-lg px-2 py-1.5 text-sm" />' +
+          '<input data-qt="' + i + '" type="text" placeholder="Payment terms" value="' + esc(q.terms) + '" class="w-full bg-brand-navy border border-brand-border rounded-lg px-2 py-1.5 text-sm" />' +
+        '</div>';
+      box.appendChild(div);
+    });
+    box.querySelectorAll('[data-q]').forEach(function (el) {
+      el.addEventListener('change', function () {
+        var p = el.dataset.q.split(':');
+        state.quals[p[0]][p[1]] = el.checked; saveDraft();
+      });
+    });
+    box.querySelectorAll('[data-qs]').forEach(function (el) {
+      el.addEventListener('input', function () { state.quals[el.dataset.qs].schedule = el.value; saveDraft(); });
+    });
+    box.querySelectorAll('[data-qt]').forEach(function (el) {
+      el.addEventListener('input', function () { state.quals[el.dataset.qt].terms = el.value; saveDraft(); });
+    });
+  }
+
+  /* ---------- render: job log ---------- */
+  function renderLog() {
+    var jobs = loadJobs();
+    var box = document.getElementById('jobLog');
+    document.getElementById('jobCount').textContent = jobs.length ? jobs.length + ' saved' : '';
+    if (!jobs.length) { box.innerHTML = '<p class="text-slate-500 text-sm">Saved jobs live here — on your phone only.</p>'; return; }
+    box.innerHTML = '';
+    jobs.slice().reverse().forEach(function (j) {
+      var div = document.createElement('div');
+      div.className = 'bg-brand-card border border-brand-border rounded-xl p-3 flex items-center justify-between gap-2';
+      div.innerHTML =
+        '<div class="min-w-0">' +
+          '<p class="font-bold text-sm truncate">' + esc(j.job.name || '(no name)') + '</p>' +
+          '<p class="text-[11px] text-slate-500">' + esc(j.job.pkg || '') + ' · ' + (j.savedAt ? new Date(j.savedAt).toLocaleDateString() : '') + ' · ' + j.bidders.length + ' bidders</p>' +
+        '</div>' +
+        '<div class="grid grid-cols-3 gap-1 shrink-0">' +
+          '<button type="button" data-open="' + j.id + '" class="bg-white/5 border border-white/10 text-slate-300 text-[11px] font-black px-2 py-1.5 rounded-lg">OPEN</button>' +
+          '<button type="button" data-copy="' + j.id + '" class="bg-white/5 border border-white/10 text-slate-300 text-[11px] font-black px-2 py-1.5 rounded-lg">COPY</button>' +
+          '<button type="button" data-deljob="' + j.id + '" class="bg-red-500/10 border border-red-500/30 text-red-300 text-[11px] font-black px-2 py-1.5 rounded-lg">DELETE</button>' +
+        '</div>';
+      box.appendChild(div);
+    });
+    box.querySelectorAll('[data-open]').forEach(function (el) {
+      el.addEventListener('click', function () {
+        var j = loadJobs().find(function (x) { return x.id === el.dataset.open; });
+        if (j) { state = JSON.parse(JSON.stringify(j)); renderAll(); saveDraft(); window.scrollTo({ top: 0, behavior: 'smooth' }); }
+      });
+    });
+    box.querySelectorAll('[data-copy]').forEach(function (el) {
+      el.addEventListener('click', function () {
+        var j = loadJobs().find(function (x) { return x.id === el.dataset.copy; });
+        if (j) {
+          state = JSON.parse(JSON.stringify(j));
+          state.id = null; state.savedAt = null;
+          state.job.name = (state.job.name || '') + ' (copy)';
+          renderAll(); saveDraft(); window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+      });
+    });
+    box.querySelectorAll('[data-deljob]').forEach(function (el) {
+      el.addEventListener('click', function () {
+        if (!confirm('Delete this saved job? This can\'t be undone.')) return;
+        saveJobs(loadJobs().filter(function (x) { return x.id !== el.dataset.deljob; }));
+        renderLog();
+      });
+    });
+  }
+
+  /* ---------- save / reset ---------- */
+  document.getElementById('saveBtn').addEventListener('click', function () {
+    var jobs = loadJobs();
+    state.savedAt = Date.now();
+    if (!state.id) state.id = 'bl-' + Date.now();
+    var idx = jobs.findIndex(function (x) { return x.id === state.id; });
+    var snap = JSON.parse(JSON.stringify(state));
+    if (idx >= 0) jobs[idx] = snap; else jobs.push(snap);
+    saveJobs(jobs); renderLog();
+    toast('Job saved on this device.');
+  });
+  document.getElementById('resetBtn').addEventListener('click', function () {
+    if (!confirm('Clear the form and start a new job? (Saved jobs are kept.)')) return;
+    state = blankState(); renderAll(); saveDraft();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+
+  /* ---------- add buttons ---------- */
+  document.getElementById('addBidder').addEventListener('click', function () {
+    if (state.bidders.length >= MAXB) return;
+    state.bidders.push(blankBidder()); renderAll(); saveDraft();
+  });
+  document.getElementById('addRow').addEventListener('click', function () {
+    state.rows.push(blankRow()); renderScope(); saveDraft();
+  });
+
+  /* ---------- settings inputs ---------- */
+  ['jobName', 'jobPackage', 'jobLocation', 'jobDate'].forEach(function (id) {
+    document.getElementById(id).addEventListener('input', function (e) {
+      var map = { jobName: 'name', jobPackage: 'pkg', jobLocation: 'location', jobDate: 'date' };
+      state.job[map[id]] = e.target.value; saveDraft();
+    });
+  });
+  document.getElementById('plugRule').addEventListener('change', function (e) { state.plugRule = e.target.value; renderResults(); saveDraft(); });
+  document.getElementById('outlierPct').addEventListener('input', function (e) { state.outlierPct = e.target.value; renderResultsSoon(); saveDraft(); });
+  document.getElementById('awardNotes').addEventListener('input', function (e) { state.awardNotes = e.target.value; saveDraft(); });
+
+  /* ---------- backup / restore ---------- */
+  document.getElementById('backupBtn').addEventListener('click', function () {
+    var data = { draft: state, jobs: loadJobs(), exportedAt: new Date().toISOString(), app: 'dfs-bid-leveler' };
+    var blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'BidLeveler-Backup-' + today() + '.json';
+    a.click();
+  });
+  document.getElementById('restoreInput').addEventListener('change', function (e) {
+    var f = e.target.files[0]; if (!f) return;
+    var reader = new FileReader();
+    reader.onload = function () {
+      try {
+        var data = JSON.parse(reader.result);
+        if (data.app !== 'dfs-bid-leveler') { alert('That doesn\'t look like a Bid Leveler backup file.'); return; }
+        if (data.jobs) saveJobs(data.jobs);
+        if (data.draft) { state = data.draft; }
+        renderAll(); saveDraft();
+        toast('Backup restored.');
+      } catch (err) { alert('Couldn\'t read that file.'); }
+    };
+    reader.readAsText(f);
+  });
+
+  /* ---------- PDF ---------- */
+  document.getElementById('pdfBtn').addEventListener('click', function () {
+    try { buildPdf(); } catch (err) { alert('PDF error: ' + err.message); }
+  });
+
+  function buildPdf() {
+    var jsPDF = window.jspdf.jsPDF;
+    var doc = new jsPDF({ orientation: 'landscape', unit: 'pt', format: 'letter' });
+    var pageW = doc.internal.pageSize.getWidth();   /* 792 */
+    var pageH = doc.internal.pageSize.getHeight();  /* 612 */
+    var margin = 40;
+    var NAVY = [13, 20, 36], ORANGE = [249, 115, 22], GRAY = [120, 130, 145], LIGHT = [235, 238, 242];
+    var r = compute();
+    var nb = state.bidders.length;
+
+    /* header band */
+    doc.setFillColor(NAVY[0], NAVY[1], NAVY[2]);
+    doc.rect(0, 0, pageW, 64, 'F');
+    doc.setTextColor(255, 255, 255);
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(18);
+    doc.text('BID LEVELING SHEET', margin, 32);
+    doc.setFontSize(10); doc.setFont('helvetica', 'normal');
+    doc.setTextColor(ORANGE[0], ORANGE[1], ORANGE[2]);
+    doc.text((state.job.name || 'Untitled job') + (state.job.pkg ? '  ·  ' + state.job.pkg : ''), margin, 50);
+    doc.setTextColor(200, 205, 215);
+    doc.text((state.job.location ? state.job.location + '  ·  ' : '') + (state.job.date || ''), pageW - margin, 32, { align: 'right' });
+
+    var y = 84;
+    /* column layout */
+    var descW = 200;
+    var colW = Math.min(130, (pageW - margin * 2 - descW) / nb);
+
+    function colX(i) { return margin + descW + colW * i; }
+
+    /* table header */
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(9);
+    doc.setTextColor(GRAY[0], GRAY[1], GRAY[2]);
+    doc.text('SCOPE ITEM', margin, y);
+    for (var i = 0; i < nb; i++) {
+      doc.text((bidderName(i) || '').toUpperCase().slice(0, 20), colX(i), y);
+    }
+    y += 6;
+    doc.setDrawColor(200, 200, 200); doc.line(margin, y, pageW - margin, y);
+    y += 14;
+
+    /* rows */
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(9);
+    state.rows.forEach(function (row, ri) {
+      if (!rowHasContent(row)) return;
+      if (y > pageH - 150) { doc.addPage(); y = 60; }
+      doc.setTextColor(30, 35, 45);
+      var lines = doc.splitTextToSize(row.desc || ('Line ' + (ri + 1)), descW - 12);
+      doc.text(lines.slice(0, 2), margin, y);
+      for (var bi = 0; bi < nb; bi++) {
+        var c = getCell(row, bi);
+        if (c.st === 'P' && c.v !== null) {
+          doc.setTextColor(30, 35, 45);
+          doc.text(fmt(c.v), colX(bi), y);
+        } else {
+          doc.setTextColor(GRAY[0], GRAY[1], GRAY[2]);
+          doc.text(c.st === 'EXC' ? 'EXCLUDED' : 'NOT QUOTED', colX(bi), y);
+        }
+      }
+      y += Math.max(16, lines.slice(0, 2).length * 11 + 5);
+    });
+
+    /* totals block */
+    y += 4;
+    doc.setDrawColor(120, 120, 120); doc.line(margin, y, pageW - margin, y);
+    y += 16;
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(30, 35, 45);
+    doc.text('Bid as written', margin, y);
+    for (var t1 = 0; t1 < nb; t1++) doc.text(fmt(r.raw[t1]), colX(t1), y);
+    y += 15;
+    if (state.plugRule !== 'none') {
+      doc.setFont('helvetica', 'normal'); doc.setTextColor(GRAY[0], GRAY[1], GRAY[2]);
+      doc.text('Plugged for missing scope (' + (state.plugRule === 'avg' ? 'average quoted' : 'highest quoted') + ')', margin, y);
+      for (var t2 = 0; t2 < nb; t2++) doc.text('+' + fmt(r.plugs[t2]).replace('$', '$'), colX(t2), y);
+      y += 15;
+      doc.setFont('helvetica', 'bold'); doc.setFontSize(11);
+      doc.setTextColor(ORANGE[0], ORANGE[1], ORANGE[2]);
+      doc.text('LEVELED TOTAL', margin, y);
+      var best = null, bv = Infinity;
+      for (var t3 = 0; t3 < nb; t3++) if (r.pricedAny[t3] && r.leveled[t3] < bv) { bv = r.leveled[t3]; best = t3; }
+      for (var t4 = 0; t4 < nb; t4++) {
+        doc.setTextColor(t4 === best ? ORANGE[0] : 30, t4 === best ? ORANGE[1] : 35, t4 === best ? ORANGE[2] : 45);
+        doc.text(fmt(r.leveled[t4]) + (t4 === best ? ' *' : ''), colX(t4), y);
+      }
+      y += 13;
+      doc.setFont('helvetica', 'normal'); doc.setFontSize(8); doc.setTextColor(GRAY[0], GRAY[1], GRAY[2]);
+      doc.text('* lowest leveled total', margin, y);
+      y += 14;
+    }
+
+    /* flags */
+    if (r.rowFlags.length || r.uncovered.length) {
+      doc.setFont('helvetica', 'bold'); doc.setFontSize(9); doc.setTextColor(30, 35, 45);
+      doc.text('FLAGS', margin, y); y += 12;
+      doc.setFont('helvetica', 'normal'); doc.setFontSize(8.5);
+      if (r.uncovered.length) {
+        doc.text('- ' + r.uncovered.length + ' scope line(s) priced by nobody; totals exclude that work.', margin, y); y += 11;
+      }
+      r.rowFlags.slice(0, 6).forEach(function (f) {
+        var fl = doc.splitTextToSize('- ' + f.text, pageW - margin * 2);
+        doc.text(fl, margin, y); y += fl.length * 10 + 2;
+      });
+      y += 4;
+    }
+
+    /* qualifications */
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(9); doc.setTextColor(30, 35, 45);
+    if (y > pageH - 110) { doc.addPage(); y = 60; }
+    doc.text('QUALIFICATIONS', margin, y); y += 12;
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(8.5);
+    state.bidders.forEach(function (b, i) {
+      var q = state.quals[i] || {};
+      var parts = [];
+      QUAL_KEYS.forEach(function (k) { parts.push(k[1] + ': ' + (q[k[0]] ? 'Yes' : '—')); });
+      if (q.schedule) parts.push('Schedule: ' + q.schedule);
+      if (q.terms) parts.push('Terms: ' + q.terms);
+      var line = bidderName(i) + ' — ' + parts.join(' · ');
+      var ql = doc.splitTextToSize(line, pageW - margin * 2);
+      doc.text(ql, margin, y); y += ql.length * 10 + 3;
+    });
+
+    /* award notes */
+    if ((state.awardNotes || '').trim()) {
+      y += 4;
+      if (y > pageH - 90) { doc.addPage(); y = 60; }
+      doc.setFont('helvetica', 'bold'); doc.text('AWARD NOTES', margin, y); y += 12;
+      doc.setFont('helvetica', 'normal');
+      var an = doc.splitTextToSize(state.awardNotes, pageW - margin * 2);
+      doc.text(an.slice(0, 8), margin, y);
+    }
+
+    /* footer on every page */
+    var totalPages = doc.internal.getNumberOfPages();
+    for (var pg = 1; pg <= totalPages; pg++) {
+      doc.setPage(pg);
+      doc.setFont('helvetica', 'normal'); doc.setFontSize(8); doc.setTextColor(GRAY[0], GRAY[1], GRAY[2]);
+      doc.text('Created with the free Bid Leveler for contractors · digitalforemansuite.com', margin, pageH - 18);
+      doc.text('Page ' + pg + ' of ' + totalPages, pageW - margin, pageH - 18, { align: 'right' });
+    }
+
+    var filename = 'BidLeveling-' + (state.job.name || 'job').replace(/[^a-z0-9]+/gi, '-').slice(0, 40) + '.pdf';
+
+    /* native share sheet first (Android/iOS PWA), fallback to download */
+    try {
+      var blob = doc.output('blob');
+      var file = new File([blob], filename, { type: 'application/pdf' });
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        navigator.share({ files: [file], title: filename, text: 'Bid leveling sheet — ' + (state.job.name || '') })
+          .catch(function () { doc.save(filename); });
+        return;
+      }
+    } catch (e) {}
+    doc.save(filename);
+  }
+
+  /* ---------- misc ---------- */
+  function esc(s) {
+    return String(s === undefined || s === null ? '' : s)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+  var toastTimer = null;
+  function toast(msg) {
+    var el = document.getElementById('toast');
+    if (!el) {
+      el = document.createElement('div');
+      el.id = 'toast';
+      el.className = 'fixed left-1/2 -translate-x-1/2 bottom-24 bg-brand-card border border-safety/50 text-slate-100 text-sm font-bold px-5 py-3 rounded-xl z-50';
+      document.body.appendChild(el);
+    }
+    el.textContent = msg;
+    el.style.display = '';
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { el.style.display = 'none'; }, 2200);
+  }
+
+  /* ---------- fill form from state ---------- */
+  function fillForm() {
+    document.getElementById('jobName').value = state.job.name || '';
+    document.getElementById('jobPackage').value = state.job.pkg || '';
+    document.getElementById('jobLocation').value = state.job.location || '';
+    document.getElementById('jobDate').value = state.job.date || today();
+    document.getElementById('plugRule').value = state.plugRule || 'high';
+    document.getElementById('outlierPct').value = state.outlierPct || 25;
+    document.getElementById('awardNotes').value = state.awardNotes || '';
+  }
+  function renderAll() {
+    fillForm(); renderBidders(); renderScope(); renderResults(); renderQuals(); renderLog();
+  }
+
+  /* ---------- install prompt ---------- */
+  var deferredPrompt = null;
+  window.addEventListener('beforeinstallprompt', function (e) {
+    e.preventDefault();
+    deferredPrompt = e;
+    try { if (localStorage.getItem('dfs.bl.install.dismissed')) return; } catch (err) {}
+    document.getElementById('installCard').classList.remove('hidden');
+  });
+  document.getElementById('installBtn').addEventListener('click', function () {
+    if (deferredPrompt) { deferredPrompt.prompt(); deferredPrompt = null; }
+    document.getElementById('installCard').classList.add('hidden');
+  });
+  document.getElementById('installDismiss').addEventListener('click', function () {
+    try { localStorage.setItem('dfs.bl.install.dismissed', '1'); } catch (e) {}
+    document.getElementById('installCard').classList.add('hidden');
+  });
+
+  /* ---------- boot ---------- */
+  state = loadDraft() || blankState();
+  if (!state.job) state = blankState();
+  renderAll();
+
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/bid-leveler/service-worker.js').catch(function () {});
+  }
+  if (navigator.storage && navigator.storage.persist) {
+    navigator.storage.persist().catch(function () {});
+  }
+})();
+</script>
+<!-- Vercel Web Analytics — cookieless, no PII. Counts that the app was opened; never sees anything you enter. Disclosed in /privacy. -->
+<script>window.va=window.va||function(){(window.vaq=window.vaq||[]).push(arguments);};</script>
+<script defer src="/_vercel/insights/script.js"></script>
+</body>
+</html>
