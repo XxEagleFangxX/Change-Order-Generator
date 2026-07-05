@@ -5,13 +5,18 @@
  * Called by the app when a user enters a license key in Settings.
  * Proxies the request to Gumroad's license verify API so the
  * Gumroad product permalink stays server-side (not exposed in app JS).
- * * TO ACTIVATE: replace GUMROAD_PRODUCT_PERMALINK below with your
+ *
+ * TO ACTIVATE: replace GUMROAD_PRODUCT_PERMALINK below with your
  * actual Gumroad product permalink once the store is live.
  */
 
 export const config = { runtime: 'edge' };
 
 const GUMROAD_PRODUCT_PERMALINK = 'change-order-generator';
+/* Gumroad now requires product_id (not permalink) to verify licenses for this product.
+   This is the public product identifier Gumroad's own API instructs us to use — not a secret. */
+const GUMROAD_PRODUCT_ID = 'KvcsGzZjU1jyUx3LiqjjEw==';
+
 export default async function handler(req) {
   if (req.method !== 'POST') {
     return new Response(JSON.stringify({ valid: false, error: 'Method not allowed' }), {
@@ -48,7 +53,7 @@ export default async function handler(req) {
 
   try {
     const formData = new URLSearchParams({
-      product_permalink: GUMROAD_PRODUCT_PERMALINK,
+      product_id: GUMROAD_PRODUCT_ID,
       license_key: key,
       increment_uses_count: 'false'
     });
