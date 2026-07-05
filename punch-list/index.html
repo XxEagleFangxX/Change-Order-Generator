@@ -52,12 +52,15 @@ tailwind.config = { theme: { extend: { colors: {
 <main class="max-w-3xl mx-auto px-4 pt-5 space-y-5">
 
   <!-- INSTALL -->
-  <div id="installCard" class="hidden bg-brand-navy border border-safety/40 rounded-2xl p-4 flex items-center justify-between gap-4">
-    <p class="text-sm text-slate-300 font-semibold">Put Punch List on your home screen — works with zero signal.</p>
-    <div class="flex items-center gap-2">
-      <button id="installBtn" type="button" class="orange-gradient text-white text-sm font-bold px-4 py-2 rounded-lg">📲 Install</button>
-      <button id="installDismiss" type="button" class="text-slate-500 text-xs font-bold px-2 py-2">Not now</button>
+  <div id="installCard" class="hidden bg-brand-navy border border-safety/40 rounded-2xl p-4">
+    <div class="flex items-center justify-between gap-4">
+      <p id="installSubtext" class="text-sm text-slate-300 font-semibold">Put Punch List on your home screen — works with zero signal.</p>
+      <div class="flex items-center gap-2 shrink-0">
+        <button id="installBtn" type="button" class="orange-gradient text-white text-sm font-bold px-4 py-2 rounded-lg">📲 Install</button>
+        <button id="installDismiss" type="button" class="text-slate-500 text-xs font-bold px-2 py-2">Not now</button>
+      </div>
     </div>
+    <div id="installHelp" class="hidden mt-3 text-sm text-slate-200 font-semibold bg-black/30 rounded-xl border border-white/10 p-3 leading-snug"></div>
   </div>
 
   <!-- JOB INFO -->
@@ -586,6 +589,11 @@ tailwind.config = { theme: { extend: { colors: {
     doc.setTextColor(200, 205, 215);
     doc.text((state.job.client ? state.job.client + '  ·  ' : '') + (state.job.location ? state.job.location + '  ·  ' : '') + (state.job.date || ''), pageW - margin, 34, { align: 'right' });
     doc.text(c.done + ' of ' + c.total + ' items closed', pageW - margin, 52, { align: 'right' });
+    var proBrand = bizSettings().companyName || '';
+    if (isPro() && proBrand) {
+      doc.setTextColor(147, 197, 253);
+      doc.text(proBrand.toUpperCase(), pageW - margin, 16, { align: 'right' });
+    }
 
     var y = 96;
     state.areas.forEach(function (area) {
@@ -711,20 +719,45 @@ tailwind.config = { theme: { extend: { colors: {
 
   /* ---------- install prompt ---------- */
   var deferredPrompt = null;
+  var installCard = document.getElementById('installCard');
+  var installHelp = document.getElementById('installHelp');
+  function isStandaloneApp() {
+    return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+  }
+  function isIOSDevice() {
+    return /iphone|ipad|ipod/i.test(navigator.userAgent) && !window.MSStream;
+  }
+  function installDismissed() {
+    try { return localStorage.getItem('dfs.pl.install.dismissed') === '1'; } catch (e) { return false; }
+  }
   window.addEventListener('beforeinstallprompt', function (e) {
     e.preventDefault();
     deferredPrompt = e;
-    try { if (localStorage.getItem('dfs.pl.install.dismissed')) return; } catch (err) {}
-    document.getElementById('installCard').classList.remove('hidden');
+    if (!installDismissed() && !isStandaloneApp()) installCard.classList.remove('hidden');
   });
+  /* iOS Safari never fires beforeinstallprompt — show the card with manual steps. */
+  if (isIOSDevice() && !installDismissed() && !isStandaloneApp()) {
+    document.getElementById('installSubtext').textContent = 'Put Punch List on your home screen — works with zero signal, opens full-screen.';
+    installCard.classList.remove('hidden');
+  }
   document.getElementById('installBtn').addEventListener('click', function () {
-    if (deferredPrompt) { deferredPrompt.prompt(); deferredPrompt = null; }
-    document.getElementById('installCard').classList.add('hidden');
+    if (deferredPrompt) {
+      deferredPrompt.prompt(); deferredPrompt = null;
+      installCard.classList.add('hidden');
+    } else if (isIOSDevice()) {
+      installHelp.innerHTML = 'On iPhone/iPad: tap the <b>Share</b> button in Safari, then choose <b>“Add to Home Screen.”</b>';
+      installHelp.classList.remove('hidden');
+    } else {
+      /* Prompt not offered (site data just cleared, or an unsupported browser) — point at the reliable path. */
+      installHelp.textContent = 'If no install prompt appears, open this page in Chrome, use it for a few seconds, then tap the ⋮ menu and choose “Install app” / “Add to Home screen.”';
+      installHelp.classList.remove('hidden');
+    }
   });
   document.getElementById('installDismiss').addEventListener('click', function () {
     try { localStorage.setItem('dfs.pl.install.dismissed', '1'); } catch (e) {}
-    document.getElementById('installCard').classList.add('hidden');
+    installCard.classList.add('hidden');
   });
+  window.addEventListener('appinstalled', function () { deferredPrompt = null; installCard.classList.add('hidden'); });
 
   /* ---------- boot ---------- */
   state = loadDraft() || blankState();
