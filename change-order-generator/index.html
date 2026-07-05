@@ -414,9 +414,10 @@
 <!-- UPGRADE MODAL — must be in DOM before the main script runs -->
 <div id="upgradeModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-ink/90 p-4" role="dialog" aria-modal="true">
   <div class="bg-slatecard rounded-2xl border-2 border-safety p-6 max-w-sm w-full shadow-2xl">
-    <p class="text-safety font-extrabold text-lg mb-1">⚡ Go Pro — $19.99 one-time</p>
-    <p class="text-slate-300 text-sm mb-5">Your logo on every PDF. No footer branding. Pay once, yours forever — no subscription, no cloud, no account.</p>
+    <p class="text-safety font-extrabold text-lg mb-1">⚡ Suite Pro — $29.99 one-time</p>
+    <p class="text-slate-300 text-sm mb-5">Your logo on every PDF — across all three DFS apps. No footer branding. Pay once, yours forever — no subscription, no cloud, no account.</p>
     <div class="space-y-2 text-sm text-slate-300 mb-5">
+      <p>✓ One key unlocks Change Orders, Bid Leveler &amp; Punch List</p>
       <p>✓ Custom company logo on all PDFs</p>
       <p>✓ "Created free" footer removed</p>
       <p>✓ Works 100% offline — same as free</p>
@@ -424,7 +425,7 @@
     </div>
     <a href="https://digitalforemansuite.com/pro" target="_blank" rel="noopener"
        class="block w-full h-14 rounded-xl bg-safety text-ink font-black text-center text-lg leading-[3.5rem] mb-3">
-      UPGRADE TO PRO — $19.99
+      UPGRADE TO PRO — $29.99
     </a>
     <button id="upgradeModalClose" type="button"
        class="w-full h-12 rounded-xl border-2 border-slateline text-slate-400 font-bold text-sm">
@@ -1151,10 +1152,11 @@
       if (typeof doc.roundedRect === 'function') { doc.roundedRect(margin, 48-lh/2-chipPad, lw+chipPad*2, lh+chipPad*2, 6, 6, 'F'); }
       else { doc.rect(margin, 48-lh/2-chipPad, lw+chipPad*2, lh+chipPad*2, 'F'); }
       try {
-        var logoImg = new Image(); logoImg.src = settings.logo.dataUrl;
-        var lc = document.createElement('canvas'); lc.width = settings.logo.w; lc.height = settings.logo.h;
-        var lctx = lc.getContext('2d'); lctx.fillStyle='#ffffff'; lctx.fillRect(0,0,lc.width,lc.height); lctx.drawImage(logoImg,0,0);
-        doc.addImage(lc.toDataURL('image/jpeg',0.85), 'JPEG', margin+chipPad, 48-lh/2, lw, lh);
+        /* PNG dataUrl straight to jsPDF — no Image()/canvas round-trip. The old
+           round-trip raced the image decode (drawImage the same tick the src was set)
+           and only worked here by accident because the Settings preview had already
+           decoded the logo. The chip is white, so PNG transparency renders correctly. */
+        doc.addImage(settings.logo.dataUrl, 'PNG', margin+chipPad, 48-lh/2, lw, lh);
       } catch (imgErr) {}
       textX = margin + lw + chipPad*2 + 16;
     }
@@ -1356,8 +1358,8 @@
     } else {
       logoProBadge.classList.remove('hidden');
       proSection.innerHTML = [
-        '<p class="text-sm font-extrabold text-safety mb-1">⚡ Upgrade to Pro — $19.99 one-time</p>',
-        '<p class="text-xs text-slate-400 mb-3">Your logo on every PDF. No footer branding. One payment, yours forever.</p>',
+        '<p class="text-sm font-extrabold text-safety mb-1">⚡ Upgrade to Suite Pro — $29.99 one-time</p>',
+        '<p class="text-xs text-slate-400 mb-3">Your logo on every PDF across all three DFS apps. No footer branding. One payment, yours forever.</p>',
         '<input id="licenseKeyInput" type="text" placeholder="Enter license key" autocomplete="off" autocorrect="off" spellcheck="false"',
         '  class="w-full h-12 px-3 rounded-xl bg-ink border-2 border-slateline text-white text-sm font-mono tracking-wider mb-2" />',
         '<button id="activateProBtn" type="button"',
@@ -1416,10 +1418,32 @@
       'Device: ' + (navigator.userAgent || 'unknown'),
       'App URL: ' + window.location.href
     ].join('\n');
-    window.location.href = 'mailto:hello@digitalforemansuite.com'
-      + '?subject=' + encodeURIComponent('DFS Bug Report / Feature Request — ' + currentCONumber())
-      + '&body='    + encodeURIComponent(body);
+    var isTouchMobile = (navigator.maxTouchPoints > 0) && window.matchMedia('(pointer: coarse)').matches;
+    if (isTouchMobile) {
+      window.location.href = 'mailto:hello@digitalforemansuite.com'
+        + '?subject=' + encodeURIComponent('DFS Bug Report / Feature Request — ' + currentCONumber())
+        + '&body='    + encodeURIComponent(body);
+    } else {
+      /* Desktop PCs often have no mail app wired to mailto: — the click would die
+         silently. Copy the address instead and say so. */
+      try { navigator.clipboard.writeText('hello@digitalforemansuite.com'); } catch (err) {}
+      coToast('Bug reports: hello@digitalforemansuite.com — address copied.');
+    }
   });
+  var coToastTimer = null;
+  function coToast(msg) {
+    var el = document.getElementById('coToast');
+    if (!el) {
+      el = document.createElement('div');
+      el.id = 'coToast';
+      el.className = 'fixed left-1/2 -translate-x-1/2 bottom-24 bg-slatecard border-2 border-safety text-slate-100 text-sm font-bold px-5 py-3 rounded-xl z-50';
+      document.body.appendChild(el);
+    }
+    el.textContent = msg;
+    el.style.display = '';
+    clearTimeout(coToastTimer);
+    coToastTimer = setTimeout(function () { el.style.display = 'none'; }, 2600);
+  }
 
   /* ── LEAVE A REVIEW (mailto funnel) ── */
   var REVIEW_BODY = [
