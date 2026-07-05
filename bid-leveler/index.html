@@ -225,7 +225,7 @@ tailwind.config = { theme: { extend: { colors: {
         <button id="csvBtn" type="button" class="bg-white/5 border border-white/10 text-slate-300 text-sm font-bold px-4 py-2 rounded-lg">📊 Export spreadsheet</button>
         <button id="backupBtn" type="button" class="bg-white/5 border border-white/10 text-slate-300 text-sm font-bold px-4 py-2 rounded-lg">⬇ Backup data</button>
         <label class="bg-white/5 border border-white/10 text-slate-300 text-sm font-bold px-4 py-2 rounded-lg cursor-pointer">⬆ Restore<input id="restoreInput" type="file" accept=".json,application/json" class="hidden" /></label>
-        <a href="mailto:hello@digitalforemansuite.com?subject=Bid%20Leveler%20bug%20report" class="bg-white/5 border border-white/10 text-slate-300 text-sm font-bold px-4 py-2 rounded-lg">Report a bug</a>
+        <a id="bugLink" href="mailto:hello@digitalforemansuite.com?subject=Bid%20Leveler%20bug%20report" class="bg-white/5 border border-white/10 text-slate-300 text-sm font-bold px-4 py-2 rounded-lg">Report a bug</a>
       </div>
     </div>
   </section>
@@ -894,6 +894,12 @@ tailwind.config = { theme: { extend: { colors: {
   document.getElementById('plugRule').addEventListener('change', function (e) { state.plugRule = e.target.value; renderResults(); saveDraft(); });
   document.getElementById('outlierPct').addEventListener('input', function (e) { state.outlierPct = e.target.value; renderResultsSoon(); saveDraft(); });
   document.getElementById('awardNotes').addEventListener('input', function (e) { state.awardNotes = e.target.value; saveDraft(); });
+
+  /* ---------- bug-report fallback (desktop PCs often have no mail app for mailto:) ---------- */
+  document.getElementById('bugLink').addEventListener('click', function () {
+    try { navigator.clipboard.writeText('hello@digitalforemansuite.com'); } catch (e) {}
+    toast('Bug reports: hello@digitalforemansuite.com — address copied.');
+  });
 
   /* ---------- spreadsheet export (CSV — opens in Excel / Google Sheets; built on-device, nothing uploaded) ---------- */
   function csvField(v) {
