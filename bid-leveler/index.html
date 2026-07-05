@@ -304,10 +304,10 @@ tailwind.config = { theme: { extend: { colors: {
     if (typeof doc.roundedRect === 'function') { doc.roundedRect(margin, cy - lh / 2 - chipPad, lw + chipPad * 2, lh + chipPad * 2, 5, 5, 'F'); }
     else { doc.rect(margin, cy - lh / 2 - chipPad, lw + chipPad * 2, lh + chipPad * 2, 'F'); }
     try {
-      var logoImg = new Image(); logoImg.src = biz.logo.dataUrl;
-      var lc = document.createElement('canvas'); lc.width = biz.logo.w; lc.height = biz.logo.h;
-      var lctx = lc.getContext('2d'); lctx.fillStyle = '#ffffff'; lctx.fillRect(0, 0, lc.width, lc.height); lctx.drawImage(logoImg, 0, 0);
-      doc.addImage(lc.toDataURL('image/jpeg', 0.85), 'JPEG', margin + chipPad, cy - lh / 2, lw, lh);
+      /* PNG dataUrl straight to jsPDF — no Image()/canvas round-trip (that races the
+         image decode and produced a blank chip on phones; the chip is white already,
+         so PNG transparency renders correctly). */
+      doc.addImage(biz.logo.dataUrl, 'PNG', margin + chipPad, cy - lh / 2, lw, lh);
     } catch (imgErr) {}
     return margin + lw + chipPad * 2 + 14;
   }
@@ -896,8 +896,9 @@ tailwind.config = { theme: { extend: { colors: {
   document.getElementById('awardNotes').addEventListener('input', function (e) { state.awardNotes = e.target.value; saveDraft(); });
 
   /* ---------- bug-report fallback (desktop PCs often have no mail app for mailto:) ---------- */
-  document.getElementById('bugLink').addEventListener('click', function () {
-    try { navigator.clipboard.writeText('hello@digitalforemansuite.com'); } catch (e) {}
+  document.getElementById('bugLink').addEventListener('click', function (e) {
+    if (!(navigator.maxTouchPoints > 0 && window.matchMedia('(pointer: coarse)').matches)) e.preventDefault();  /* desktop: no OS mail dialog, just copy */
+    try { navigator.clipboard.writeText('hello@digitalforemansuite.com'); } catch (err) {}
     toast('Bug reports: hello@digitalforemansuite.com — address copied.');
   });
 
