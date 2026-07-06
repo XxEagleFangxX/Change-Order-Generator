@@ -24,7 +24,7 @@
       the rest, and failures are logged to the console.
    =========================================================*/
 
-const CACHE_NAME = "change-order-cache-v24";
+const CACHE_NAME = "change-order-cache-v25";
 
 /* Files served from our own site. */
 const APP_SHELL = [
