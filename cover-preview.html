@@ -8,122 +8,175 @@
   body { background: #080c14; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; color: #f1f5f9; position: relative; }
   body::before { content: ''; position: absolute; inset: 0; background-image: repeating-linear-gradient(-45deg, transparent, transparent 40px, rgba(249,115,22,0.025) 40px, rgba(249,115,22,0.025) 41px); pointer-events: none; }
   .top-bar { position: absolute; top: 0; left: 0; right: 0; height: 4px; background: linear-gradient(90deg, #f97316, #ea580c, #f97316); }
-  .layout { position: relative; display: flex; align-items: center; height: 720px; padding: 0 80px; gap: 60px; z-index: 1; }
-  .left { flex: 1; display: flex; flex-direction: column; justify-content: center; }
-  .suite-badge { display: inline-flex; align-items: center; gap: 8px; background: rgba(249,115,22,0.12); border: 1px solid rgba(249,115,22,0.35); border-radius: 4px; padding: 6px 14px; margin-bottom: 28px; width: fit-content; }
+  .wrap { position: relative; z-index: 1; height: 720px; display: flex; flex-direction: column; padding: 44px 70px 30px; }
+
+  /* header */
+  .head { text-align: center; }
+  .suite-badge { display: inline-flex; align-items: center; gap: 8px; background: rgba(249,115,22,0.12); border: 1px solid rgba(249,115,22,0.35); border-radius: 4px; padding: 6px 14px; margin-bottom: 18px; }
   .suite-badge .dot { width: 7px; height: 7px; background: #f97316; border-radius: 50%; }
-  .suite-badge span { font-size: 11px; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; color: #f97316; }
-  .tagline { font-size: 82px; font-weight: 900; line-height: 1.0; letter-spacing: -0.03em; margin-bottom: 24px; }
-  .tagline .orange { color: #f97316; }
-  .product-name { font-size: 19px; font-weight: 500; color: #94a3b8; margin-bottom: 36px; line-height: 1.4; max-width: 420px; }
-  .divider { width: 60px; height: 3px; background: #f97316; margin-bottom: 28px; border-radius: 2px; }
-  .price-row { display: flex; align-items: center; gap: 16px; }
-  .price-sub { font-size: 16px; color: #64748b; line-height: 1.5; }
-  .price-sub strong { display: block; font-size: 26px; color: #f1f5f9; font-weight: 800; margin-bottom: 6px; }
-  .pills { display: flex; gap: 10px; margin-top: 28px; flex-wrap: wrap; }
+  .suite-badge span { font-size: 12px; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; color: #f97316; }
+  .headline { font-size: 52px; font-weight: 900; line-height: 1.02; letter-spacing: -0.02em; }
+  .headline .orange { color: #f97316; }
+  .subline { font-size: 18px; color: #94a3b8; font-weight: 500; margin-top: 12px; letter-spacing: 0.01em; }
+
+  /* tiles */
+  .tiles { flex: 1; display: flex; align-items: center; justify-content: center; gap: 46px; }
+  .tile { width: 236px; display: flex; flex-direction: column; align-items: center; }
+  .phone { position: relative; width: 236px; height: 344px; background: #11162200; border-radius: 30px; border: 2px solid rgba(249,115,22,0.4); box-shadow: 0 0 0 1px rgba(255,255,255,0.06), 0 24px 60px rgba(0,0,0,0.55); overflow: hidden; }
+  .glow { position: absolute; inset: -30px; background: radial-gradient(ellipse at 50% 40%, rgba(249,115,22,0.16) 0%, transparent 65%); pointer-events: none; z-index: 0; }
+  .screen { position: absolute; inset: 0; background: #0a0e1a; display: flex; flex-direction: column; z-index: 1; }
+  .scr-head { padding: 12px 12px 10px; border-bottom: 1px solid rgba(249,115,22,0.28); display: flex; align-items: center; justify-content: space-between; background: #0d1424; }
+  .scr-app { font-size: 7px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: #f97316; }
+  .scr-ttl { font-size: 12px; font-weight: 800; color: #f1f5f9; margin-top: 2px; }
+  .badge-o { border: 1.5px solid #f97316; color: #f97316; font-size: 8px; font-weight: 800; letter-spacing: 0.08em; padding: 3px 7px; border-radius: 4px; }
+  .badge-g { border: 1.5px solid #22c55e; color: #22c55e; font-size: 8px; font-weight: 800; letter-spacing: 0.06em; padding: 3px 7px; border-radius: 4px; }
+  .scr-body { padding: 11px 11px; flex: 1; }
+  .card { background: #141c2e; border: 1px solid rgba(59,130,246,0.18); border-radius: 7px; padding: 8px 9px; margin-bottom: 7px; }
+  .card-t { font-size: 6.5px; font-weight: 700; letter-spacing: 0.1em; color: #60a5fa; text-transform: uppercase; margin-bottom: 6px; }
+  .row { display: flex; justify-content: space-between; align-items: center; font-size: 8px; color: #cbd5e1; margin-bottom: 5px; }
+  .row:last-child { margin-bottom: 0; }
+  .row .amt { color: #f97316; font-weight: 700; }
+  .total { background: rgba(249,115,22,0.1); border: 1px solid rgba(249,115,22,0.25); border-radius: 6px; padding: 7px 9px; display: flex; justify-content: space-between; align-items: center; }
+  .total .lbl { font-size: 7px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.06em; }
+  .total .val { font-size: 13px; font-weight: 900; color: #f97316; }
+
+  /* bid-leveler grid */
+  .grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 4px; }
+  .gcol { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.07); border-radius: 5px; padding: 6px 4px; text-align: center; }
+  .gcol.low { border-color: rgba(34,197,94,0.5); background: rgba(34,197,94,0.08); }
+  .gcol .who { font-size: 6px; color: #64748b; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 4px; }
+  .gcol .p { font-size: 9px; font-weight: 800; color: #cbd5e1; }
+  .gcol.low .p { color: #22c55e; }
+  .flag { font-size: 6.5px; color: #fca5a5; margin-top: 6px; text-align: center; }
+
+  /* punch checklist */
+  .chk { display: flex; align-items: center; gap: 6px; font-size: 8px; color: #cbd5e1; margin-bottom: 6px; }
+  .box { width: 11px; height: 11px; border-radius: 3px; border: 1.5px solid #3d4d63; flex-shrink: 0; }
+  .box.on { background: #22c55e; border-color: #22c55e; position: relative; }
+  .box.on::after { content: '\2713'; color: #06210f; font-size: 8px; font-weight: 900; position: absolute; top: -1px; left: 1px; }
+  .chk.done { color: #64748b; text-decoration: line-through; }
+  .prog { height: 6px; background: rgba(255,255,255,0.06); border-radius: 999px; overflow: hidden; margin-top: 2px; }
+  .prog > i { display: block; height: 100%; width: 66%; background: linear-gradient(90deg,#f97316,#22c55e); }
+
+  .tile .name { font-size: 19px; font-weight: 800; margin-top: 18px; }
+  .tile .desc { font-size: 12px; color: #94a3b8; margin-top: 4px; text-align: center; line-height: 1.35; }
+
+  /* footer strip */
+  .foot { text-align: center; }
+  .oneline { font-size: 21px; font-weight: 800; margin-bottom: 14px; }
+  .oneline .orange { color: #f97316; }
+  .pills { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
   .pill { display: flex; align-items: center; gap: 6px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 999px; padding: 6px 14px; font-size: 12px; color: #94a3b8; font-weight: 500; }
-  .pill .check { color: #22c55e; }
-  .right { width: 420px; flex-shrink: 0; position: relative; display: flex; align-items: center; justify-content: center; }
-  .glow { position: absolute; width: 360px; height: 560px; background: radial-gradient(ellipse at center, rgba(249,115,22,0.18) 0%, transparent 70%); border-radius: 50%; top: 50%; left: 50%; transform: translate(-50%, -50%); }
-  .phone { position: relative; width: 320px; height: 620px; background: #1a1f2e; border-radius: 44px; border: 2px solid rgba(249,115,22,0.4); box-shadow: 0 0 0 1px rgba(255,255,255,0.08), 0 32px 80px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.08); overflow: hidden; z-index: 1; }
-  .phone-notch { position: absolute; top: 14px; left: 50%; transform: translateX(-50%); width: 90px; height: 22px; background: #080c14; border-radius: 999px; z-index: 10; }
-  .phone-screen { position: absolute; inset: 0; background: #0a0e1a; display: flex; flex-direction: column; padding-top: 50px; }
-  .app-header { background: #0d1424; padding: 10px 14px; border-bottom: 1px solid rgba(249,115,22,0.3); display: flex; align-items: center; justify-content: space-between; }
-  .app-suite { font-size: 7px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: #f97316; }
-  .app-co-num { font-size: 11px; font-weight: 700; color: #f1f5f9; margin-top: 1px; }
-  .app-co-num span { color: #f97316; }
-  .app-co-date { font-size: 8px; color: #64748b; margin-top: 1px; }
-  .draft-badge { background: transparent; border: 1.5px solid #f97316; color: #f97316; font-size: 9px; font-weight: 800; letter-spacing: 0.1em; padding: 3px 8px; border-radius: 4px; }
-  .app-body { padding: 10px 14px; flex: 1; overflow: hidden; }
-  .app-section { background: #141c2e; border: 1px solid rgba(59,130,246,0.2); border-radius: 8px; padding: 10px 12px; margin-bottom: 8px; }
-  .app-section-title { font-size: 7px; font-weight: 700; letter-spacing: 0.1em; color: #60a5fa; text-transform: uppercase; margin-bottom: 8px; }
-  .app-field { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 4px; padding: 5px 8px; margin-bottom: 5px; }
-  .app-field-label { font-size: 6px; color: #64748b; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 2px; }
-  .app-field-value { font-size: 9px; color: #f1f5f9; font-weight: 500; }
-  .app-row { display: flex; gap: 5px; }
-  .app-row .app-field { flex: 1; }
-  .app-lineitem { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); border-radius: 4px; padding: 6px 8px; margin-bottom: 4px; }
-  .app-lineitem-desc { font-size: 8px; color: #cbd5e1; font-weight: 500; margin-bottom: 3px; }
-  .app-lineitem-row { display: flex; justify-content: space-between; font-size: 7px; color: #64748b; }
-  .app-lineitem-total { color: #f97316; font-weight: 700; }
-  .app-total { background: rgba(249,115,22,0.1); border: 1px solid rgba(249,115,22,0.25); border-radius: 6px; padding: 8px 10px; display: flex; justify-content: space-between; align-items: center; margin-top: 6px; }
-  .app-total-label { font-size: 8px; font-weight: 700; color: #94a3b8; }
-  .app-total-amount { font-size: 14px; font-weight: 900; color: #f97316; }
-  .app-footer { display: grid; grid-template-columns: 1fr 2fr; gap: 6px; padding: 8px 14px 14px; }
-  .app-btn-reset { background: #1a2236; border: 1px solid #2d3748; border-radius: 6px; padding: 8px 4px; text-align: center; font-size: 7px; font-weight: 700; color: #94a3b8; text-transform: uppercase; line-height: 1.4; }
-  .app-btn-generate { background: linear-gradient(135deg, #f97316, #ea580c); border-radius: 6px; padding: 8px 4px; text-align: center; font-size: 8px; font-weight: 800; color: #fff; text-transform: uppercase; line-height: 1.4; box-shadow: 0 4px 16px rgba(249,115,22,0.4); }
-  .bottom-brand { position: absolute; bottom: 28px; left: 80px; right: 80px; display: flex; align-items: center; justify-content: space-between; }
-  .bottom-brand .brand-name { font-size: 11px; font-weight: 600; color: #334155; letter-spacing: 0.08em; text-transform: uppercase; }
-  .bottom-brand .brand-url { font-size: 11px; color: #334155; }
+  .pill .check { color: #22c55e; font-weight: 800; }
+  .bottom-brand { display: flex; align-items: center; justify-content: space-between; margin-top: 20px; padding: 0 4px; }
+  .bottom-brand .bn { font-size: 11px; font-weight: 600; color: #334155; letter-spacing: 0.08em; text-transform: uppercase; }
+  .bottom-brand .bu { font-size: 11px; color: #334155; }
 </style>
 </head>
 <body>
 <div class="top-bar"></div>
-<div class="layout">
-  <div class="left">
+<div class="wrap">
+
+  <div class="head">
     <div class="suite-badge"><div class="dot"></div><span>Digital Foreman Suite</span></div>
-    <div class="tagline">Sign it.<br>Send it.<br><span class="orange">Get paid.</span></div>
-    <div class="product-name">On-The-Spot Change Order Generator<br>Built for independent contractors, by a contractor.</div>
-    <div class="divider"></div>
-    <div class="price-row">
-      <div class="price-sub"><strong>One-time payment &mdash; yours forever</strong>No subscription &nbsp;&middot;&nbsp; No account &nbsp;&middot;&nbsp; No cloud</div>
-    </div>
-    <div class="pills">
-      <div class="pill"><span class="check">&#10003;</span> 100% Offline</div>
-      <div class="pill"><span class="check">&#10003;</span> Finger Signature</div>
-      <div class="pill"><span class="check">&#10003;</span> Instant PDF</div>
-      <div class="pill"><span class="check">&#10003;</span> Works in Dead Zones</div>
-    </div>
+    <div class="headline">Three Free Apps, <span class="orange">Built For the Trade.</span></div>
+    <div class="subline">Change Orders &nbsp;&middot;&nbsp; Bid Leveling &nbsp;&middot;&nbsp; Punch Lists</div>
   </div>
-  <div class="right">
-    <div class="glow"></div>
-    <div class="phone">
-      <div class="phone-notch"></div>
-      <div class="phone-screen">
-        <div class="app-header">
-          <div class="app-header-left">
-            <div class="app-suite">Digital Foreman Suite</div>
-            <div class="app-co-num">Change Order <span>CO-20260613-001</span></div>
-            <div class="app-co-date">Saturday, June 13, 2026</div>
+
+  <div class="tiles">
+
+    <!-- CHANGE ORDER GENERATOR -->
+    <div class="tile">
+      <div class="phone">
+        <div class="glow"></div>
+        <div class="screen">
+          <div class="scr-head">
+            <div><div class="scr-app">Digital Foreman Suite</div><div class="scr-ttl">Change Order</div></div>
+            <div class="badge-o">DRAFT</div>
           </div>
-          <div class="draft-badge">DRAFT</div>
-        </div>
-        <div class="app-body">
-          <div class="app-section">
-            <div class="app-section-title">Client &amp; Project</div>
-            <div class="app-field"><div class="app-field-label">Client Name</div><div class="app-field-value">Peterson Residence</div></div>
-            <div class="app-row">
-              <div class="app-field"><div class="app-field-label">Project</div><div class="app-field-value">Master Bath Reno</div></div>
-              <div class="app-field"><div class="app-field-label">Date</div><div class="app-field-value">06/13/2026</div></div>
+          <div class="scr-body">
+            <div class="card">
+              <div class="card-t">Scope Changes</div>
+              <div class="row"><span>Subfloor sistering &mdash; 3 joists</span><span class="amt">$680</span></div>
+              <div class="row"><span>Demo shower tile</span><span class="amt">$420</span></div>
             </div>
+            <div class="total"><span class="lbl">Total w/ tax &amp; markup</span><span class="val">$1,287</span></div>
           </div>
-          <div class="app-section">
-            <div class="app-section-title">Scope Changes</div>
-            <div class="app-lineitem">
-              <div class="app-lineitem-desc">Subfloor sistering &mdash; 3 joists</div>
-              <div class="app-lineitem-row"><span>Labor + Material</span><span class="app-lineitem-total">$680.00</span></div>
-            </div>
-            <div class="app-lineitem">
-              <div class="app-lineitem-desc">Demo existing shower tile</div>
-              <div class="app-lineitem-row"><span>Labor</span><span class="app-lineitem-total">$420.00</span></div>
-            </div>
-            <div class="app-total">
-              <span class="app-total-label">TOTAL WITH TAX &amp; MARKUP</span>
-              <span class="app-total-amount">$1,287.50</span>
-            </div>
-          </div>
-        </div>
-        <div class="app-footer">
-          <div class="app-btn-reset">RESET /<br>NEW CO</div>
-          <div class="app-btn-generate">GENERATE PDF<br>CHANGE ORDER</div>
         </div>
       </div>
+      <div class="name">Change Order Generator</div>
+      <div class="desc">Signed change-order PDFs<br>on the spot</div>
+    </div>
+
+    <!-- BID LEVELER -->
+    <div class="tile">
+      <div class="phone">
+        <div class="glow"></div>
+        <div class="screen">
+          <div class="scr-head">
+            <div><div class="scr-app">Digital Foreman Suite</div><div class="scr-ttl">Bid Leveler</div></div>
+            <div class="badge-g">LEVEL</div>
+          </div>
+          <div class="scr-body">
+            <div class="card">
+              <div class="card-t">Framing &mdash; leveled</div>
+              <div class="grid">
+                <div class="gcol"><div class="who">Sub A</div><div class="p">$24.9k</div></div>
+                <div class="gcol low"><div class="who">Sub B</div><div class="p">$22.7k</div></div>
+                <div class="gcol"><div class="who">Sub C</div><div class="p">$26.1k</div></div>
+              </div>
+              <div class="flag">&#9873; Sub B low on 5 of 6 lines</div>
+            </div>
+            <div class="total"><span class="lbl">True low, apples-to-apples</span><span class="val">Sub B</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="name">Bid Leveler</div>
+      <div class="desc">Compare sub bids<br>apples&#8209;to&#8209;apples</div>
+    </div>
+
+    <!-- PUNCH LIST -->
+    <div class="tile">
+      <div class="phone">
+        <div class="glow"></div>
+        <div class="screen">
+          <div class="scr-head">
+            <div><div class="scr-app">Digital Foreman Suite</div><div class="scr-ttl">Punch List</div></div>
+            <div class="badge-o">2 OPEN</div>
+          </div>
+          <div class="scr-body">
+            <div class="card">
+              <div class="card-t">Kitchen &mdash; walkthrough</div>
+              <div class="chk done"><span class="box on"></span>Caulk backsplash</div>
+              <div class="chk done"><span class="box on"></span>Touch-up paint, north wall</div>
+              <div class="chk"><span class="box"></span>Adjust cabinet door</div>
+              <div class="chk"><span class="box"></span>Replace outlet cover</div>
+            </div>
+            <div class="total"><span class="lbl">Close-out progress</span><span class="val">66%</span></div>
+            <div class="prog"><i></i></div>
+          </div>
+        </div>
+      </div>
+      <div class="name">Punch List</div>
+      <div class="desc">Close out the job,<br>both sign off</div>
+    </div>
+
+  </div>
+
+  <div class="foot">
+    <div class="oneline">3 free apps &nbsp;&middot;&nbsp; <span class="orange">one Pro key</span></div>
+    <div class="pills">
+      <div class="pill"><span class="check">&#10003;</span> 100% Offline</div>
+      <div class="pill"><span class="check">&#10003;</span> No Account</div>
+      <div class="pill"><span class="check">&#10003;</span> Signed PDFs</div>
+      <div class="pill"><span class="check">&#10003;</span> Built by a contractor</div>
+    </div>
+    <div class="bottom-brand">
+      <span class="bn">Digital Foreman Suite</span>
+      <span class="bu">digitalforemansuite.com</span>
     </div>
   </div>
-</div>
-<div class="bottom-brand">
-  <span class="brand-name">Digital Foreman Suite</span>
-  <span class="brand-url">digitalforemansuite.com</span>
+
 </div>
 </body>
 </html>
