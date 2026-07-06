@@ -5,7 +5,7 @@
    - individual fetch per asset so one bad path can't kill offline
    ========================================================= */
 
-const CACHE_NAME = "punch-list-cache-v9";
+const CACHE_NAME = "punch-list-cache-v10";
 
 const APP_SHELL = [
   "./",
