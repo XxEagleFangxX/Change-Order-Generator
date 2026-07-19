@@ -32,6 +32,46 @@ tailwind.config = { theme: { extend: { colors: {
   .done-item { opacity: 0.55; }
   .done-item .itemdesc { text-decoration: line-through; }
 </style>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "What is a punch list?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "A punch list is the run of small items left at the end of a job, like touch-up paint, a door that sticks, or a missing outlet cover. You walk the job with the customer near the end, write down everything that still needs doing, and work the list until it is clear."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Is there a free punch list template or app?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes. The Punch List app is free and works like a punch list template you never have to build. Tag each item by room and trade, check them off as they are finished, and watch the progress close out. No account and no subscription."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Can I get a punch list signed off by the customer?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes. When the last item is done, you and the customer both sign right on the screen with a finger and the app produces a signed completion PDF. It is clean proof the work was finished and accepted."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Can I export the punch list to Excel?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes. Tap Export spreadsheet and you get the whole punch list as a file that opens in Excel or Google Sheets, including the area, item, trade, status, and notes. It is built on your device and nothing is uploaded."
+      }
+    }
+  ]
+}
+</script>
 </head>
 <body class="text-white min-h-screen pb-28">
 
@@ -133,6 +173,16 @@ tailwind.config = { theme: { extend: { colors: {
       <span id="jobCount" class="text-[11px] text-slate-500 font-bold"></span>
     </div>
     <div id="jobLog" class="space-y-2"></div>
+  </section>
+
+  <!-- WHAT IS A PUNCH LIST -->
+  <section class="bg-brand-navy border border-brand-border rounded-2xl p-5">
+    <h2 class="text-xs font-black tracking-widest text-safety uppercase mb-3">What is a punch list?</h2>
+    <div class="text-sm text-slate-400 space-y-3 leading-relaxed">
+      <p>A punch list is the run of small items left at the end of a job — the touch-up paint in the hallway, the door that sticks, the missing outlet cover. You walk the job with the customer near the end, write down everything that still needs doing, and work the list until it's clear.</p>
+      <p>Contractors have always kept this on a <b class="text-slate-200">punch list template</b> or a legal pad. This app is that list, built for your phone. Tag each item by room and trade, check them off as they're finished, and watch the progress bar close out. When the last item's done, you and the customer both sign right on the screen and it turns into a signed completion PDF — clean proof the work was finished and accepted.</p>
+      <p>You can also export the whole list to Excel or Google Sheets. Free, works with zero signal, and everything stays on your own device.</p>
+    </div>
   </section>
 
   <!-- FAQ -->
