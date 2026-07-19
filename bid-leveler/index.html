@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Free Bid Leveling Tool for Contractors — Compare Sub Bids, Works Offline</title>
-<meta name="description" content="Level sub bids apples-to-apples on your phone. Spot missing scope, plug the gaps, and see the true low bid — 100% offline, no account, no subscription. Built by a 30-year contractor." />
+<title>Free Bid Leveling Sheet &amp; Software for Contractors — Works Offline</title>
+<meta name="description" content="Free bid leveling software and sheet — compare sub bids apples-to-apples, spot missing scope, find the real low bid, and export to Excel. Works offline, no account." />
 <link rel="canonical" href="https://digitalforemansuite.com/bid-leveler" />
 <meta property="og:type" content="website" />
 <meta property="og:url" content="https://digitalforemansuite.com/bid-leveler" />
@@ -44,6 +44,46 @@ tailwind.config = { theme: { extend: { colors: {
     #scopeTable input[data-price] { padding-top: 0.55rem; padding-bottom: 0.55rem; }
   }
 </style>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "What is bid leveling?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Bid leveling (also spelled bid levelling) is how you compare subcontractor bids apples-to-apples. Two bids on the same job can look thousands apart until you line them up side by side and see that one left out demo, another excluded the permit, and a third never priced the railings. Leveling puts every bid on the same scope, so you are looking at the real low bid instead of the cheapest paper."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What is a bid leveling sheet?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "A bid leveling sheet is the spreadsheet contractors use to compare bids: scope down the side, bidders across the top, and a price in every cell. Bid Leveler is that sheet built for your phone. It fills the gaps where a sub did not price a line and shows the leveled total for every bidder."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Is there a free bid leveling template?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes. Bid Leveler is free to use and works like a bid leveling template you never have to build. Enter your scope once, tap in each bidder's prices, and it handles the plugs, the flags, and the leveled totals. No account and no subscription."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Can I export the bid leveling sheet to Excel?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes. Tap Export spreadsheet and you get the whole leveled sheet as a file that opens in Excel or Google Sheets: scope, every bidder's prices, the plugged gaps, and the leveled totals. It is built right on your device and nothing gets uploaded."
+      }
+    }
+  ]
+}
+</script>
 </head>
 <body class="text-white min-h-screen pb-28">
 
@@ -183,6 +223,16 @@ tailwind.config = { theme: { extend: { colors: {
     <div id="jobLog" class="space-y-2"></div>
   </section>
 
+  <!-- WHAT IS BID LEVELING -->
+  <section class="bg-brand-navy border border-brand-border rounded-2xl p-5">
+    <h2 class="text-xs font-black tracking-widest text-safety uppercase mb-3">What is bid leveling?</h2>
+    <div class="text-sm text-slate-400 space-y-3 leading-relaxed">
+      <p>Bid leveling (also spelled bid levelling) is how you compare subcontractor bids apples-to-apples. Two bids on the same job can look thousands apart until you line them up side by side and see that one left out demo, another excluded the permit, and a third never priced the railings. Leveling puts every bid on the same scope, so you're looking at the real low bid instead of the cheapest paper.</p>
+      <p>Contractors have always done this on a <b class="text-slate-200">bid leveling sheet</b> — scope down the side, bidders across the top. This app is that sheet, built for your phone. Enter the scope, tap in each bidder's prices, mark what's excluded or not quoted, and it plugs the gaps and flags the number that looks too good. Free, works offline, and nothing you enter leaves your device.</p>
+      <p>When you're done, export the leveled sheet straight to <b class="text-slate-200">Excel or Google Sheets</b>, or generate a clean one-page PDF to send out with your award.</p>
+    </div>
+  </section>
+
   <!-- FAQ -->
   <section class="bg-brand-navy border border-brand-border rounded-2xl p-5">
     <h2 class="text-xs font-black tracking-widest text-safety uppercase mb-3">FAQ · How-To</h2>
@@ -208,11 +258,15 @@ tailwind.config = { theme: { extend: { colors: {
         <p class="text-sm text-slate-400 mt-2 leading-relaxed">Yes — open the same address in your computer's browser, and big bids are much faster with a keyboard: Tab moves across a row, Enter moves down a column, just like a spreadsheet. You can also tap 📊 Export spreadsheet below to get the whole leveling sheet as a file that opens in Excel or Google Sheets. Your data stays per-device, so use ⬇ Backup / ⬆ Restore below to move a job between phone and computer.</p>
       </details>
       <details class="border-b border-brand-border py-2">
-        <summary class="cursor-pointer text-sm font-bold text-slate-200 min-h-[44px] flex items-center"><span class="text-safety font-extrabold mr-2">06</span> Does it work offline?</summary>
+        <summary class="cursor-pointer text-sm font-bold text-slate-200 min-h-[44px] flex items-center"><span class="text-safety font-extrabold mr-2">06</span> Can I export the bid leveling sheet to Excel?</summary>
+        <p class="text-sm text-slate-400 mt-2 leading-relaxed">Yes. Tap 📊 Export spreadsheet and you get the whole leveled sheet as a file that opens in Excel or Google Sheets — scope, every bidder's prices, the plugged gaps, and the leveled totals. It's built right on your device; nothing gets uploaded.</p>
+      </details>
+      <details class="border-b border-brand-border py-2">
+        <summary class="cursor-pointer text-sm font-bold text-slate-200 min-h-[44px] flex items-center"><span class="text-safety font-extrabold mr-2">07</span> Does it work offline?</summary>
         <p class="text-sm text-slate-400 mt-2 leading-relaxed">Yes. After the first visit it works with zero signal — concrete basement, metal building, no problem. Everything runs and saves on your device.</p>
       </details>
       <details class="py-2">
-        <summary class="cursor-pointer text-sm font-bold text-slate-200 min-h-[44px] flex items-center"><span class="text-safety font-extrabold mr-2">07</span> Where is my data? What if I switch phones?</summary>
+        <summary class="cursor-pointer text-sm font-bold text-slate-200 min-h-[44px] flex items-center"><span class="text-safety font-extrabold mr-2">08</span> Where is my data? What if I switch phones?</summary>
         <p class="text-sm text-slate-400 mt-2 leading-relaxed">Everything lives on this device — no account, no cloud, nothing sent anywhere. Before switching devices, tap ⬇ Backup to save a file, then ⬆ Restore it on the new one.</p>
       </details>
     </div>
