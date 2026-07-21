@@ -165,6 +165,19 @@
 
   <div class="h-1 w-full orange-gradient fixed top-0 left-0 z-50"></div>
 
+  <!-- In-app-browser notice (Facebook / Instagram / Messenger / LinkedIn webviews can't install PWAs) -->
+  <div id="iabNotice" class="fixed bottom-0 left-0 right-0 z-50 px-4 pb-4" style="display:none">
+    <div class="max-w-xl mx-auto bg-brand-navy border-2 border-safety/70 rounded-2xl p-4 shadow-2xl flex items-start gap-3">
+      <span class="text-2xl leading-none">📲</span>
+      <p class="text-sm text-slate-200 leading-snug flex-1">
+        <span class="font-bold text-white">Want to install the apps?</span>
+        This built-in browser can&rsquo;t install them. Tap the <span class="font-bold text-white">&#8942;</span> or <span class="font-bold text-white">&hellip;</span> menu and choose
+        <span class="font-bold text-white">Open in Chrome</span> (Android) or <span class="font-bold text-white">Open in Safari</span> (iPhone) &mdash; then tap Install there.
+      </p>
+      <button id="iabNoticeClose" aria-label="Dismiss" class="text-slate-400 hover:text-white text-xl leading-none font-bold px-1">&times;</button>
+    </div>
+  </div>
+
   <!-- NAV -->
   <nav class="nav-blur fixed top-1 left-0 right-0 z-40 border-b border-white/5">
     <div class="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
@@ -230,9 +243,9 @@
           <li class="flex items-center gap-2"><span class="text-green-400">✓</span> Your data never leaves your device</li>
         </ul>
         <div class="flex flex-col sm:flex-row gap-4 justify-center items-stretch">
-          <a href="/change-order-generator" class="flex-1 orange-gradient text-white font-bold px-6 py-4 rounded-xl text-base hover:opacity-90 transition-opacity">📋 Change Orders</a>
-          <a href="/bid-leveler" class="flex-1 orange-gradient text-white font-bold px-6 py-4 rounded-xl text-base hover:opacity-90 transition-opacity">📊 Bid Leveler</a>
-          <a href="/punch-list" class="flex-1 orange-gradient text-white font-bold px-6 py-4 rounded-xl text-base hover:opacity-90 transition-opacity">✅ Punch List</a>
+          <a href="/change-order-generator" class="flex-1 orange-gradient text-white font-bold px-6 py-4 rounded-xl text-base hover:opacity-90 transition-opacity">📲 Install Change Orders</a>
+          <a href="/bid-leveler" class="flex-1 orange-gradient text-white font-bold px-6 py-4 rounded-xl text-base hover:opacity-90 transition-opacity">📲 Install Bid Leveler</a>
+          <a href="/punch-list" class="flex-1 orange-gradient text-white font-bold px-6 py-4 rounded-xl text-base hover:opacity-90 transition-opacity">📲 Install Punch List</a>
         </div>
         <p class="text-slate-500 text-sm mt-6">Or just use them in your browser — phone or computer, nothing to install, nothing to sign up for. On a desktop, the Bid Leveler even turns into a full spreadsheet with Excel export.</p>
       </div>
@@ -481,6 +494,19 @@
     el.href = 'mailto:hello@digitalforemansuite.com?subject='
       + encodeURIComponent('My review of the Digital Foreman Suite')
       + '&body=' + encodeURIComponent(body);
+  })();
+  </script>
+
+  <!-- Show the in-app-browser notice only inside FB/IG/Messenger/LinkedIn webviews -->
+  <script>
+  (function () {
+    var ua = navigator.userAgent || '';
+    var inApp = /FBAN|FBAV|FB_IAB|FBIOS|Instagram|Messenger|LinkedInApp/i.test(ua);
+    var n = document.getElementById('iabNotice');
+    if (!n || !inApp) return;
+    n.style.display = 'block';
+    var x = document.getElementById('iabNoticeClose');
+    if (x) x.addEventListener('click', function () { n.remove(); });
   })();
   </script>
 
