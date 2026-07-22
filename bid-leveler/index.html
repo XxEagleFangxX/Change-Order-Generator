@@ -484,7 +484,7 @@ tailwind.config = { theme: { extend: { colors: {
         btn.className = 'text-xs font-bold px-3 py-2 rounded-lg border ' + (activePdfTab === i ? 'border-safety text-safety bg-safety/10' : 'border-brand-border text-slate-300 bg-brand-card');
         btn.innerHTML = '📄 ' + name + ' <span class="text-slate-500 font-black ml-1" data-clearpdf="' + i + '">✕</span>';
         btn.addEventListener('click', function (e) {
-          if (e.target && e.target.hasAttribute('data-clearpdf')) { pdfTexts[i] = null; if (activePdfTab === i) activePdfTab = -1; renderPdfTabs(); showPdfTab(activePdfTab); return; }
+          if (e.target && e.target.hasAttribute('data-clearpdf')) { if (!confirm('Remove this loaded bid PDF?')) return; pdfTexts[i] = null; savePdfTexts(); if (activePdfTab === i) activePdfTab = -1; renderPdfTabs(); showPdfTab(activePdfTab); return; }
           activePdfTab = i; renderPdfTabs(); showPdfTab(i);
         });
       } else {
@@ -534,6 +534,9 @@ tailwind.config = { theme: { extend: { colors: {
     var idx = pendingLoadIdx; pendingLoadIdx = -1;
     if (!window.pdfjsLib) { alert('PDF reader needs one first load with internet — connect once and try again.'); return; }
     var reader = new FileReader();
+    reader.onerror = function () {
+      alert("Couldn't read that file. If it lives in OneDrive or Google Drive, it may not actually be on your phone yet \u2014 open the file's app, download it to the phone (or mark it Available offline), then load it from Internal storage / Downloads.");
+    };
     reader.onload = function () {
       window.pdfjsLib.getDocument({ data: reader.result }).promise.then(function (doc) {
         var pages = [];
@@ -560,6 +563,7 @@ tailwind.config = { theme: { extend: { colors: {
           } else {
             pdfTexts[idx] = text;
           }
+          savePdfTexts();
           activePdfTab = idx; renderPdfTabs(); showPdfTab(idx);
         });
       }).catch(function (err) {
@@ -572,6 +576,16 @@ tailwind.config = { theme: { extend: { colors: {
   new MutationObserver(function () { renderPdfTabs(); }).observe(document.getElementById('bidderList'), { childList: true, subtree: true });
 
   function saveDraft() { try { localStorage.setItem(K_DRAFT, JSON.stringify(state)); } catch (e) {} }
+  var K_PDFTEXTS = 'dfs.bl.pdftexts';
+  function savePdfTexts() { try { localStorage.setItem(K_PDFTEXTS, JSON.stringify(pdfTexts)); } catch (e) {} }
+  function loadPdfTexts() {
+    try {
+      var s = localStorage.getItem(K_PDFTEXTS);
+      if (!s) return;
+      var arr = JSON.parse(s);
+      if (Array.isArray(arr)) { for (var i = 0; i < pdfTexts.length; i++) { if (typeof arr[i] === 'string' && arr[i]) pdfTexts[i] = arr[i]; } }
+    } catch (e) {}
+  }
   function loadDraft() {
     try { var s = localStorage.getItem(K_DRAFT); return s ? JSON.parse(s) : null; } catch (e) { return null; }
   }
@@ -931,7 +945,7 @@ tailwind.config = { theme: { extend: { colors: {
   });
   document.getElementById('resetBtn').addEventListener('click', function () {
     if (!confirm('Clear the form and start a new job? (Saved jobs are kept.)')) return;
-    state = blankState(); renderAll(); saveDraft();
+    state = blankState(); pdfTexts = [null, null, null, null]; activePdfTab = -1; savePdfTexts(); renderAll(); saveDraft();
     window.scrollTo({ top: 0, behavior: 'smooth' });
   });
 
@@ -1303,6 +1317,7 @@ tailwind.config = { theme: { extend: { colors: {
   /* ---------- boot ---------- */
   state = loadDraft() || blankState();
   if (!state.job) state = blankState();
+  loadPdfTexts();
   renderAll();
 
   if ('serviceWorker' in navigator) {
