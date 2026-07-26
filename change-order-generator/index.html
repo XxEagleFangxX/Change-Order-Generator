@@ -1924,6 +1924,10 @@
   /* ── BOOT ── */
   var hasSavedSettings = loadSettings();
   settingsToForm();
+  /* Re-render branding UI now that settings are loaded — the first render above ran
+     before loadSettings(), so a returning user's logo/company name (and the
+     "From your logo" swatches) were missing until they touched a control. */
+  renderBrandUI(); refreshLogoSwatches();
   if (hasSavedSettings) {
     settingsBody.classList.add('hidden'); settingsChevron.textContent = '▸';
     taxInput.value = settings.taxRate || 0;
