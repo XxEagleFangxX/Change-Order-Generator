@@ -393,6 +393,24 @@ tailwind.config = { theme: { extend: { colors: {
     return margin + lw + chipPad * 2 + 14;
   }
 
+  /* ── PRO BRANDING v2 (dfs.brandStyle.v1 — set in the CO app's Business Settings, read here).
+     No stored style (or no Pro) = null = this app draws its legacy look untouched. ── */
+  var BRAND_KEY = 'dfs.brandStyle.v1';
+  function bhex(h) { return [parseInt(h.slice(1,3),16), parseInt(h.slice(3,5),16), parseInt(h.slice(5,7),16)]; }
+  function brelLum(rgb) { var a = rgb.map(function (v) { v/=255; return v<=0.03928 ? v/12.92 : Math.pow((v+0.055)/1.055,2.4); }); return 0.2126*a[0]+0.7152*a[1]+0.0722*a[2]; }
+  function activeBrandStyle() {
+    var p; try { p = JSON.parse(localStorage.getItem(BRAND_KEY) || 'null'); } catch (e) { p = null; }
+    if (!isPro() || !p) return null;
+    var hs = (p.headerStyle === 'letterhead' || p.headerStyle === 'bold') ? p.headerStyle : 'banner';
+    var ac = (typeof p.accent === 'string' && /^#[0-9a-fA-F]{6}$/.test(p.accent)) ? bhex(p.accent) : [234,88,12];
+    return {
+      style: hs, acc: ac,
+      accDark: brelLum(ac) < 0.16 ? ac.map(function (v) { return Math.round(v + (255-v)*0.6); }) : ac,
+      accWhite: brelLum(ac) > 0.62 ? ac.map(function (v) { return Math.round(v*0.55); }) : ac,
+      ink: brelLum(ac) > 0.42 ? [17,24,39] : [255,255,255]
+    };
+  }
+
   /* ---------- Bid PDF assist (on-device pdf.js text extraction; nothing uploaded) ---------- */
   var pdfTexts = [null, null, null, null];   /* per bidder index; session-only, not saved with the job */
   var activePdfTab = -1;
@@ -1052,7 +1070,8 @@ tailwind.config = { theme: { extend: { colors: {
 
   /* ---------- backup / restore ---------- */
   document.getElementById('backupBtn').addEventListener('click', function () {
-    var data = { draft: state, jobs: loadJobs(), exportedAt: new Date().toISOString(), app: 'dfs-bid-leveler' };
+    var brandRaw = null; try { brandRaw = JSON.parse(localStorage.getItem(BRAND_KEY) || 'null'); } catch (e) {}
+    var data = { draft: state, jobs: loadJobs(), exportedAt: new Date().toISOString(), app: 'dfs-bid-leveler', brandStyle: brandRaw };
     var blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
     var a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
@@ -1068,6 +1087,7 @@ tailwind.config = { theme: { extend: { colors: {
         if (data.app !== 'dfs-bid-leveler') { alert('That doesn\'t look like a Bid Leveler backup file.'); return; }
         if (data.jobs) saveJobs(data.jobs);
         if (data.draft) { state = data.draft; }
+        if (data.brandStyle && typeof data.brandStyle === 'object') { try { localStorage.setItem(BRAND_KEY, JSON.stringify(data.brandStyle)); } catch (e2) {} }
         renderAll(); saveDraft();
         toast('Backup restored.');
       } catch (err) { alert('Couldn\'t read that file.'); }
@@ -1090,22 +1110,56 @@ tailwind.config = { theme: { extend: { colors: {
     var r = compute();
     var nb = state.bidders.length;
 
-    /* header band */
-    doc.setFillColor(NAVY[0], NAVY[1], NAVY[2]);
-    doc.rect(0, 0, pageW, 64, 'F');
-    var textX = drawProLogo(doc, margin, 64);
-    doc.setTextColor(255, 255, 255);
-    doc.setFont('helvetica', 'bold'); doc.setFontSize(18);
-    doc.text('BID LEVELING SHEET', textX, 32);
-    doc.setFontSize(10); doc.setFont('helvetica', 'normal');
-    doc.setTextColor(ORANGE[0], ORANGE[1], ORANGE[2]);
-    doc.text((state.job.name || 'Untitled job') + (state.job.pkg ? '  ·  ' + state.job.pkg : ''), textX, 50);
-    doc.setTextColor(200, 205, 215);
-    doc.text((state.job.location ? state.job.location + '  ·  ' : '') + (state.job.date || ''), pageW - margin, 32, { align: 'right' });
+    /* header band — Pro Branding v2 aware (null brand = legacy look, untouched) */
+    var brand = activeBrandStyle();
+    var ACCW = brand ? brand.accWhite : ORANGE;
+    var jobLine = (state.job.name || 'Untitled job') + (state.job.pkg ? '  ·  ' + state.job.pkg : '');
+    var metaLine = (state.job.location ? state.job.location + '  ·  ' : '') + (state.job.date || '');
     var proBrand = bizSettings().companyName || '';
-    if (isPro() && proBrand) {
-      doc.setTextColor(147, 197, 253);
-      doc.text(proBrand.toUpperCase(), pageW - margin, 50, { align: 'right' });
+    var textX;
+    if (brand && brand.style === 'letterhead') {
+      var lhBiz = bizSettings();
+      textX = margin;
+      if (lhBiz.logo && lhBiz.logo.dataUrl && lhBiz.logo.w && lhBiz.logo.h) {
+        var lr = lhBiz.logo.w / lhBiz.logo.h, lhh = 40, lhw = lhh * lr;
+        if (lhw > 180) { lhw = 180; lhh = lhw / lr; }
+        try { doc.addImage(lhBiz.logo.dataUrl, 'PNG', margin, 10, lhw, lhh); } catch (e) {}
+        textX = margin + lhw + 14;
+      }
+      doc.setTextColor(15, 23, 42); doc.setFont('helvetica', 'bold'); doc.setFontSize(18);
+      doc.text('BID LEVELING SHEET', textX, 32);
+      doc.setFontSize(10); doc.setFont('helvetica', 'normal');
+      doc.setTextColor(brand.accWhite[0], brand.accWhite[1], brand.accWhite[2]);
+      doc.text(jobLine, textX, 48);
+      doc.setTextColor(GRAY[0], GRAY[1], GRAY[2]);
+      doc.text(metaLine, pageW - margin, 32, { align: 'right' });
+      if (proBrand) {
+        doc.setFont('helvetica', 'bold'); doc.setTextColor(15, 23, 42);
+        doc.text(proBrand.toUpperCase(), pageW - margin, 48, { align: 'right' });
+        doc.setFont('helvetica', 'normal');
+      }
+      doc.setFillColor(brand.acc[0], brand.acc[1], brand.acc[2]); doc.rect(0, 61, pageW, 3, 'F');
+    } else {
+      var bandCol = (brand && brand.style === 'bold') ? brand.acc : NAVY;
+      var onBand = (brand && brand.style === 'bold') ? brand.ink : [255, 255, 255];
+      var subBand = brand ? ((brand.style === 'bold') ? brand.ink : brand.accDark) : ORANGE;
+      doc.setFillColor(bandCol[0], bandCol[1], bandCol[2]);
+      doc.rect(0, 0, pageW, 64, 'F');
+      textX = drawProLogo(doc, margin, 64);
+      doc.setTextColor(onBand[0], onBand[1], onBand[2]);
+      doc.setFont('helvetica', 'bold'); doc.setFontSize(18);
+      doc.text('BID LEVELING SHEET', textX, 32);
+      doc.setFontSize(10); doc.setFont('helvetica', 'normal');
+      doc.setTextColor(subBand[0], subBand[1], subBand[2]);
+      doc.text(jobLine, textX, 50);
+      var metaCol = (brand && brand.style === 'bold') ? brand.ink : [200, 205, 215];
+      doc.setTextColor(metaCol[0], metaCol[1], metaCol[2]);
+      doc.text(metaLine, pageW - margin, 32, { align: 'right' });
+      if (isPro() && proBrand) {
+        var nameCol = brand ? ((brand.style === 'bold') ? brand.ink : brand.accDark) : [147, 197, 253];
+        doc.setTextColor(nameCol[0], nameCol[1], nameCol[2]);
+        doc.text(proBrand.toUpperCase(), pageW - margin, 50, { align: 'right' });
+      }
     }
 
     var y = 84;
@@ -1162,12 +1216,12 @@ tailwind.config = { theme: { extend: { colors: {
       for (var t2 = 0; t2 < nb; t2++) doc.text('+' + fmt(r.plugs[t2]).replace('$', '$'), colX(t2), y);
       y += 15;
       doc.setFont('helvetica', 'bold'); doc.setFontSize(11);
-      doc.setTextColor(ORANGE[0], ORANGE[1], ORANGE[2]);
+      doc.setTextColor(ACCW[0], ACCW[1], ACCW[2]);
       doc.text('LEVELED TOTAL', margin, y);
       var best = null, bv = Infinity;
       for (var t3 = 0; t3 < nb; t3++) if (r.pricedAny[t3] && r.leveled[t3] < bv) { bv = r.leveled[t3]; best = t3; }
       for (var t4 = 0; t4 < nb; t4++) {
-        doc.setTextColor(t4 === best ? ORANGE[0] : 30, t4 === best ? ORANGE[1] : 35, t4 === best ? ORANGE[2] : 45);
+        doc.setTextColor(t4 === best ? ACCW[0] : 30, t4 === best ? ACCW[1] : 35, t4 === best ? ACCW[2] : 45);
         doc.text(fmt(r.leveled[t4]) + (t4 === best ? ' *' : ''), colX(t4), y);
       }
       y += 13;
