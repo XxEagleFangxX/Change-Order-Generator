@@ -28,7 +28,7 @@
    APP service worker at /change-order-generator/. Its cache name has its OWN prefix
    ("dfs-home-cache-") and its activate step below only deletes caches with that prefix,
    so it can NEVER wipe the app's "change-order-cache-*" offline cache (and vice-versa). */
-const CACHE_NAME = "dfs-home-cache-v4";
+const CACHE_NAME = "dfs-home-cache-v5";
 
 /* Files served from our own site (homepage shell + install icons). */
 const APP_SHELL = [
@@ -100,6 +100,11 @@ self.addEventListener("activate", (event) => {
 /* ---------- FETCH ---------- */
 self.addEventListener("fetch", (event) => {
   if (event.request.method !== "GET") return;
+
+  /* v5: NEVER intercept /media/ — large video files must stream straight from
+     the network (the browser's own Range-request handling powers seeking), and
+     a ~19MB file must never be written into the runtime cache. */
+  if (new URL(event.request.url).pathname.startsWith("/media/")) return;
 
   /* The page itself: NETWORK-FIRST.
      Online  -> newest deployed version, and the cache is refreshed.
