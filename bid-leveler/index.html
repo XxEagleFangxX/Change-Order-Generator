@@ -1126,18 +1126,25 @@ tailwind.config = { theme: { extend: { colors: {
         try { doc.addImage(lhBiz.logo.dataUrl, 'PNG', margin, 10, lhw, lhh); } catch (e) {}
         textX = margin + lhw + 14;
       }
-      doc.setTextColor(15, 23, 42); doc.setFont('helvetica', 'bold'); doc.setFontSize(18);
-      doc.text('BID LEVELING SHEET', textX, 32);
-      doc.setFontSize(10); doc.setFont('helvetica', 'normal');
-      doc.setTextColor(brand.accWhite[0], brand.accWhite[1], brand.accWhite[2]);
-      doc.text(jobLine, textX, 48);
-      doc.setTextColor(GRAY[0], GRAY[1], GRAY[2]);
-      doc.text(metaLine, pageW - margin, 32, { align: 'right' });
-      if (proBrand) {
-        doc.setFont('helvetica', 'bold'); doc.setTextColor(15, 23, 42);
-        doc.text(proBrand.toUpperCase(), pageW - margin, 48, { align: 'right' });
-        doc.setFont('helvetica', 'normal');
+      /* Letterhead: the COMPANY NAME is the star (big ink type, shrink-to-fit, never wraps) —
+         matches the CO app's letterhead; the doc title moves small into the right block. */
+      var lhName = (proBrand || 'Contractor').toUpperCase();
+      var nmSize = 18, nmMax = pageW - textX - 300;
+      doc.setTextColor(15, 23, 42); doc.setFont('helvetica', 'bold'); doc.setFontSize(nmSize);
+      while (nmSize > 11 && doc.getTextWidth(lhName) > nmMax) { nmSize -= 1; doc.setFontSize(nmSize); }
+      if (doc.getTextWidth(lhName) > nmMax) {   /* truncate only when it truly can't fit */
+        while (lhName.length > 4 && doc.getTextWidth(lhName + '...') > nmMax) { lhName = lhName.slice(0, -1); }
+        lhName = lhName.replace(/\s+$/, '') + '...';
       }
+      doc.text(lhName, textX, 34);
+      doc.setFont('helvetica', 'normal'); doc.setFontSize(10);
+      doc.setTextColor(brand.accWhite[0], brand.accWhite[1], brand.accWhite[2]);
+      doc.text(jobLine, textX, 50);
+      doc.setFont('helvetica', 'bold'); doc.setFontSize(11);
+      doc.text('BID LEVELING SHEET', pageW - margin, 26, { align: 'right' });
+      doc.setFont('helvetica', 'normal'); doc.setFontSize(9);
+      doc.setTextColor(GRAY[0], GRAY[1], GRAY[2]);
+      doc.text(metaLine, pageW - margin, 42, { align: 'right' });
       doc.setFillColor(brand.acc[0], brand.acc[1], brand.acc[2]); doc.rect(0, 61, pageW, 3, 'F');
     } else {
       var bandCol = (brand && brand.style === 'bold') ? brand.acc : NAVY;
