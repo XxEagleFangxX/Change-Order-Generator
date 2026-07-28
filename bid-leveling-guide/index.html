@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>How to Level Sub Bids — Free Bid Leveling Template &amp; Method | Digital Foreman Suite</title>
+  <meta name="description" content="A bid leveling template and the step-by-step method contractors use to compare sub bids apples-to-apples. See a worked example, learn what to mark excluded vs never quoted, and find the real low bid before you award." />
+  <link rel="canonical" href="https://digitalforemansuite.com/bid-leveling-guide" />
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content="https://digitalforemansuite.com/bid-leveling-guide" />
+  <meta property="og:title" content="How to Level Sub Bids — Free Bid Leveling Template &amp; Method" />
+  <meta property="og:description" content="The lowest number isn't always the lowest bid. Here's the leveling method, a worked example, and a free app that does it in minutes." />
+  <meta property="og:image" content="https://digitalforemansuite.com/og-image.png" />
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "HowTo",
+    "name": "How to Level Sub Bids",
+    "description": "The step-by-step method for comparing subcontractor bids apples-to-apples so you can see which number is actually the lowest complete bid.",
+    "totalTime": "PT20M",
+    "step": [
+      { "@type": "HowToStep", "position": 1, "name": "Write out the scope, one line at a time", "text": "List every line the job actually needs — demo, footings, framing, decking, permits, cleanup. This becomes the left column of your bid leveling sheet." },
+      { "@type": "HowToStep", "position": 2, "name": "Put each bidder's price next to each line", "text": "Give every bidder a column and fill in what they priced for each scope line. Now you can see exactly who covered what." },
+      { "@type": "HowToStep", "position": 3, "name": "Mark EXC and NQ", "text": "When a sub deliberately excluded a line, mark it EXC. When they simply never quoted it, mark it NQ. Different reasons, same result: that work is missing from their number." },
+      { "@type": "HowToStep", "position": 4, "name": "Plug every hole with the highest competing price", "text": "Fill each EXC and NQ cell with the highest price another bidder gave for that same line. This keeps a thin bid from looking cheap just because it is thin." },
+      { "@type": "HowToStep", "position": 5, "name": "Add up the leveled totals", "text": "Total each column after the gaps are plugged. That is the real comparison — same scope, every bidder, apples to apples." },
+      { "@type": "HowToStep", "position": 6, "name": "Question any line 30% under the field", "text": "When one price sits far under everybody else on the same line, that is a question rather than a bargain. Call and ask what is in that number before you award." }
+    ]
+  }
+  </script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "What is bid leveling?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Bid leveling is putting every subcontractor bid on the same scope so the totals can be compared fairly. Subs write bids differently — one includes demo and haul-off, another leaves it out — so raw totals compare different jobs that happen to share an address. Leveling fills those gaps so you are comparing the same work." }
+      },
+      {
+        "@type": "Question",
+        "name": "What does EXC and NQ mean on a bid leveling sheet?",
+        "acceptedAnswer": { "@type": "Answer", "text": "EXC means the sub deliberately excluded that line from their bid. NQ means they never quoted it at all. Different reasons, same practical result: the work is missing from their number and has to be plugged before you compare totals." }
+      },
+      {
+        "@type": "Question",
+        "name": "How do you fill a gap in a sub bid?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Use the highest competing price for that same scope line. It sounds strict, but it is fair — it keeps a bid from looking cheap simply because it left the most out, and it reflects what that work will realistically cost you to buy from someone else." }
+      },
+      {
+        "@type": "Question",
+        "name": "Is there a free bid leveling template or app?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Yes. The Bid Leveler from Digital Foreman Suite is free, works 100% offline with no account and no monthly fee, and on a computer it becomes a full spreadsheet with one-tap export to Excel. Everything stays on your own device." }
+      }
+    ]
+  }
+  </script>
+  <link rel="icon" type="image/png" href="/icons/icon-192.png" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = { theme: { extend: { colors: { 'brand-dark': '#080c14', 'brand-navy': '#0d1424', 'brand-card': '#111827', 'brand-border': '#1e2a3a', 'safety': '#f97316', 'safety-dark': '#ea580c' } } } }
+  </script>
+  <style>
+    body { background: #080c14; }
+    .orange-gradient { background: linear-gradient(135deg, #f97316, #ea580c); }
+    .orange-glow { box-shadow: 0 0 40px rgba(249,115,22,0.25); }
+    .pill { display: inline-flex; align-items: center; gap: 6px; background: rgba(249,115,22,0.1); border: 1px solid rgba(249,115,22,0.3); border-radius: 999px; padding: 4px 14px; font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: #f97316; }
+    table { border-collapse: collapse; width: 100%; font-size: 14px; }
+    th, td { border: 1px solid #1e2a3a; padding: 8px 10px; text-align: right; white-space: nowrap; }
+    th:first-child, td:first-child { text-align: left; }
+    thead th { background: #0d1424; color: #f8fafc; font-weight: 800; }
+    .miss { color: #f97316; font-weight: 700; }
+    .flag { color: #f97316; font-weight: 700; }
+    .totalrow td { background: #0d1424; font-weight: 800; color: #fff; }
+    .wrap { overflow-x: auto; }
+  </style>
+</head>
+<body class="text-white">
+
+  <nav class="flex items-center justify-between max-w-5xl mx-auto px-6 py-5">
+    <a href="/" class="flex items-center gap-2">
+      <span class="text-xl font-black tracking-tight">DIGITAL <span class="text-safety">FOREMAN</span> SUITE</span>
+    </a>
+    <a href="/bid-leveler" class="orange-gradient text-white text-sm font-bold px-4 py-2 rounded-lg hover:opacity-90 transition-opacity">Open Free App ↗</a>
+  </nav>
+
+  <article>
+
+  <section class="pt-14 pb-10 px-6">
+    <div class="max-w-3xl mx-auto">
+      <span class="pill mb-6 inline-flex">Contractor's Guide</span>
+      <h1 class="text-4xl md:text-5xl font-black leading-[1.1] tracking-tight mb-6">How to Level Sub Bids<br /><span class="text-safety">(so the cheapest bid isn't the most expensive).</span></h1>
+      <p class="text-slate-400 text-lg leading-relaxed">Three subs bid your deck job. One comes in at $26,200. One at $26,550. And one at $21,200. Easy call, right? Not so fast. That last number might be the most expensive one on the table. Here is the bid leveling method, a worked example you can copy, and the free app that does it in minutes.</p>
+    </div>
+  </section>
+
+  <section class="px-6 pb-12">
+    <div class="max-w-3xl mx-auto bg-brand-navy border border-brand-border rounded-2xl p-8">
+      <h2 class="text-2xl font-black mb-4">Why the lowest paper price isn't always the low bid</h2>
+      <p class="text-slate-400 leading-relaxed mb-4">No two subs write a bid the same way. One includes the demo and the haul-off. The next one leaves it out because he figures that's on you. One prices the permit. One never mentions it. None of that means anybody did anything wrong — it just means they read the scope differently.</p>
+      <p class="text-slate-400 leading-relaxed">So when you stack the totals side by side, you aren't comparing the same job. You're comparing three different jobs that happen to share an address. Most of the time, the low number just means somebody left the most out. Leveling puts everybody back on the same scope so the comparison means something.</p>
+    </div>
+  </section>
+
+  <section class="px-6 pb-12">
+    <div class="max-w-3xl mx-auto">
+      <h2 class="text-3xl font-black mb-6">The bid leveling method, step by step</h2>
+
+      <div class="space-y-5">
+        <div class="bg-brand-card border border-brand-border rounded-xl p-6">
+          <h3 class="font-bold text-lg mb-2"><span class="text-safety">1.</span> Write out the scope, one line at a time</h3>
+          <p class="text-slate-400">Demo. Footings. Framing. Decking and rail. Permit. Cleanup. Every line the job actually needs, whether or not anybody bid it. This becomes the left column of your leveling sheet.</p>
+        </div>
+        <div class="bg-brand-card border border-brand-border rounded-xl p-6">
+          <h3 class="font-bold text-lg mb-2"><span class="text-safety">2.</span> Put each bidder's price next to each line</h3>
+          <p class="text-slate-400">One column per bidder. Fill in what each of them priced for each line. Now you can see at a glance exactly who covered what.</p>
+        </div>
+        <div class="bg-brand-card border border-brand-border rounded-xl p-6">
+          <h3 class="font-bold text-lg mb-2"><span class="text-safety">3.</span> Mark <span class="text-safety">EXC</span> and <span class="text-safety">NQ</span></h3>
+          <p class="text-slate-400">When a sub deliberately excluded a line, mark it <strong class="text-slate-200">EXC</strong>. When he simply never quoted it, mark it <strong class="text-slate-200">NQ</strong>. Different reasons, same result: that work is missing from his number, and somebody still has to do it.</p>
+        </div>
+        <div class="bg-brand-card border border-brand-border rounded-xl p-6">
+          <h3 class="font-bold text-lg mb-2"><span class="text-safety">4.</span> Plug every hole with the highest competing price</h3>
+          <p class="text-slate-400">Fill each EXC and NQ cell with the highest price another bidder gave for that same line. That sounds strict, but it's fair. It means a thin bid can't look cheap just because it's thin, and it reflects what that work will realistically cost you to buy somewhere else.</p>
+        </div>
+        <div class="bg-brand-card border border-brand-border rounded-xl p-6">
+          <h3 class="font-bold text-lg mb-2"><span class="text-safety">5.</span> Add up the leveled totals</h3>
+          <p class="text-slate-400">Total each column after the gaps are plugged. That's the real comparison — same scope, every bidder, apples to apples.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="px-6 pb-12">
+    <div class="max-w-3xl mx-auto">
+      <h2 class="text-3xl font-black mb-3">A worked bid leveling example</h2>
+      <p class="text-slate-400 mb-6">Same deck job, three bidders. Copy this layout onto paper, into a spreadsheet, or let the app build it for you.</p>
+
+      <div class="wrap bg-brand-navy border border-brand-border rounded-2xl p-4 mb-4">
+        <table>
+          <thead>
+            <tr><th>Scope line</th><th>Bidder A</th><th>Bidder B</th><th>Bidder C</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Demo &amp; haul-off</td><td>$1,850</td><td>$2,100</td><td class="miss">EXC</td></tr>
+            <tr><td>Footings</td><td>$3,200</td><td>$2,950</td><td class="flag">$1,200 ⚑</td></tr>
+            <tr><td>Framing</td><td>$8,400</td><td>$8,900</td><td>$8,600</td></tr>
+            <tr><td>Decking &amp; rail</td><td>$11,200</td><td>$10,800</td><td>$11,400</td></tr>
+            <tr><td>Permit &amp; inspection</td><td>$650</td><td>$700</td><td class="miss">NQ</td></tr>
+            <tr><td>Cleanup</td><td>$900</td><td>$1,100</td><td class="miss">NQ</td></tr>
+            <tr class="totalrow"><td>Bid as written</td><td>$26,200</td><td>$26,550</td><td>$21,200</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p class="text-slate-400 leading-relaxed mb-4">On paper, Bidder C is $5,000 cheaper. Now plug his three gaps with the highest competing price for each line — demo $2,100, permit $700, cleanup $1,100 — and add them back:</p>
+
+      <div class="wrap bg-brand-navy border border-brand-border rounded-2xl p-4 mb-4">
+        <table>
+          <thead>
+            <tr><th>&nbsp;</th><th>Bidder A</th><th>Bidder B</th><th>Bidder C</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Bid as written</td><td>$26,200</td><td>$26,550</td><td>$21,200</td></tr>
+            <tr><td>Gaps plugged</td><td>—</td><td>—</td><td class="miss">+$3,900</td></tr>
+            <tr class="totalrow"><td>Leveled total</td><td>$26,200</td><td>$26,550</td><td>$25,100</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p class="text-slate-400 leading-relaxed">A $5,000 gap turns into about $1,100. C is still the low number, but now it's a real one you can actually award against — and there's still that footings line to talk about.</p>
+    </div>
+  </section>
+
+  <section class="px-6 pb-12">
+    <div class="max-w-3xl mx-auto bg-brand-navy border border-brand-border rounded-2xl p-8">
+      <h2 class="text-2xl font-black mb-4">Reading the flags</h2>
+      <p class="text-slate-400 leading-relaxed mb-4">Look at C's footings: $1,200 against $2,950 and $3,200. When one price sits 30% or more under everybody else on the same line, that isn't a prize. It's a question.</p>
+      <p class="text-slate-400 leading-relaxed">Most of the time it means he read that line differently than you did — fewer piers, a different depth, no inspection trip. So make the phone call and ask what's in that number. A five-minute call before you award beats a hard conversation halfway through the job. And when you do award, you're picking the best leveled number from a sub you trust, with the qualifications in writing.</p>
+    </div>
+  </section>
+
+  <section class="px-6 pb-12">
+    <div class="max-w-3xl mx-auto bg-brand-card border border-brand-border rounded-2xl p-8">
+      <h2 class="text-2xl font-black mb-4">Or let the free app do it</h2>
+      <p class="text-slate-400 leading-relaxed mb-4">The <strong class="text-slate-200">Bid Leveler</strong> is a free app that runs this whole method for you. Put in your scope lines and up to four bidders. Open each sub's quote PDF right in the app and tap their prices straight into the sheet — no retyping. Mark what's excluded, and it plugs the gaps and flags the too-good numbers automatically. On a computer it becomes a full spreadsheet with one-tap export to Excel.</p>
+      <p class="text-slate-400 leading-relaxed mb-6">It works with zero cell service, there's no account and no monthly fee, and your numbers never leave your device.</p>
+      <a href="/bid-leveler" class="orange-gradient orange-glow inline-block text-white font-bold px-8 py-4 rounded-xl text-base hover:opacity-90 transition-opacity">Open the Free Bid Leveler →</a>
+      <p class="text-slate-500 text-sm mt-4">No download · No signup · Works with zero signal</p>
+    </div>
+  </section>
+
+  <section class="px-6 pb-12">
+    <div class="max-w-3xl mx-auto">
+      <h2 class="text-2xl font-black mb-6">Questions contractors ask about bid leveling</h2>
+      <div class="space-y-4">
+        <div class="bg-brand-navy border border-brand-border rounded-xl p-6"><h3 class="font-bold text-lg mb-2">What is bid leveling?</h3><p class="text-slate-400">Putting every sub bid on the same scope so the totals can be compared fairly. Raw totals compare different jobs that happen to share an address; leveling fills the gaps so you're comparing the same work.</p></div>
+        <div class="bg-brand-navy border border-brand-border rounded-xl p-6"><h3 class="font-bold text-lg mb-2">What do EXC and NQ mean on a bid leveling sheet?</h3><p class="text-slate-400">EXC means the sub excluded that line on purpose. NQ means he never quoted it at all. Different reasons, same result — the work is missing from his number.</p></div>
+        <div class="bg-brand-navy border border-brand-border rounded-xl p-6"><h3 class="font-bold text-lg mb-2">How do you fill a gap in a sub bid?</h3><p class="text-slate-400">Use the highest competing price for that same line. It keeps a bid from looking cheap just because it left the most out, and it's close to what that work will really cost you to buy elsewhere.</p></div>
+        <div class="bg-brand-navy border border-brand-border rounded-xl p-6"><h3 class="font-bold text-lg mb-2">Is there a free bid leveling template or app?</h3><p class="text-slate-400">Yes. The Bid Leveler is free, works 100% offline with no account and no monthly fee, and exports to Excel on a computer. Everything stays on your own device.</p></div>
+      </div>
+    </div>
+  </section>
+
+  </article>
+
+  <section class="px-6 pb-20 text-center">
+    <div class="max-w-3xl mx-auto">
+      <h2 class="text-3xl font-black mb-4">Level the bids. Win the right jobs.</h2>
+      <a href="/bid-leveler" class="orange-gradient orange-glow inline-block text-white font-bold px-8 py-4 rounded-xl text-base hover:opacity-90 transition-opacity">Open the Free Bid Leveler →</a>
+    </div>
+  </section>
+
+  <footer class="border-t border-brand-border px-6 py-10">
+    <div class="max-w-5xl mx-auto text-center text-sm text-slate-500 space-y-4">
+      <p>
+        <a href="/" class="hover:text-slate-300">Home</a> ·
+        <a href="/bid-leveler" class="hover:text-slate-300">Bid Leveler</a> ·
+        <a href="/change-order-generator" class="hover:text-slate-300">Change Order App</a> ·
+        <a href="/punch-list" class="hover:text-slate-300">Punch List</a> ·
+        <a href="/pro" class="hover:text-slate-300">Pro</a> ·
+        <a href="/privacy.html" class="hover:text-slate-300">Privacy &amp; Terms</a>
+      </p>
+      <p>For your trade:
+        <a href="/electricians" class="hover:text-slate-300">Electricians</a> ·
+        <a href="/plumbers" class="hover:text-slate-300">Plumbers</a> ·
+        <a href="/hvac" class="hover:text-slate-300">HVAC</a> ·
+        <a href="/roofers" class="hover:text-slate-300">Roofers</a> ·
+        <a href="/remodelers" class="hover:text-slate-300">Remodelers</a>
+      </p>
+      <p>© 2026 Digital Foreman Suite · Built by a 30-year contractor · Little Rock, AR</p>
+    </div>
+  </footer>
+
+</body>
+</html>
