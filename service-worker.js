@@ -28,7 +28,7 @@
    APP service worker at /change-order-generator/. Its cache name has its OWN prefix
    ("dfs-home-cache-") and its activate step below only deletes caches with that prefix,
    so it can NEVER wipe the app's "change-order-cache-*" offline cache (and vice-versa). */
-const CACHE_NAME = "dfs-home-cache-v6";
+const CACHE_NAME = "dfs-home-cache-v7";
 
 /* Files served from our own site (homepage shell + install icons). */
 const APP_SHELL = [
@@ -36,7 +36,11 @@ const APP_SHELL = [
   "/index.html",
   "/icons/icon-192.png",
   "/icons/icon-512.png",
-  "/icons/icon-512-maskable.png"
+  "/icons/icon-512-maskable.png",
+  "/media/barlow-condensed-700.woff2",
+  "/media/shot-co.png",
+  "/media/shot-bl.png",
+  "/media/shot-pl.png"
 ];
 
 /* Third-party engines the app cannot run without.
