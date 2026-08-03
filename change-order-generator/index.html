@@ -679,7 +679,9 @@
       var nm = name.toUpperCase(), nmSize = 19, nmMax = pageW - textX - 170, nmCut = false;
       doc.setFontSize(nmSize);
       while (nmSize > 11 && doc.getTextWidth(nm) > nmMax) { nmSize -= 1; doc.setFontSize(nmSize); }
-      while (nm.length > 4 && doc.getTextWidth(nm + '...') > nmMax) { nm = nm.slice(0, -1); nmCut = true; }
+      if (doc.getTextWidth(nm) > nmMax) {   /* truncate only when it truly can't fit (matches BL/PL) */
+        while (nm.length > 4 && doc.getTextWidth(nm + '...') > nmMax) { nm = nm.slice(0, -1); nmCut = true; }
+      }
       doc.text(nmCut ? nm.replace(/\s+$/, '') + '...' : nm, textX, nameY);
       if (ctx.contactLine) { doc.setFont('helvetica','normal'); doc.setFontSize(9); doc.setTextColor(GRAY[0],GRAY[1],GRAY[2]); doc.text(ctx.contactLine, textX, 60); }
       doc.setFont('helvetica','bold'); doc.setFontSize(12); doc.setTextColor(bs.accWhite[0],bs.accWhite[1],bs.accWhite[2]);
