@@ -1,14 +1,17 @@
 {
-  "name": "On-The-Spot Change Order Generator",
-  "short_name": "Change Orders",
-  "description": "Create, sign, and PDF professional change orders on the job site. 100% offline. Zero accounts. Zero cloud fees.",
-  "start_url": "/change-order-generator",
-  "scope": "/change-order-generator",
+  "name": "Digital Foreman Suite",
+  "short_name": "Foreman Suite",
+  "description": "Three free, offline apps for independent contractors: signed change orders, apples-to-apples bid leveling, and signed-off punch lists. No account, no subscription, and nothing you enter leaves your device.",
+  "start_url": "/",
+  "scope": "/",
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#0b1220",
   "theme_color": "#f5a623",
-  "categories": ["business", "productivity"],
+  "categories": [
+    "business",
+    "productivity"
+  ],
   "icons": [
     {
       "src": "/icons/icon-192.png",
