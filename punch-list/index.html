@@ -280,9 +280,13 @@ tailwind.config = { theme: { extend: { colors: {
         <summary class="cursor-pointer text-sm font-bold text-slate-200 min-h-[44px] flex items-center"><span class="text-safety font-extrabold mr-2">05</span> Does it work offline?</summary>
         <p class="text-sm text-slate-400 mt-2 leading-relaxed">Yes. After the first visit it works with zero signal — the walkthrough usually happens in a house with no wifi anyway. Everything runs and saves on your device.</p>
       </details>
-      <details class="py-2">
+      <details class="border-b border-brand-border py-2">
         <summary class="cursor-pointer text-sm font-bold text-slate-200 min-h-[44px] flex items-center"><span class="text-safety font-extrabold mr-2">06</span> Where is my data? What if I switch phones?</summary>
         <p class="text-sm text-slate-400 mt-2 leading-relaxed">Everything lives on this device — no account, no cloud, nothing sent anywhere. Before switching devices, tap ⬇ Backup to save a file, then ⬆ Restore it on the new one.</p>
+      </details>
+      <details class="py-2">
+        <summary class="cursor-pointer text-sm font-bold text-slate-200 min-h-[44px] flex items-center"><span class="text-safety font-extrabold mr-2">07</span> Where do the before &amp; after photos live?</summary>
+        <p class="text-sm text-slate-400 mt-2 leading-relaxed">On this device, right alongside the rest of the job — nothing is uploaded. The signed completion PDF is the permanent, shareable record: any before &amp; after photos on the list print side-by-side right on it (photos do make the PDF file a bit bigger). Moving to a new phone? Tick "Include photos" when you tap ⬇ Backup and they come along.</p>
       </details>
     </div>
   </section>
@@ -296,6 +300,7 @@ tailwind.config = { theme: { extend: { colors: {
       <div class="flex flex-wrap gap-3 pt-1">
         <button id="csvBtn" type="button" class="bg-white/5 border border-white/10 text-slate-300 text-sm font-bold px-4 py-2 rounded-lg">📊 Export spreadsheet</button>
         <button id="backupBtn" type="button" class="bg-white/5 border border-white/10 text-slate-300 text-sm font-bold px-4 py-2 rounded-lg">⬇ Backup data</button>
+        <label class="flex items-center gap-2 text-xs text-slate-400 font-semibold cursor-pointer"><input id="backupPhotos" type="checkbox" class="accent-orange-500 w-4 h-4" /> Include photos (bigger file)</label>
         <label class="bg-white/5 border border-white/10 text-slate-300 text-sm font-bold px-4 py-2 rounded-lg cursor-pointer">⬆ Restore<input id="restoreInput" type="file" accept=".json,application/json" class="hidden" /></label>
         <a id="bugLink" href="mailto:hello@digitalforemansuite.com?subject=Punch%20List%20bug%20report" class="bg-white/5 border border-white/10 text-slate-300 text-sm font-bold px-4 py-2 rounded-lg">Report a bug</a>
       </div>
@@ -336,6 +341,19 @@ tailwind.config = { theme: { extend: { colors: {
   </div>
 </div>
 
+<!-- PHOTO VIEWER (full-screen) + shared photo picker — Punch List v1.2 before/after photos.
+     One plain file input, accept="image/*", NO capture attribute: phones then offer both
+     camera and gallery, which also covers "the client texted me the photo". -->
+<div id="photoViewer" class="fixed inset-0 z-50 flex-col items-center justify-center p-4" style="display:none;background:rgba(8,12,20,0.94);">
+  <p id="photoViewerLabel" class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-3"></p>
+  <img id="photoViewerImg" alt="Punch item photo" class="max-w-full rounded-xl border border-brand-border" style="max-height:72vh;" />
+  <div class="flex gap-3 mt-4">
+    <button id="photoViewerDelete" type="button" class="bg-red-500/10 border border-red-500/30 text-red-300 text-sm font-black px-4 py-2 rounded-lg">Delete photo</button>
+    <button id="photoViewerClose" type="button" class="bg-white/5 border border-white/10 text-slate-300 text-sm font-black px-4 py-2 rounded-lg">Close</button>
+  </div>
+</div>
+<input id="photoFile" type="file" accept="image/*" class="hidden" />
+
 <script>
 (function () {
   'use strict';
@@ -349,11 +367,12 @@ tailwind.config = { theme: { extend: { colors: {
       areas: [blankArea('')],
       sigs: { C: null, K: null },
       savedAt: null,
-      id: null
+      id: null,
+      photoId: newId('plp')   /* stable photo-key prefix; follows the job when saved to the log */
     };
   }
   function blankArea(name) { return { name: name, items: [] }; }
-  function blankItem() { return { desc: '', trade: 'General', done: false, note: '' }; }
+  function blankItem() { return { desc: '', trade: 'General', done: false, note: '', iid: newId('i') }; }
   function today() {
     var d = new Date();
     return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
@@ -417,6 +436,287 @@ tailwind.config = { theme: { extend: { colors: {
   function loadJobs() { try { var s = localStorage.getItem(K_JOBS); return s ? JSON.parse(s) : []; } catch (e) { return []; } }
   function saveJobs(j) { try { localStorage.setItem(K_JOBS, JSON.stringify(j)); } catch (e) {} }
 
+  /* ---------- before/after photos (v1.2) ----------
+     Photos live in IndexedDB ONLY (localStorage is ~5–10MB shared across all three DFS
+     apps — image data would evict CO/BL data). Key = jobId:itemId:slot, value =
+     { blob (compressed JPEG), w, h, ts }. Item objects carry just a tiny marker
+     (it.ph = {b:1,a:1}) so dfs.pl.draft / dfs.pl.jobs stay small. */
+  var IDB_NAME = 'dfs-pl-photos', IDB_STORE = 'photos';
+  var idbDb = null;
+  var photoOpen = {};        /* iid -> photo strip expanded */
+  var pendingPhoto = null;   /* { iid, slot } while the file picker is up */
+  var thumbUrls = [];        /* object URLs from the last thumbnail render, revoked on the next */
+  var viewerCtx = null;      /* { iid, slot, url } while the full-screen viewer is open */
+
+  function newId(p) { return p + '-' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8); }
+  function ensureIds(s) {
+    if (!s.photoId) s.photoId = newId('plp');
+    (s.areas || []).forEach(function (a) {
+      (a.items || []).forEach(function (it) { if (!it.iid) it.iid = newId('i'); });
+    });
+  }
+  function photoKey(iid, slot) { return state.photoId + ':' + iid + ':' + slot; }
+  function findItemByIid(iid) {
+    for (var i = 0; i < state.areas.length; i++) {
+      var its = state.areas[i].items;
+      for (var k = 0; k < its.length; k++) { if (its[k].iid === iid) return its[k]; }
+    }
+    return null;
+  }
+
+  function idbOpen(cb) {
+    if (idbDb) return cb(null, idbDb);
+    try {
+      if (!window.indexedDB) return cb(new Error('IndexedDB unavailable'));
+      var req = indexedDB.open(IDB_NAME, 1);
+      req.onupgradeneeded = function () {
+        var db = req.result;
+        if (!db.objectStoreNames.contains(IDB_STORE)) db.createObjectStore(IDB_STORE);
+      };
+      req.onsuccess = function () {
+        idbDb = req.result;
+        idbDb.onclose = function () { idbDb = null; };
+        cb(null, idbDb);
+      };
+      req.onerror = function () { cb(req.error || new Error('IndexedDB open failed')); };
+    } catch (e) { cb(e); }
+  }
+  function idbPut(key, val, cb) {
+    idbOpen(function (err, db) {
+      if (err) { if (cb) cb(err); return; }
+      try {
+        var tx = db.transaction(IDB_STORE, 'readwrite');
+        tx.objectStore(IDB_STORE).put(val, key);
+        tx.oncomplete = function () { if (cb) cb(null); };
+        tx.onerror = function () { if (cb) cb(tx.error); };
+      } catch (e) { if (cb) cb(e); }
+    });
+  }
+  function idbGet(key, cb) {
+    idbOpen(function (err, db) {
+      if (err) return cb(err, null);
+      try {
+        var req = db.transaction(IDB_STORE, 'readonly').objectStore(IDB_STORE).get(key);
+        req.onsuccess = function () { cb(null, req.result || null); };
+        req.onerror = function () { cb(req.error, null); };
+      } catch (e) { cb(e, null); }
+    });
+  }
+  function idbDelete(key, cb) {
+    idbOpen(function (err, db) {
+      if (err) { if (cb) cb(err); return; }
+      try {
+        var tx = db.transaction(IDB_STORE, 'readwrite');
+        tx.objectStore(IDB_STORE).delete(key);
+        tx.oncomplete = function () { if (cb) cb(null); };
+        tx.onerror = function () { if (cb) cb(tx.error); };
+      } catch (e) { if (cb) cb(e); }
+    });
+  }
+  function idbDeletePrefix(prefix, cb) {
+    /* prefix walk: keys are "jobId:itemId:slot" strings, so the range
+       [prefix, prefix + U+FFFF] covers everything under one jobId. */
+    idbOpen(function (err, db) {
+      if (err) { if (cb) cb(err); return; }
+      try {
+        var tx = db.transaction(IDB_STORE, 'readwrite');
+        tx.objectStore(IDB_STORE).delete(IDBKeyRange.bound(prefix, prefix + '\uffff'));
+        tx.oncomplete = function () { if (cb) cb(null); };
+        tx.onerror = function () { if (cb) cb(tx.error); };
+      } catch (e) { if (cb) cb(e); }
+    });
+  }
+  function idbAll(cb) {
+    idbOpen(function (err, db) {
+      if (err) return cb(err, []);
+      try {
+        var out = [];
+        var req = db.transaction(IDB_STORE, 'readonly').objectStore(IDB_STORE).openCursor();
+        req.onsuccess = function () {
+          var cur = req.result;
+          if (cur) { out.push({ key: cur.key, val: cur.value }); cur.continue(); }
+          else { cb(null, out); }
+        };
+        req.onerror = function () { cb(req.error, []); };
+      } catch (e) { cb(e, []); }
+    });
+  }
+
+  function compressPhoto(file, cb) {
+    /* canvas re-encode: max long edge 1280px, JPEG quality 0.72 — originals are never stored */
+    var url;
+    try { url = URL.createObjectURL(file); } catch (e) { cb(e, null); return; }
+    var img = new Image();
+    img.onload = function () {
+      try {
+        var w = img.naturalWidth || img.width, h = img.naturalHeight || img.height;
+        var scale = Math.min(1, 1280 / Math.max(w, h, 1));
+        var cw = Math.max(1, Math.round(w * scale)), ch = Math.max(1, Math.round(h * scale));
+        var cv = document.createElement('canvas');
+        cv.width = cw; cv.height = ch;
+        cv.getContext('2d').drawImage(img, 0, 0, cw, ch);
+        URL.revokeObjectURL(url);
+        if (cv.toBlob) {
+          cv.toBlob(function (blob) {
+            if (blob) { cb(null, { blob: blob, w: cw, h: ch, ts: Date.now() }); }
+            else { cb(new Error('encode failed'), null); }
+          }, 'image/jpeg', 0.72);
+        } else {
+          var b = dataUrlToBlob(cv.toDataURL('image/jpeg', 0.72));
+          if (b) { cb(null, { blob: b, w: cw, h: ch, ts: Date.now() }); }
+          else { cb(new Error('encode failed'), null); }
+        }
+      } catch (e2) { try { URL.revokeObjectURL(url); } catch (e3) {} cb(e2, null); }
+    };
+    img.onerror = function () { try { URL.revokeObjectURL(url); } catch (e) {} cb(new Error('unreadable image'), null); };
+    img.src = url;
+  }
+  function blobToDataUrl(blob, cb) {
+    try {
+      var reader = new FileReader();
+      reader.onload = function () { cb(String(reader.result || '')); };
+      reader.onerror = function () { cb(null); };
+      reader.readAsDataURL(blob);
+    } catch (e) { cb(null); }
+  }
+  function dataUrlToBlob(du) {
+    try {
+      var parts = String(du).split(',');
+      var mime = (parts[0].match(/data:([^;]+)/) || [])[1] || 'image/jpeg';
+      var bin = atob(parts[1]);
+      var arr = new Uint8Array(bin.length);
+      for (var i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+      return new Blob([arr], { type: mime });
+    } catch (e) { return null; }
+  }
+
+  function checkQuota() {
+    try {
+      if (navigator.storage && navigator.storage.estimate) {
+        navigator.storage.estimate().then(function (est) {
+          if (est && est.quota && (est.usage / est.quota) > 0.8) {
+            toast('Storage getting full — old job photos can be cleared from Saved Jobs.');
+          }
+        }).catch(function () {});
+      }
+    } catch (e) {}
+  }
+
+  function clearPhotoMark(it, slot) {
+    if (!it || !it.ph) return;
+    delete it.ph[slot === 'before' ? 'b' : 'a'];
+    if (!it.ph.b && !it.ph.a) delete it.ph;
+  }
+  function deleteItemPhotos(it) {
+    if (!it || !it.iid || !state.photoId) return;
+    idbDelete(photoKey(it.iid, 'before'), null);
+    idbDelete(photoKey(it.iid, 'after'), null);
+  }
+
+  function photoStripHtml(it) {
+    return '<div class="grid grid-cols-2 gap-2 mt-2">' +
+      photoSlotHtml(it, 'before', 'At walkthrough') +
+      photoSlotHtml(it, 'after', 'Completed') +
+      '</div>';
+  }
+  function photoSlotHtml(it, slot, label) {
+    var filled = !!(it.ph && it.ph[slot === 'before' ? 'b' : 'a']);
+    if (filled) {
+      return '<button type="button" data-photoview="' + it.iid + ':' + slot + '" class="relative w-full h-24 rounded-lg overflow-hidden border border-brand-border bg-black/30">' +
+        '<img data-photoimg="' + it.iid + ':' + slot + '" alt="' + label + ' photo" class="w-full h-full object-cover" />' +
+        '<span class="absolute bottom-0 left-0 right-0 bg-black/60 text-[9px] font-bold text-slate-200 uppercase tracking-wider py-0.5 text-center">' + label + '</span>' +
+        '</button>';
+    }
+    return '<button type="button" data-photoslot="' + it.iid + ':' + slot + '" class="w-full h-24 rounded-lg border border-dashed border-brand-border text-slate-500 flex flex-col items-center justify-center gap-1">' +
+      '<span class="text-xl leading-none text-safety">+</span>' +
+      '<span class="text-[10px] font-bold uppercase tracking-wider">' + label + '</span>' +
+      '</button>';
+  }
+  function loadPhotoThumbs() {
+    thumbUrls.forEach(function (u) { try { URL.revokeObjectURL(u); } catch (e) {} });
+    thumbUrls = [];
+    var imgs = document.querySelectorAll('[data-photoimg]');
+    if (!imgs.length) return;
+    var pending = imgs.length, stale = false;
+    imgs.forEach(function (img) {
+      var p = img.dataset.photoimg.split(':');   /* iid:slot */
+      idbGet(photoKey(p[0], p[1]), function (err, rec) {
+        if (!err && rec && rec.blob) {
+          try {
+            var u = URL.createObjectURL(rec.blob);
+            thumbUrls.push(u);
+            img.src = u;
+          } catch (e) {}
+        } else if (!err) {
+          /* marker with no blob (photo-less restore, or a cleared job) — settle back to an empty slot */
+          clearPhotoMark(findItemByIid(p[0]), p[1]);
+          stale = true;
+        }
+        if (--pending === 0 && stale) { saveDraft(); renderAreas(); }
+      });
+    });
+  }
+
+  var photoViewer = document.getElementById('photoViewer');
+  var photoViewerImg = document.getElementById('photoViewerImg');
+  var photoViewerLabel = document.getElementById('photoViewerLabel');
+  function openPhotoViewer(iid, slot) {
+    idbGet(photoKey(iid, slot), function (err, rec) {
+      if (err || !rec || !rec.blob) {
+        clearPhotoMark(findItemByIid(iid), slot);
+        saveDraft(); renderAreas();
+        return;
+      }
+      var u;
+      try { u = URL.createObjectURL(rec.blob); } catch (e) { return; }
+      viewerCtx = { iid: iid, slot: slot, url: u };
+      photoViewerImg.src = u;
+      photoViewerLabel.textContent = slot === 'before' ? 'At walkthrough' : 'Completed';
+      photoViewer.style.display = 'flex';
+    });
+  }
+  function closePhotoViewer() {
+    photoViewer.style.display = 'none';
+    photoViewerImg.removeAttribute('src');
+    if (viewerCtx && viewerCtx.url) { try { URL.revokeObjectURL(viewerCtx.url); } catch (e) {} }
+    viewerCtx = null;
+  }
+  document.getElementById('photoViewerClose').addEventListener('click', closePhotoViewer);
+  photoViewer.addEventListener('click', function (e) { if (e.target === photoViewer) closePhotoViewer(); });
+  document.getElementById('photoViewerDelete').addEventListener('click', function () {
+    if (!viewerCtx) return;
+    if (!confirm('Delete this photo?')) return;
+    var ctx = viewerCtx;
+    idbDelete(photoKey(ctx.iid, ctx.slot), function () {
+      clearPhotoMark(findItemByIid(ctx.iid), ctx.slot);
+      saveDraft(); renderAreas();
+    });
+    closePhotoViewer();
+  });
+
+  var photoFileInput = document.getElementById('photoFile');
+  photoFileInput.addEventListener('change', function (e) {
+    var f = e.target.files && e.target.files[0];
+    var target = pendingPhoto;
+    pendingPhoto = null;
+    e.target.value = '';
+    if (!f || !target) return;
+    if (!findItemByIid(target.iid)) return;
+    compressPhoto(f, function (err, rec) {
+      if (err || !rec) { toast('Couldn\'t read that photo — try another one.'); return; }
+      idbPut(photoKey(target.iid, target.slot), rec, function (perr) {
+        if (perr) { toast('Couldn\'t save the photo on this device.'); return; }
+        var live = findItemByIid(target.iid);
+        if (live) {
+          live.ph = live.ph || {};
+          live.ph[target.slot === 'before' ? 'b' : 'a'] = 1;
+        }
+        saveDraft(); renderAreas();
+        checkQuota();
+      });
+    });
+  });
+
   /* ---------- progress ---------- */
   function counts() {
     var total = 0, done = 0;
@@ -448,19 +748,26 @@ tailwind.config = { theme: { extend: { colors: {
       var hiddenDone = 0;
       area.items.forEach(function (it, ii) {
         if (openOnly && it.done) { hiddenDone++; return; }
+        var stripOpen = !!(it.iid && photoOpen[it.iid]);
+        var hasPhoto = !!(it.ph && (it.ph.b || it.ph.a));
         itemsHtml +=
           '<div class="bg-brand-card border border-brand-border rounded-xl p-3 ' + (it.done ? 'done-item' : '') + '">' +
             '<div class="flex items-start gap-2">' +
               '<input type="checkbox" data-done="' + ai + ':' + ii + '" ' + (it.done ? 'checked' : '') + ' class="accent-orange-500 w-5 h-5 mt-2 shrink-0" />' +
               '<div class="flex-1 min-w-0">' +
-                '<input data-desc="' + ai + ':' + ii + '" type="text" placeholder="e.g. Touch up paint at hall closet door" value="' + esc(it.desc) + '" class="itemdesc w-full bg-transparent border-0 border-b border-brand-border px-1 py-1.5 text-base focus:outline-none" />' +
-                '<div class="flex gap-2 mt-2">' +
+                '<div class="flex items-center">' +
+                  '<input data-desc="' + ai + ':' + ii + '" type="text" placeholder="e.g. Touch up paint at hall closet door" value="' + esc(it.desc) + '" class="itemdesc w-full bg-transparent border-0 border-b border-brand-border px-1 py-1.5 text-base focus:outline-none" />' +
+                  (hasPhoto && !stripOpen ? '<span class="text-[10px] shrink-0 pl-1" title="Has photos">📷</span>' : '') +
+                '</div>' +
+                '<div class="flex items-center gap-2 mt-2">' +
                   '<select data-trade="' + ai + ':' + ii + '" class="bg-brand-navy border border-brand-border rounded-lg px-2 py-1 text-xs">' +
                     TRADES.map(function (t) { return '<option ' + (it.trade === t ? 'selected' : '') + '>' + t + '</option>'; }).join('') +
                   '</select>' +
-                  '<input data-note="' + ai + ':' + ii + '" type="text" placeholder="note (optional)" value="' + esc(it.note) + '" class="flex-1 bg-brand-navy border border-brand-border rounded-lg px-2 py-1 text-xs" />' +
+                  '<button type="button" data-phototoggle="' + it.iid + '" class="shrink-0 text-base leading-none px-1 py-1 rounded-lg ' + (stripOpen ? 'bg-white/10' : '') + '" title="Before / after photos" aria-label="Before and after photos">📷</button>' +
+                  '<input data-note="' + ai + ':' + ii + '" type="text" placeholder="note (optional)" value="' + esc(it.note) + '" class="flex-1 min-w-0 bg-brand-navy border border-brand-border rounded-lg px-2 py-1 text-xs" />' +
                   '<button type="button" data-delitem="' + ai + ':' + ii + '" class="text-slate-600 font-bold px-1">✕</button>' +
                 '</div>' +
+                (stripOpen ? photoStripHtml(it) : '') +
               '</div>' +
             '</div>' +
           '</div>';
@@ -486,6 +793,7 @@ tailwind.config = { theme: { extend: { colors: {
         var a = state.areas[+el.dataset.delarea];
         var hasItems = a.items.some(function (i) { return (i.desc || '').trim(); });
         if (hasItems && !confirm('Remove this area and its items?')) return;
+        a.items.forEach(function (i) { deleteItemPhotos(i); });
         state.areas.splice(+el.dataset.delarea, 1);
         if (!state.areas.length) state.areas.push(blankArea(''));
         renderAreas(); renderProgress(); saveDraft();
@@ -526,10 +834,32 @@ tailwind.config = { theme: { extend: { colors: {
     wrap.querySelectorAll('[data-delitem]').forEach(function (el) {
       el.addEventListener('click', function () {
         var p = el.dataset.delitem.split(':');
+        deleteItemPhotos(state.areas[+p[0]].items[+p[1]]);
         state.areas[+p[0]].items.splice(+p[1], 1);
         renderAreas(); renderProgress(); saveDraft();
       });
     });
+    wrap.querySelectorAll('[data-phototoggle]').forEach(function (el) {
+      el.addEventListener('click', function () {
+        var iid = el.dataset.phototoggle;
+        if (photoOpen[iid]) { delete photoOpen[iid]; } else { photoOpen[iid] = true; }
+        renderAreas();
+      });
+    });
+    wrap.querySelectorAll('[data-photoslot]').forEach(function (el) {
+      el.addEventListener('click', function () {
+        var p = el.dataset.photoslot.split(':');
+        pendingPhoto = { iid: p[0], slot: p[1] };
+        photoFileInput.click();
+      });
+    });
+    wrap.querySelectorAll('[data-photoview]').forEach(function (el) {
+      el.addEventListener('click', function () {
+        var p = el.dataset.photoview.split(':');
+        openPhotoViewer(p[0], p[1]);
+      });
+    });
+    loadPhotoThumbs();
   }
 
   document.getElementById('addArea').addEventListener('click', function () {
@@ -612,7 +942,7 @@ tailwind.config = { theme: { extend: { colors: {
     box.querySelectorAll('[data-open]').forEach(function (el) {
       el.addEventListener('click', function () {
         var j = loadJobs().find(function (x) { return x.id === el.dataset.open; });
-        if (j) { state = JSON.parse(JSON.stringify(j)); renderAll(); saveDraft(); window.scrollTo({ top: 0, behavior: 'smooth' }); }
+        if (j) { state = JSON.parse(JSON.stringify(j)); ensureIds(state); renderAll(); saveDraft(); window.scrollTo({ top: 0, behavior: 'smooth' }); }
       });
     });
     box.querySelectorAll('[data-copy]').forEach(function (el) {
@@ -622,6 +952,11 @@ tailwind.config = { theme: { extend: { colors: {
           state = JSON.parse(JSON.stringify(j));
           state.id = null; state.savedAt = null; state.sigs = { C: null, K: null };
           state.job.name = (state.job.name || '') + ' (copy)';
+          /* the copy gets its own photo-key prefix and starts with empty slots —
+             its photos stay independent of the original job's */
+          state.photoId = newId('plp');
+          state.areas.forEach(function (a) { a.items.forEach(function (it) { if (it.ph) delete it.ph; }); });
+          ensureIds(state);
           renderAll(); saveDraft(); window.scrollTo({ top: 0, behavior: 'smooth' });
         }
       });
@@ -629,7 +964,9 @@ tailwind.config = { theme: { extend: { colors: {
     box.querySelectorAll('[data-deljob]').forEach(function (el) {
       el.addEventListener('click', function () {
         if (!confirm('Delete this saved punch list? This can\'t be undone.')) return;
+        var gone = loadJobs().find(function (x) { return x.id === el.dataset.deljob; });
         saveJobs(loadJobs().filter(function (x) { return x.id !== el.dataset.deljob; }));
+        if (gone && gone.photoId) { idbDeletePrefix(gone.photoId + ':', null); }
         renderLog();
       });
     });
@@ -640,6 +977,7 @@ tailwind.config = { theme: { extend: { colors: {
     var jobs = loadJobs();
     state.savedAt = Date.now();
     if (!state.id) state.id = 'pl-' + Date.now();
+    if (!state.photoId) state.photoId = newId('plp');   /* photoId follows the job into the log */
     var idx = jobs.findIndex(function (x) { return x.id === state.id; });
     var snap = JSON.parse(JSON.stringify(state));
     if (idx >= 0) jobs[idx] = snap; else jobs.push(snap);
@@ -648,6 +986,13 @@ tailwind.config = { theme: { extend: { colors: {
   });
   document.getElementById('resetBtn').addEventListener('click', function () {
     if (!confirm('Clear the form and start a new punch list? (Saved jobs are kept.)')) return;
+    /* RESET clears the draft's photos — unless this draft was opened from the log,
+       in which case the saved job still owns that photo prefix and keeps it */
+    var pid = state.photoId;
+    if (pid && !loadJobs().some(function (j) { return j.photoId === pid; })) {
+      idbDeletePrefix(pid + ':', null);
+    }
+    photoOpen = {};
     state = blankState(); renderAll(); saveDraft();
     window.scrollTo({ top: 0, behavior: 'smooth' });
   });
@@ -700,14 +1045,42 @@ tailwind.config = { theme: { extend: { colors: {
   });
 
   /* ---------- backup / restore ---------- */
+  function collectAllPhotos(cb) {
+    /* every stored photo whose jobId prefix belongs to the draft or a saved job,
+       as base64 dataURLs keyed by the full photo key */
+    var known = {};
+    if (state.photoId) known[state.photoId] = 1;
+    loadJobs().forEach(function (j) { if (j.photoId) known[j.photoId] = 1; });
+    idbAll(function (err, entries) {
+      if (err || !entries.length) return cb({});
+      entries = entries.filter(function (en) { return known[String(en.key).split(':')[0]]; });
+      var map = {}, i = 0;
+      (function next() {
+        if (i >= entries.length) return cb(map);
+        var en = entries[i++];
+        if (!en.val || !en.val.blob) return next();
+        blobToDataUrl(en.val.blob, function (du) {
+          if (du) map[en.key] = { d: du, w: en.val.w, h: en.val.h, ts: en.val.ts };
+          next();
+        });
+      })();
+    });
+  }
   document.getElementById('backupBtn').addEventListener('click', function () {
     var brandRaw = null; try { brandRaw = JSON.parse(localStorage.getItem(BRAND_KEY) || 'null'); } catch (e) {}
     var data = { draft: state, jobs: loadJobs(), exportedAt: new Date().toISOString(), app: 'dfs-punch-list', brandStyle: brandRaw };
-    var blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-    var a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = 'PunchList-Backup-' + today() + '.json';
-    a.click();
+    function download() {
+      var blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      var a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'PunchList-Backup-' + today() + '.json';
+      a.click();
+    }
+    if (document.getElementById('backupPhotos').checked) {
+      collectAllPhotos(function (photos) { data.photos = photos; download(); });
+    } else {
+      download();
+    }
   });
   document.getElementById('restoreInput').addEventListener('change', function (e) {
     var f = e.target.files[0]; if (!f) return;
@@ -719,8 +1092,27 @@ tailwind.config = { theme: { extend: { colors: {
         if (data.jobs) saveJobs(data.jobs);
         if (data.draft) state = data.draft;
         if (data.brandStyle && typeof data.brandStyle === 'object') { try { localStorage.setItem(BRAND_KEY, JSON.stringify(data.brandStyle)); } catch (e2) {} }
-        renderAll(); saveDraft();
-        toast('Backup restored.');
+        ensureIds(state);
+        /* photos are optional in the file: present = write them back to IndexedDB
+           (render only once they're all in, so thumbnails find their blobs);
+           absent (photos-off backup, or a pre-v1.2 backup) = items restore as-is
+           and any photo markers simply settle back to empty slots */
+        var finishRestore = function () { renderAll(); saveDraft(); toast('Backup restored.'); };
+        var photoKeys = (data.photos && typeof data.photos === 'object') ? Object.keys(data.photos) : [];
+        if (photoKeys.length) {
+          var pending = photoKeys.length;
+          photoKeys.forEach(function (key) {
+            var p = data.photos[key];
+            var du = (p && typeof p === 'object') ? p.d : p;
+            var blob = du ? dataUrlToBlob(du) : null;
+            if (!blob) { if (--pending === 0) finishRestore(); return; }
+            idbPut(key, { blob: blob, w: (p && p.w) || 0, h: (p && p.h) || 0, ts: (p && p.ts) || Date.now() }, function () {
+              if (--pending === 0) finishRestore();
+            });
+          });
+        } else {
+          finishRestore();
+        }
       } catch (err) { alert('Couldn\'t read that file.'); }
     };
     reader.readAsText(f);
@@ -728,10 +1120,64 @@ tailwind.config = { theme: { extend: { colors: {
 
   /* ---------- PDF ---------- */
   document.getElementById('pdfBtn').addEventListener('click', function () {
-    try { buildPdf(); } catch (err) { alert('PDF error: ' + err.message); }
+    /* photos live in IndexedDB (async) while the PDF build is sync — prefetch every
+       needed photo to a dataURL first, then run the build exactly as before. The
+       dataURLs go straight to doc.addImage (same non-racy pattern as drawProLogo). */
+    collectPdfPhotos(function (photoMap) {
+      try { buildPdf(photoMap); } catch (err) { alert('PDF error: ' + err.message); }
+    });
   });
 
-  function buildPdf() {
+  function collectPdfPhotos(cb) {
+    var wants = [];
+    state.areas.forEach(function (a) {
+      a.items.forEach(function (it) {
+        if (!(it.desc || '').trim() || !it.iid || !it.ph) return;
+        if (it.ph.b) wants.push({ iid: it.iid, slot: 'before' });
+        if (it.ph.a) wants.push({ iid: it.iid, slot: 'after' });
+      });
+    });
+    if (!wants.length) return cb({});
+    var map = {}, pending = wants.length;
+    wants.forEach(function (w) {
+      idbGet(photoKey(w.iid, w.slot), function (err, rec) {
+        if (!err && rec && rec.blob) {
+          blobToDataUrl(rec.blob, function (du) {
+            if (du) {
+              map[w.iid] = map[w.iid] || {};
+              map[w.iid][w.slot] = { dataUrl: du, w: rec.w || 4, h: rec.h || 3 };
+            }
+            if (--pending === 0) cb(map);
+          });
+        } else {
+          if (--pending === 0) cb(map);
+        }
+      });
+    });
+  }
+
+  function drawPhotoRow(doc, ph, x, y, GRAY) {
+    /* two thumbnails side-by-side, ~150pt wide each, aspect-fit; one photo = one
+       thumbnail with its label. Labels: 7pt gray caps. Returns the new y. */
+    var thumbW = 150, thumbMaxH = 100, gap = 14, px = x, maxH = 0;
+    [['before', 'AT WALKTHROUGH'], ['after', 'COMPLETED']].forEach(function (pair) {
+      var p = ph[pair[0]];
+      if (!p) return;
+      var scale = Math.min(thumbW / (p.w || 1), thumbMaxH / (p.h || 1));
+      var dw = (p.w || 1) * scale, dh = (p.h || 1) * scale;
+      doc.setFont('helvetica', 'bold'); doc.setFontSize(7);
+      doc.setTextColor(GRAY[0], GRAY[1], GRAY[2]);
+      doc.text(pair[1], px, y);
+      try { doc.addImage(p.dataUrl, 'JPEG', px, y + 4, dw, dh); } catch (e) {}
+      if (dh > maxH) maxH = dh;
+      px += thumbW + gap;
+    });
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(10);
+    return y + 4 + maxH + 14;
+  }
+
+  function buildPdf(photoMap) {
+    photoMap = photoMap || {};
     var jsPDF = window.jspdf.jsPDF;
     var doc = new jsPDF({ orientation: 'portrait', unit: 'pt', format: 'letter' });
     var pageW = doc.internal.pageSize.getWidth();   /* 612 */
@@ -814,7 +1260,10 @@ tailwind.config = { theme: { extend: { colors: {
       y += 15;
       doc.setFontSize(10);
       items.forEach(function (it) {
-        if (y > pageH - 90) { doc.addPage(); y = 60; }
+        var ph = (it.iid && photoMap[it.iid]) || null;
+        if (ph && !ph.before && !ph.after) ph = null;
+        /* photo rows need ~120pt reserved so a row never straddles the page edge */
+        if (y > pageH - 90 - (ph ? 120 : 0)) { doc.addPage(); y = 60; }
         /* checkbox */
         doc.setDrawColor(90, 95, 105);
         doc.rect(margin, y - 8, 10, 10);
@@ -831,6 +1280,7 @@ tailwind.config = { theme: { extend: { colors: {
         doc.text(it.trade.toUpperCase(), pageW - margin, y, { align: 'right' });
         doc.setFontSize(10);
         y += lines.length * 12 + 6;
+        if (ph) { y = drawPhotoRow(doc, ph, margin + 18, y + 2, GRAY); }
       });
       y += 10;
     });
@@ -969,6 +1419,7 @@ tailwind.config = { theme: { extend: { colors: {
   state = loadDraft() || blankState();
   if (!state.job) state = blankState();
   if (!state.sigs) state.sigs = { C: null, K: null };
+  ensureIds(state);   /* pre-v1.2 drafts: give the draft its stable photoId and every item an iid */
   renderAll();
 
   if ('serviceWorker' in navigator) {
