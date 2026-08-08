@@ -1176,6 +1176,15 @@ tailwind.config = { theme: { extend: { colors: {
     return y + 4 + maxH + 14;
   }
 
+  function truncToWidth(doc, str, maxW) {
+    /* keeps header lines from running into each other: ellipsis-truncate at the
+       current font when a long job name / client / address would overflow */
+    str = String(str || '');
+    if (maxW <= 0 || doc.getTextWidth(str) <= maxW) return str;
+    while (str.length > 1 && doc.getTextWidth(str + '\u2026') > maxW) { str = str.slice(0, -1); }
+    return str.replace(/[\s\u00b7]+$/, '') + '\u2026';
+  }
+
   function buildPdf(photoMap) {
     photoMap = photoMap || {};
     var jsPDF = window.jspdf.jsPDF;
@@ -1216,12 +1225,12 @@ tailwind.config = { theme: { extend: { colors: {
       doc.text(lhName, textX, 36);
       doc.setFont('helvetica', 'normal'); doc.setFontSize(10);
       doc.setTextColor(brand.accWhite[0], brand.accWhite[1], brand.accWhite[2]);
-      doc.text(state.job.name || 'Untitled job', textX, 52);
+      doc.text(truncToWidth(doc, state.job.name || 'Untitled job', pageW - textX - margin - 110), textX, 52);
       doc.setFont('helvetica', 'bold'); doc.setFontSize(11);
       doc.text(plTitle, pageW - margin, 24, { align: 'right' });
       doc.setFont('helvetica', 'normal'); doc.setFontSize(9);
       doc.setTextColor(GRAY[0], GRAY[1], GRAY[2]);
-      doc.text(plMeta, pageW - margin, 39, { align: 'right' });
+      doc.text(truncToWidth(doc, plMeta, 205), pageW - margin, 39, { align: 'right' });
       doc.text(c.done + ' of ' + c.total + ' items closed', pageW - margin, 52, { align: 'right' });
       doc.setFillColor(brand.acc[0], brand.acc[1], brand.acc[2]); doc.rect(0, 67, pageW, 3, 'F');
     } else {
@@ -1235,10 +1244,10 @@ tailwind.config = { theme: { extend: { colors: {
       doc.setFontSize(10); doc.setFont('helvetica', 'normal');
       var subCol = brand ? ((brand.style === 'bold') ? brand.ink : brand.accDark) : ORANGE;
       doc.setTextColor(subCol[0], subCol[1], subCol[2]);
-      doc.text(state.job.name || 'Untitled job', textX, 52);
+      doc.text(truncToWidth(doc, state.job.name || 'Untitled job', pageW - textX - margin - 110), textX, 52);
       var metaCol = (brand && brand.style === 'bold') ? brand.ink : [200, 205, 215];
       doc.setTextColor(metaCol[0], metaCol[1], metaCol[2]);
-      doc.text(plMeta, pageW - margin, 34, { align: 'right' });
+      doc.text(truncToWidth(doc, plMeta, pageW - margin - textX - doc.getTextWidth(plTitle) * 1.9 - 16), pageW - margin, 34, { align: 'right' });
       doc.text(c.done + ' of ' + c.total + ' items closed', pageW - margin, 52, { align: 'right' });
       if (isPro() && proBrand) {
         var nameCol = brand ? ((brand.style === 'bold') ? brand.ink : brand.accDark) : [147, 197, 253];
