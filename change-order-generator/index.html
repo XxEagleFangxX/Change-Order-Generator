@@ -289,6 +289,54 @@
         </button>
         <p id="settingsStatus" class="text-sm font-bold text-slate-400 mt-3 text-center">Saved settings load automatically every time you open the app on this device.</p>
 
+        <!-- RATE CARD — Time & Materials rates and terms. Set once, used on every T&M CO.
+             Own storage key (dfs.co.ratecard.v1); saves as you type. The fixed-price
+             markup/tax below are surfaced by reference only — their code is untouched. -->
+        <div class="mt-5 border-t-2 border-slateline pt-4" id="rateCardBlock">
+          <p class="text-sm font-bold text-slate-300 mb-1">Rate Card <span class="text-slate-500 font-semibold">— for Time &amp; Materials change orders. Saves as you type.</span></p>
+
+          <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mt-3 mb-2">Labor tiers <span class="text-slate-500 normal-case tracking-normal">— name + hourly rate</span></p>
+          <div id="rcTiers" class="space-y-2"></div>
+          <button type="button" id="rcAddTier"
+            class="mt-2 h-12 px-4 rounded-xl bg-ink border-2 border-blueprint text-blueprintsoft font-extrabold text-sm tracking-wide active:bg-blueprint active:text-white">+ ADD TIER</button>
+
+          <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mt-4 mb-2">Materials</p>
+          <div class="space-y-2">
+            <label class="flex items-center gap-3 min-h-[48px] px-3 rounded-xl bg-ink border-2 border-slateline cursor-pointer">
+              <input type="radio" name="rcMat" id="rcMatCost" value="cost" class="h-6 w-6 shrink-0 accent-orange-500" checked />
+              <span class="text-sm font-bold text-slate-200">At cost — receipts as-is</span>
+            </label>
+            <label class="flex items-center gap-3 min-h-[48px] px-3 rounded-xl bg-ink border-2 border-slateline cursor-pointer">
+              <input type="radio" name="rcMat" id="rcMatPlus" value="plus" class="h-6 w-6 shrink-0 accent-orange-500" />
+              <span class="text-sm font-bold text-slate-200">Cost +</span>
+              <span class="relative inline-block">
+                <input id="rcMatPct" type="number" inputmode="decimal" step="0.5" min="0" max="100" placeholder="0"
+                  class="h-12 w-20 text-center text-base font-extrabold rounded-lg bg-slatecard border-2 border-slateline text-white pr-6" />
+                <span class="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-sm">%</span>
+              </span>
+              <span class="text-xs text-slate-400 font-semibold">covers the list, the ordering, and the pickup</span>
+            </label>
+          </div>
+
+          <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mt-4 mb-2">Contractor fee</p>
+          <div class="flex items-center gap-2">
+            <span class="relative inline-block shrink-0">
+              <input id="rcFeePct" type="number" inputmode="decimal" step="0.5" min="0" max="100" placeholder="0"
+                class="h-12 w-20 text-center text-base font-extrabold rounded-lg bg-ink border-2 border-slateline text-white pr-6" />
+              <span class="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-sm">%</span>
+            </span>
+            <input id="rcFeeLabel" type="text" placeholder="Contractor Fee"
+              class="flex-1 min-w-0 h-12 px-3 text-base font-semibold rounded-lg bg-ink border-2 border-slateline text-white" />
+          </div>
+          <p class="text-xs text-slate-400 font-semibold mt-2">Prints as its own labeled line above tax on every T&amp;M final bill — never folded into the rates. Waive it on any single CO with one tap.</p>
+
+          <div class="mt-4 bg-ink rounded-xl border border-slateline p-3">
+            <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Fixed-price CO settings — unchanged</p>
+            <p class="text-sm text-slate-300 font-semibold">Markup: <span id="rcMarkupView" class="text-white font-extrabold"></span> &nbsp;·&nbsp; Local tax: <span id="rcTaxView" class="text-white font-extrabold"></span></p>
+            <p class="text-xs text-slate-500 font-semibold mt-1">These belong to fixed-price change orders and still work exactly as before — markup adjusts on each CO, tax comes from the Local Tax Rate field above.</p>
+          </div>
+        </div>
+
         <div class="mt-5 border-t-2 border-slateline pt-4">
           <p class="text-sm font-bold text-slate-300 mb-2">Backup &amp; Restore <span class="text-slate-500 font-semibold">(settings, logo, saved items, CO log)</span></p>
           <input id="backupFile" type="file" accept=".json,application/json" />
@@ -311,6 +359,16 @@
         </div>
 
       </div>
+    </section>
+
+    <!-- ============ CO TYPE SELECTOR (T&M upgrade) ============ -->
+    <section id="coTypeSection" class="bg-slatecard rounded-2xl border border-slateline p-4 sm:p-5">
+      <h2 class="text-sm font-extrabold tracking-[0.15em] text-blueprintsoft uppercase mb-4">How is this change billed?</h2>
+      <div class="grid grid-cols-2 gap-3">
+        <button type="button" id="typeFixedBtn" class="h-16 rounded-xl bg-safety text-ink font-extrabold text-sm tracking-wide leading-tight border-2 border-safety">FIXED PRICE<br /><span class="text-[10px] font-bold normal-case tracking-normal">One total, priced now</span></button>
+        <button type="button" id="typeTMBtn" class="h-16 rounded-xl bg-ink border-2 border-slateline text-slate-300 font-extrabold text-sm tracking-wide leading-tight active:border-safety active:text-safety">TIME &amp; MATERIALS<br /><span class="text-[10px] font-bold normal-case tracking-normal">Rates now, bill at completion</span></button>
+      </div>
+      <p id="coTypeHint" class="text-xs text-slate-400 font-semibold mt-3">Time &amp; Materials: the customer signs the rates and terms before the work, and the hours and receipts are tallied on the final bill.</p>
     </section>
 
     <!-- ============ SECTION 2: CLIENT & JOB SITE ============ -->
@@ -347,8 +405,8 @@
       </div>
     </section>
 
-    <!-- ============ SECTION 4: LINE ITEMS & PRICING ============ -->
-    <section class="bg-slatecard rounded-2xl border border-slateline p-4 sm:p-5">
+    <!-- ============ SECTION 4: LINE ITEMS & PRICING (fixed-price COs) ============ -->
+    <section id="fixedPricingSection" class="bg-slatecard rounded-2xl border border-slateline p-4 sm:p-5">
       <h2 class="text-sm font-extrabold tracking-[0.15em] text-blueprintsoft uppercase mb-4">3 · Line Items &amp; Pricing</h2>
 
       <div id="lineItems" class="space-y-3"></div>
@@ -409,10 +467,112 @@
       </div>
     </section>
 
+    <!-- ============ T&M: RATES & TERMS (authorization stage) ============ -->
+    <section id="tmAuthSection" class="hidden bg-slatecard rounded-2xl border border-slateline p-4 sm:p-5">
+      <h2 class="text-sm font-extrabold tracking-[0.15em] text-blueprintsoft uppercase mb-2">3 · Hourly Rates &amp; Terms</h2>
+      <p class="text-xs text-slate-400 font-semibold mb-4">The customer signs these rates and terms now. Hours and receipts are tallied on the final bill.</p>
+
+      <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Rate sheet <span class="text-slate-500 normal-case tracking-normal">— untick any tier not on this job</span></p>
+      <div id="tmTierList" class="space-y-2"></div>
+      <button type="button" id="tmAddTierBtn"
+        class="mt-2 h-12 px-4 rounded-xl bg-ink border-2 border-blueprint text-blueprintsoft font-extrabold text-sm tracking-wide active:bg-blueprint active:text-white">+ ADD TIER</button>
+      <p class="text-xs text-slate-400 font-semibold mt-2">Tiers and rates fill in from your Rate Card in Business Settings — set it once and every T&amp;M CO is ready to sign.</p>
+
+      <div class="mt-4 bg-ink rounded-xl border border-slateline p-3">
+        <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Materials term</p>
+        <p id="tmMatTermOut" class="text-sm text-white font-bold"></p>
+        <p id="tmMatTermNote" class="text-xs text-slate-500 font-semibold mt-1"></p>
+      </div>
+
+      <div class="mt-3 bg-ink rounded-xl border border-slateline p-3 hidden" id="tmFeeWrap">
+        <div class="flex items-center justify-between gap-3">
+          <p id="tmFeeOut" class="text-sm text-white font-bold min-w-0 flex-1"></p>
+          <button type="button" id="tmFeeWaiveBtn"
+            class="h-12 px-4 shrink-0 rounded-lg border-2 border-slateline text-slate-300 text-sm font-extrabold active:border-safety active:text-safety">WAIVE</button>
+        </div>
+        <p class="text-xs text-slate-500 font-semibold mt-1">Carried from your Rate Card. Waiving applies to this change order only — the next CO starts with the fee back on.</p>
+      </div>
+
+      <div class="mt-4">
+        <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Estimate / Not-to-exceed <span class="text-slate-500 normal-case tracking-normal">— optional</span></p>
+        <div class="flex items-center gap-2">
+          <span class="text-slate-400 font-extrabold text-xl">$</span>
+          <input id="tmEstAmount" type="number" inputmode="decimal" min="0" step="any" placeholder="Leave blank to skip"
+            class="flex-1 min-w-0 h-14 px-3 text-lg font-extrabold rounded-xl bg-ink border-2 border-slateline text-white" />
+        </div>
+        <div class="grid grid-cols-2 gap-2 mt-2">
+          <label class="flex items-center gap-2 min-h-[48px] px-3 rounded-xl bg-ink border-2 border-slateline cursor-pointer">
+            <input type="radio" name="tmEstMode" id="tmEstModeEstimate" value="estimate" class="h-5 w-5 shrink-0 accent-orange-500" checked />
+            <span class="text-sm font-bold text-slate-200">Estimate</span>
+          </label>
+          <label class="flex items-center gap-2 min-h-[48px] px-3 rounded-xl bg-ink border-2 border-slateline cursor-pointer">
+            <input type="radio" name="tmEstMode" id="tmEstModeNte" value="nte" class="h-5 w-5 shrink-0 accent-orange-500" />
+            <span class="text-sm font-bold text-slate-200">Not to exceed</span>
+          </label>
+        </div>
+        <p class="text-xs text-slate-500 font-semibold mt-1">Blank means neither line prints. An estimate prints with plain wording that the final bill comes from actual hours and receipts.</p>
+      </div>
+    </section>
+
+    <!-- ============ T&M: COMPLETE-THE-BILL OFFER ============ -->
+    <section id="tmBillOffer" class="hidden bg-slatecard rounded-2xl border-2 border-safety p-4 sm:p-5">
+      <p class="text-sm font-extrabold text-white leading-snug">This authorization is signed. When the work wraps up, tally the hours and receipts here.</p>
+      <button type="button" id="tmCompleteBillBtn"
+        class="mt-3 w-full h-14 rounded-xl bg-safety text-ink text-lg font-extrabold tracking-wide active:bg-safetydeep">COMPLETE THE BILL</button>
+    </section>
+
+    <!-- ============ T&M: FINAL BILL (hours & receipts) ============ -->
+    <section id="tmBillSection" class="hidden bg-slatecard rounded-2xl border-2 border-safety p-4 sm:p-5">
+      <h2 class="text-sm font-extrabold tracking-[0.15em] text-safety uppercase mb-2">Final Bill — Hours &amp; Receipts</h2>
+      <p class="text-xs text-slate-400 font-semibold mb-4">Tally the job by tier and task. The signed materials term and contractor fee apply automatically.</p>
+
+      <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Labor <span class="text-slate-500 normal-case tracking-normal">— tier × hours, one row per task</span></p>
+      <div id="tmLaborRows" class="space-y-3"></div>
+      <button type="button" id="tmAddLaborBtn"
+        class="mt-2 w-full h-14 rounded-xl bg-ink border-2 border-blueprint text-blueprintsoft text-base font-extrabold tracking-wide active:bg-blueprint active:text-white">+ ADD LABOR</button>
+
+      <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mt-5 mb-2">Materials <span class="text-slate-500 normal-case tracking-normal">— one row per receipt</span></p>
+      <div id="tmMatRows" class="space-y-3"></div>
+      <button type="button" id="tmAddMatBtn"
+        class="mt-2 w-full h-14 rounded-xl bg-ink border-2 border-blueprint text-blueprintsoft text-base font-extrabold tracking-wide active:bg-blueprint active:text-white">+ ADD RECEIPT</button>
+      <p class="text-xs text-slate-500 font-semibold mt-2">The bill lists each receipt — hand the paper receipts over with it.</p>
+
+      <div class="mt-6 space-y-3 border-t-2 border-slateline pt-5">
+        <div class="flex items-center justify-between">
+          <span class="text-base font-bold text-slate-300">Labor</span>
+          <span id="tmLaborOut" class="text-lg font-extrabold text-white tabular-nums">$0.00</span>
+        </div>
+        <div class="flex items-center justify-between">
+          <span class="text-base font-bold text-slate-300">Materials — receipts</span>
+          <span id="tmMatOut" class="text-lg font-extrabold text-white tabular-nums">$0.00</span>
+        </div>
+        <div class="flex items-center justify-between" id="tmMatMarkupRow" style="display:none">
+          <span id="tmMatMarkupLabel" class="text-base font-bold text-slate-300"></span>
+          <span id="tmMatMarkupOut" class="text-lg font-extrabold text-white tabular-nums">$0.00</span>
+        </div>
+        <div class="flex items-center justify-between border-t border-slateline pt-3">
+          <span class="text-base font-bold text-slate-300">Subtotal</span>
+          <span id="tmSubtotalOut" class="text-xl font-extrabold text-white tabular-nums">$0.00</span>
+        </div>
+        <div class="flex items-center justify-between" id="tmFeeRow" style="display:none">
+          <span id="tmFeeRowLabel" class="text-base font-bold text-slate-300"></span>
+          <span id="tmFeeAmtOut" class="text-lg font-extrabold text-white tabular-nums">$0.00</span>
+        </div>
+        <div class="flex items-center justify-between">
+          <span id="tmTaxRowLabel" class="text-base font-bold text-slate-300">Tax</span>
+          <span id="tmTaxOut" class="text-lg font-extrabold text-white tabular-nums">$0.00</span>
+        </div>
+        <div class="flex items-end justify-between bg-ink rounded-2xl border-2 border-safety px-4 py-4 mt-2">
+          <span class="text-sm font-extrabold tracking-[0.2em] text-slate-300 uppercase pb-1">Total</span>
+          <span id="tmGrandOut" class="text-4xl sm:text-5xl font-black text-safety leading-none tabular-nums">$0.00</span>
+        </div>
+      </div>
+    </section>
+
     <!-- ============ SECTION 5: SCHEDULE IMPACT ============ -->
     <section class="bg-slatecard rounded-2xl border border-slateline p-4 sm:p-5">
       <h2 class="text-sm font-extrabold tracking-[0.15em] text-blueprintsoft uppercase mb-4">4 · Schedule Impact</h2>
-      <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <div id="daysRow" class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <p class="text-base font-semibold text-slate-200 leading-snug">Days added to project timeline</p>
         <div class="flex items-center gap-3">
           <button type="button" id="daysMinus" class="h-14 w-14 rounded-xl bg-ink border-2 border-slateline text-3xl font-extrabold text-blueprintsoft active:border-blueprint">−</button>
@@ -420,13 +580,25 @@
           <button type="button" id="daysPlus" class="h-14 w-14 rounded-xl bg-ink border-2 border-slateline text-3xl font-extrabold text-blueprintsoft active:border-blueprint">+</button>
         </div>
       </div>
-      <p class="text-sm text-slate-400 font-medium mt-3">Substantial completion date shifts by this many calendar days upon approval.</p>
+      <p id="daysNote" class="text-sm text-slate-400 font-medium mt-3">Substantial completion date shifts by this many calendar days upon approval.</p>
+
+      <!-- T&M upgrade: optional working-days line — Time & Materials COs only.
+           Fixed-price COs keep their original stepper above, exactly as before. -->
+      <div id="workDaysWrap" class="hidden mt-1">
+        <label for="workDaysInput" class="block text-sm font-bold text-slate-300 mb-1.5">Working days added to the schedule <span class="text-slate-500 font-semibold">— optional</span></label>
+        <div class="flex items-center gap-3">
+          <input id="workDaysInput" type="number" inputmode="numeric" min="0" step="1" placeholder="Blank"
+            class="w-28 h-14 px-4 text-lg font-extrabold rounded-xl bg-ink border-2 border-slateline text-white text-center" />
+          <p class="text-xs text-slate-400 font-semibold leading-snug flex-1">Prints one line above the signatures — “Adds N working days to the schedule.” It keeps everyone’s calendar on the same page. Blank prints nothing.</p>
+        </div>
+      </div>
     </section>
 
     <!-- ============ SECTION 6: APPROVAL & SIGNATURES ============ -->
     <section class="bg-slatecard rounded-2xl border border-slateline p-4 sm:p-5">
       <h2 class="text-sm font-extrabold tracking-[0.15em] text-blueprintsoft uppercase mb-4">5 · Approval &amp; Signatures</h2>
-      <p class="text-sm text-slate-300 font-medium leading-relaxed bg-ink border border-slateline rounded-xl p-4 mb-5">
+      <p id="tmSigNote" class="hidden text-xs text-blueprintsoft font-extrabold mb-3">Final bill — the client signs here to acknowledge the tallied hours and receipts.</p>
+      <p id="ackText" class="text-sm text-slate-300 font-medium leading-relaxed bg-ink border border-slateline rounded-xl p-4 mb-5">
         By signing below, the Client authorizes the work described in this Change Order, agrees to the Grand Total shown above as an adjustment to the contract price, and accepts the stated schedule impact. This Change Order becomes part of the original construction agreement.
       </p>
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
@@ -893,6 +1065,7 @@
     renderBrandUI();
     taxInput.value = settings.taxRate;
     recalc();
+    renderRateMeta();
     flashSettingsStatus(ok
       ? '✓ Saved. Your info and logo now load automatically on this device.'
       : 'Saved for this session only — storage is blocked in this browser mode (e.g., private browsing).', ok);
@@ -1221,7 +1394,10 @@
   }
 
   var clientPad, contractorPad;
-  function syncStatus() { setStatus(!clientPad.isEmpty()); }
+  function syncStatus() {
+    if (coType === 'tm') { setStatusTM(); return; }
+    setStatus(!clientPad.isEmpty());
+  }
   clientPad     = new SignaturePad(document.getElementById('sigClient'),     function () { syncStatus(); });
   contractorPad = new SignaturePad(document.getElementById('sigContractor'), function () {});
   document.getElementById('clearClient').addEventListener('click',     function () { clientPad.clear(); });
@@ -1259,6 +1435,7 @@
   function snapshotCO() {
     var t = computeTotals();
     return {
+      type: 'fixed',
       coNumber: currentCONumber(), datePretty: currentCODatePretty(),
       savedAt: new Date().toISOString(),
       client: document.getElementById('clientName').value.trim(),
@@ -1324,6 +1501,19 @@
       var st = document.createElement('p');
       st.className = rec.signed ? 'text-[11px] font-extrabold text-green-400 tracking-wide' : 'text-[11px] font-extrabold text-safety tracking-wide';
       st.textContent = rec.signed ? 'SIGNED' : 'DRAFT';
+      /* T&M upgrade: T&M records get their own status chip — Authorized → Billed. */
+      if (rec.type === 'tm') {
+        if (rec.tmStage === 'billed') {
+          amt.textContent = fmt(rec.grand || 0);
+          st.className = 'text-[11px] font-extrabold text-green-400 tracking-wide';
+          st.textContent = 'BILLED';
+        } else {
+          amt.textContent = (rec.grand > 0) ? ('Est. ' + fmt(rec.grand)) : 'T&M';
+          amt.className = 'text-sm font-black text-safety leading-tight tabular-nums pt-1';
+          st.className = rec.signed ? 'text-[11px] font-extrabold text-green-400 tracking-wide' : 'text-[11px] font-extrabold text-safety tracking-wide';
+          st.textContent = rec.signed ? 'AUTHORIZED' : 'DRAFT';
+        }
+      }
       right.appendChild(amt);
       right.appendChild(st);
 
@@ -1357,13 +1547,21 @@
     return document.getElementById('clientName').value.trim().length > 0
       || descBox.value.trim().length > 0
       || computeTotals().subtotal > 0
-      || !clientPad.isEmpty() || !contractorPad.isEmpty();
+      || !clientPad.isEmpty() || !contractorPad.isEmpty()
+      || (coType === 'tm' && (num(tmEstAmount.value) > 0 || tmLaborRowsEl.children.length > 0 || tmMatRowsEl.children.length > 0));
   }
   function confirmDiscardCurrent() {
     if (!currentCOHasWork()) return true;
     return window.confirm('Load this CO from the log? Anything on the current screen that has not been saved as a PDF will be replaced.');
   }
   function loadFromLog(rec, asDuplicate) {
+    /* T&M upgrade: records saved as Time & Materials load through their own path.
+       Records without a type (every CO saved before this upgrade) are fixed-price
+       and continue through the code below exactly as before. */
+    if (rec && rec.type === 'tm') { loadTMFromLog(rec, asDuplicate); return; }
+    coType = 'fixed'; TM.offer = false;
+    workDaysInput.value = '';
+    updateFlowVisibility();
     document.getElementById('clientName').value  = rec.client || '';
     document.getElementById('jobAddress').value  = rec.jobAddress || '';
     descBox.value = rec.description || '';
@@ -1541,7 +1739,7 @@
   document.getElementById('backupBtn').addEventListener('click', function () {
     formToSettings();
     var brandRaw = null; try { brandRaw = JSON.parse(storageGet(BRAND_KEY) || 'null'); } catch (e) {}
-    var payload = { kind:'dfs-change-order-backup', version:1, exportedAt:new Date().toISOString(), settings:settings, coCounter:coCounter, favorites:favorites, coLog:coLog, brandStyle:brandRaw };
+    var payload = { kind:'dfs-change-order-backup', version:1, exportedAt:new Date().toISOString(), settings:settings, coCounter:coCounter, favorites:favorites, coLog:coLog, brandStyle:brandRaw, rateCard:rateCard };
     var blob = new Blob([JSON.stringify(payload)], { type:'application/json' });
     var url = URL.createObjectURL(blob);
     var a = document.createElement('a'); a.href = url; a.download = 'DFS-Backup-' + todayStamp() + '.json';
@@ -1568,6 +1766,9 @@
       if (data.brandStyle && typeof data.brandStyle === 'object') {
         try { storageSet(BRAND_KEY, JSON.stringify(data.brandStyle)); uiBrand = loadBrandStyle(); renderBrandUI(); refreshLogoSwatches(); } catch (e) {}
       }
+      if (data.rateCard && typeof data.rateCard === 'object') {
+        try { storageSet(RATE_KEY, JSON.stringify(data.rateCard)); loadRateCard(); renderRateCardPanel(); } catch (e) {}
+      }
       refreshHeader(); recalc();
       flashSettingsStatus('✓ Backup restored. Settings, saved items, and CO log are back.', true);
     };
@@ -1577,6 +1778,9 @@
 
   /* ── PDF ENGINE ── */
   document.getElementById('pdfBtn').addEventListener('click', function () {
+    /* T&M upgrade: Time & Materials COs take their own path. Fixed-price COs
+       continue through the untouched code below. */
+    if (coType === 'tm') { generateTMPdf(); return; }
     var jsPDFCtor = (window.jspdf && window.jspdf.jsPDF) ? window.jspdf.jsPDF : null;
     if (!jsPDFCtor) { alert('PDF library failed to load. Check your internet connection and reload the page.'); return; }
     formToSettings();
@@ -1983,12 +2187,1038 @@
     lineItemsEl.innerHTML = '';
     markupInput.value = 15; taxInput.value = settings.taxRate || 0;
     days = 0; renderDays();
+    workDaysInput.value = '';
     clientPad.clear(); contractorPad.clear();
     coOverride = null; coCounter++;
     storageSet(COUNTER_KEY, String(coCounter));
     refreshHeader(); addLineItem(); recalc();
+    /* T&M upgrade: a fresh CO gets a fresh T&M slate — fee back on, rate sheet
+       refilled from the Rate Card. The billing-type choice stays as selected. */
+    TM.seeded = false;
+    if (coType === 'tm') {
+      seedTMFromRateCard(); TM.seeded = true;
+      renderTMTiers(); renderTMTerms(); renderTMEst(); recalcTM();
+    }
+    updateFlowVisibility();
     window.scrollTo({ top: 0, behavior: 'smooth' });
   });
+
+  /* ══════════════════════════════════════════════════════════════════════
+     TIME & MATERIALS + RATE CARD (T&M upgrade)
+     Everything in this block is additive. The fixed-price flow above is
+     untouched: T&M change orders branch off at the top of the PDF handler
+     and in loadFromLog; records without a `type` field always take the
+     original fixed-price path.
+     ══════════════════════════════════════════════════════════════════════ */
+
+  var RATE_KEY = 'dfs.co.ratecard.v1';
+  var RC_TIER_CAP = 8;
+  var RC_DEFAULT_TIERS = [
+    { name: 'Laborer', rate: '' },
+    { name: 'Carpenter', rate: '' },
+    { name: 'Skilled Carpenter', rate: '' }
+  ];
+
+  /* Penny-exact rounding for every money step on a T&M bill. */
+  function r2(n) { if (!isFinite(n)) return 0; return Math.round(n * 100 + 1e-9) / 100; }
+
+  /* ── RATE CARD state (own key; the three default tiers are offered until
+        the user saves their own card) ── */
+  var rateCard = {
+    tiers: RC_DEFAULT_TIERS.map(function (t) { return { name: t.name, rate: t.rate }; }),
+    matMode: 'cost', matPct: '', feePct: '', feeLabel: 'Contractor Fee'
+  };
+  function rateCardStored() { return !!storageGet(RATE_KEY); }
+  function loadRateCard() {
+    var raw = storageGet(RATE_KEY);
+    if (!raw) return;
+    try {
+      var p = JSON.parse(raw);
+      if (p && typeof p === 'object') {
+        rateCard.tiers = Array.isArray(p.tiers)
+          ? p.tiers.slice(0, RC_TIER_CAP).map(function (t) {
+              return {
+                name: (t && typeof t.name === 'string') ? t.name : '',
+                rate: (t && t.rate !== '' && t.rate !== null && t.rate !== undefined && isFinite(parseFloat(t.rate))) ? num(t.rate) : ''
+              };
+            })
+          : [];
+        rateCard.matMode  = p.matMode === 'plus' ? 'plus' : 'cost';
+        rateCard.matPct   = (p.matPct === '' || p.matPct === null || p.matPct === undefined) ? '' : num(p.matPct);
+        rateCard.feePct   = (p.feePct === '' || p.feePct === null || p.feePct === undefined) ? '' : num(p.feePct);
+        rateCard.feeLabel = (typeof p.feeLabel === 'string' && p.feeLabel.length) ? p.feeLabel : 'Contractor Fee';
+      }
+    } catch (e) {}
+  }
+  function persistRateCard() { return storageSet(RATE_KEY, JSON.stringify(rateCard)); }
+
+  /* ── RATE CARD panel wiring ── */
+  var rcTiersEl    = document.getElementById('rcTiers');
+  var rcAddTierBtn = document.getElementById('rcAddTier');
+  var rcMatCost    = document.getElementById('rcMatCost');
+  var rcMatPlus    = document.getElementById('rcMatPlus');
+  var rcMatPct     = document.getElementById('rcMatPct');
+  var rcFeePct     = document.getElementById('rcFeePct');
+  var rcFeeLabelEl = document.getElementById('rcFeeLabel');
+  var rcMarkupView = document.getElementById('rcMarkupView');
+  var rcTaxView    = document.getElementById('rcTaxView');
+
+  /* Read-only view of the fixed-price CO's existing markup/tax — surfaced by
+     reference; their storage and PDF code are untouched. */
+  function renderRateMeta() {
+    rcMarkupView.textContent = num(markupInput.value) + '%';
+    var tv = parseFloat(setTax.value);
+    rcTaxView.textContent = (isFinite(tv) ? tv : 0) + '%';
+  }
+  function renderRateCardPanel() {
+    rcTiersEl.innerHTML = '';
+    rateCard.tiers.forEach(function (t, i) {
+      var row = document.createElement('div');
+      row.className = 'rcTierRow';
+      row.setAttribute('data-idx', String(i));
+      row.innerHTML =
+        '<div style="display:flex;gap:8px;align-items:center;">' +
+          '<input type="text" data-field="name" placeholder="Tier name (e.g., Carpenter)" style="flex:1;min-width:0;" ' +
+            'class="h-12 px-3 text-base font-semibold rounded-lg bg-ink border-2 border-slateline text-white" />' +
+          '<div class="relative" style="flex:none;width:118px;">' +
+            '<input type="number" data-field="rate" inputmode="decimal" min="0" step="any" placeholder="Rate" ' +
+              'class="w-full h-12 px-2 pr-9 text-base font-extrabold rounded-lg bg-ink border-2 border-slateline text-white text-right" />' +
+            '<span class="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 text-[10px] font-bold">$/hr</span>' +
+          '</div>' +
+          '<button type="button" data-action="del" aria-label="Remove tier" style="flex:none;width:48px;height:48px;" ' +
+            'class="rounded-lg border-2 border-slateline text-slate-400 text-xl font-extrabold active:border-red-500 active:text-red-400">✕</button>' +
+        '</div>';
+      row.querySelector('[data-field="name"]').value = t.name;
+      row.querySelector('[data-field="rate"]').value = t.rate;
+      rcTiersEl.appendChild(row);
+    });
+    rcAddTierBtn.style.display = rateCard.tiers.length >= RC_TIER_CAP ? 'none' : '';
+    rcMatCost.checked = rateCard.matMode !== 'plus';
+    rcMatPlus.checked = rateCard.matMode === 'plus';
+    rcMatPct.value    = rateCard.matPct;
+    rcFeePct.value    = rateCard.feePct;
+    rcFeeLabelEl.value = rateCard.feeLabel === 'Contractor Fee' ? '' : rateCard.feeLabel;
+    renderRateMeta();
+  }
+  rcTiersEl.addEventListener('input', function (e) {
+    var row = e.target.closest('.rcTierRow'); if (!row) return;
+    var i = parseInt(row.getAttribute('data-idx'), 10);
+    if (!rateCard.tiers[i]) return;
+    var f = e.target.getAttribute('data-field');
+    if (f === 'name') rateCard.tiers[i].name = e.target.value;
+    if (f === 'rate') rateCard.tiers[i].rate = e.target.value === '' ? '' : num(e.target.value);
+    persistRateCard();
+  });
+  rcTiersEl.addEventListener('click', function (e) {
+    var del = e.target.closest('[data-action="del"]'); if (!del) return;
+    var row = del.closest('.rcTierRow');
+    var i = parseInt(row.getAttribute('data-idx'), 10);
+    rateCard.tiers.splice(i, 1);
+    persistRateCard(); renderRateCardPanel();
+  });
+  rcAddTierBtn.addEventListener('click', function () {
+    if (rateCard.tiers.length >= RC_TIER_CAP) return;
+    rateCard.tiers.push({ name: '', rate: '' });
+    persistRateCard(); renderRateCardPanel();
+    var rows = rcTiersEl.querySelectorAll('.rcTierRow');
+    if (rows.length) rows[rows.length - 1].querySelector('[data-field="name"]').focus();
+  });
+  rcMatCost.addEventListener('change', function () { if (rcMatCost.checked) { rateCard.matMode = 'cost'; persistRateCard(); } });
+  rcMatPlus.addEventListener('change', function () { if (rcMatPlus.checked) { rateCard.matMode = 'plus'; persistRateCard(); } });
+  rcMatPct.addEventListener('focus', function () {
+    if (!rcMatPlus.checked) { rcMatPlus.checked = true; rcMatCost.checked = false; rateCard.matMode = 'plus'; persistRateCard(); }
+  });
+  rcMatPct.addEventListener('input', function () {
+    rateCard.matPct = rcMatPct.value === '' ? '' : Math.max(0, Math.min(100, num(rcMatPct.value)));
+    persistRateCard();
+  });
+  rcFeePct.addEventListener('input', function () {
+    rateCard.feePct = rcFeePct.value === '' ? '' : Math.max(0, Math.min(100, num(rcFeePct.value)));
+    persistRateCard();
+  });
+  rcFeeLabelEl.addEventListener('input', function () {
+    rateCard.feeLabel = rcFeeLabelEl.value.trim() || 'Contractor Fee';
+    persistRateCard();
+  });
+  markupInput.addEventListener('input', renderRateMeta);
+  setTax.addEventListener('input', renderRateMeta);
+
+  /* ── CO TYPE + per-CO T&M state ── */
+  var coType = 'fixed';
+  var TM = {
+    seeded: false,          /* rate sheet filled from the Rate Card for this CO yet? */
+    mode: 'auth',           /* 'auth' (stage 1) | 'bill' (stage 2) */
+    stage: 'auth',          /* recorded stage: 'auth' | 'billed' */
+    offer: false,           /* show the COMPLETE THE BILL card */
+    tiers: [],              /* [{name, rate, included}] — this CO's signed rate sheet */
+    matTermOn: false, matMode: 'cost', matPct: 0,
+    feePct: 0, feeLabel: 'Contractor Fee', feeWaived: false,
+    estMode: 'estimate', taxPct: 0,
+    authSig: null           /* {signed, client, contractor} stashed while billing */
+  };
+
+  var typeFixedBtn   = document.getElementById('typeFixedBtn');
+  var typeTMBtn      = document.getElementById('typeTMBtn');
+  var fixedPricingEl = document.getElementById('fixedPricingSection');
+  var tmAuthSection  = document.getElementById('tmAuthSection');
+  var tmBillOffer    = document.getElementById('tmBillOffer');
+  var tmBillSection  = document.getElementById('tmBillSection');
+  var tmTierListEl   = document.getElementById('tmTierList');
+  var tmAddTierBtn   = document.getElementById('tmAddTierBtn');
+  var tmMatTermOut   = document.getElementById('tmMatTermOut');
+  var tmMatTermNote  = document.getElementById('tmMatTermNote');
+  var tmFeeWrap      = document.getElementById('tmFeeWrap');
+  var tmFeeOut       = document.getElementById('tmFeeOut');
+  var tmFeeWaiveBtn  = document.getElementById('tmFeeWaiveBtn');
+  var tmEstAmount    = document.getElementById('tmEstAmount');
+  var tmEstModeEstimate = document.getElementById('tmEstModeEstimate');
+  var tmEstModeNte   = document.getElementById('tmEstModeNte');
+  var tmLaborRowsEl  = document.getElementById('tmLaborRows');
+  var tmMatRowsEl    = document.getElementById('tmMatRows');
+  var tmLaborOut     = document.getElementById('tmLaborOut');
+  var tmMatOut       = document.getElementById('tmMatOut');
+  var tmMatMarkupRow = document.getElementById('tmMatMarkupRow');
+  var tmMatMarkupLabel = document.getElementById('tmMatMarkupLabel');
+  var tmMatMarkupOut = document.getElementById('tmMatMarkupOut');
+  var tmSubtotalOut  = document.getElementById('tmSubtotalOut');
+  var tmFeeRow       = document.getElementById('tmFeeRow');
+  var tmFeeRowLabel  = document.getElementById('tmFeeRowLabel');
+  var tmFeeAmtOut    = document.getElementById('tmFeeAmtOut');
+  var tmTaxRowLabel  = document.getElementById('tmTaxRowLabel');
+  var tmTaxOut       = document.getElementById('tmTaxOut');
+  var tmGrandOut     = document.getElementById('tmGrandOut');
+  var daysRowEl      = document.getElementById('daysRow');
+  var daysNoteEl     = document.getElementById('daysNote');
+  var workDaysWrapEl = document.getElementById('workDaysWrap');
+  var workDaysInput  = document.getElementById('workDaysInput');
+  var ackTextEl      = document.getElementById('ackText');
+  var tmSigNoteEl    = document.getElementById('tmSigNote');
+  var tmPdfBtn       = document.getElementById('pdfBtn');
+
+  var PDF_BTN_FIXED_HTML = tmPdfBtn.innerHTML;
+  var FIXED_ACK_TEXT = ackTextEl.textContent;
+  var TM_ACK_AUTH = 'By signing below, the Client authorizes the work described in this Change Order at the hourly rates and terms shown above. Hours and materials are tallied on the final bill, and this Change Order becomes part of the original construction agreement.';
+  var TM_ACK_BILL = 'By signing below, the Client acknowledges this final bill: actual hours by tier and materials receipts, tallied under the signed authorization for this Change Order.';
+
+  function seedTMFromRateCard() {
+    TM.tiers = (rateCard.tiers.length ? rateCard.tiers : RC_DEFAULT_TIERS).map(function (t) {
+      return { name: t.name, rate: t.rate, included: true };
+    });
+    TM.matTermOn = rateCardStored();
+    TM.matMode = rateCard.matMode;
+    TM.matPct = num(rateCard.matPct);
+    TM.feePct = num(rateCard.feePct);
+    TM.feeLabel = rateCard.feeLabel || 'Contractor Fee';
+    TM.feeWaived = false;
+    TM.estMode = 'estimate';
+    TM.taxPct = settings.taxRate || 0;
+    TM.mode = 'auth'; TM.stage = 'auth'; TM.offer = false; TM.authSig = null;
+    tmEstAmount.value = '';
+    tmLaborRowsEl.innerHTML = ''; tmMatRowsEl.innerHTML = '';
+  }
+
+  /* ── T&M rate sheet (authorization) ── */
+  function renderTMTiers() {
+    tmTierListEl.innerHTML = '';
+    TM.tiers.forEach(function (t, i) {
+      var row = document.createElement('div');
+      row.className = 'tmTierRow bg-ink rounded-xl border-2 border-slateline p-3';
+      row.setAttribute('data-idx', String(i));
+      row.innerHTML =
+        '<div style="display:flex;gap:8px;align-items:center;">' +
+          '<input type="checkbox" data-field="inc" aria-label="Use this tier on this change order" ' +
+            'style="flex:none;width:24px;height:24px;" class="accent-orange-500" />' +
+          '<input type="text" data-field="name" placeholder="Tier name" style="flex:1;min-width:0;" ' +
+            'class="h-12 px-3 text-base font-semibold rounded-lg bg-slatecard border-2 border-slateline text-white" />' +
+          '<div class="relative" style="flex:none;width:118px;">' +
+            '<input type="number" data-field="rate" inputmode="decimal" min="0" step="any" placeholder="Rate" ' +
+              'class="w-full h-12 px-2 pr-9 text-base font-extrabold rounded-lg bg-slatecard border-2 border-slateline text-white text-right" />' +
+            '<span class="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 text-[10px] font-bold">$/hr</span>' +
+          '</div>' +
+        '</div>';
+      row.querySelector('[data-field="inc"]').checked = t.included !== false;
+      row.querySelector('[data-field="name"]').value = t.name;
+      row.querySelector('[data-field="rate"]').value = t.rate;
+      tmTierListEl.appendChild(row);
+    });
+    tmAddTierBtn.style.display = TM.tiers.length >= RC_TIER_CAP ? 'none' : '';
+    refreshTMLaborSelects();
+  }
+  tmTierListEl.addEventListener('input', function (e) {
+    var row = e.target.closest('.tmTierRow'); if (!row) return;
+    var i = parseInt(row.getAttribute('data-idx'), 10);
+    if (!TM.tiers[i]) return;
+    var f = e.target.getAttribute('data-field');
+    if (f === 'name') TM.tiers[i].name = e.target.value;
+    if (f === 'rate') TM.tiers[i].rate = e.target.value === '' ? '' : num(e.target.value);
+    if (f === 'inc')  TM.tiers[i].included = e.target.checked;
+    refreshTMLaborSelects();
+  });
+  tmAddTierBtn.addEventListener('click', function () {
+    if (TM.tiers.length >= RC_TIER_CAP) return;
+    TM.tiers.push({ name: '', rate: '', included: true });
+    renderTMTiers();
+    var rows = tmTierListEl.querySelectorAll('.tmTierRow');
+    if (rows.length) rows[rows.length - 1].querySelector('[data-field="name"]').focus();
+  });
+
+  function renderTMTerms() {
+    if (TM.matTermOn) {
+      tmMatTermOut.textContent = TM.matMode === 'plus'
+        ? 'Cost + ' + TM.matPct + '% — receipts provided'
+        : 'At cost — receipts provided';
+      tmMatTermNote.textContent = 'Prints as a signed term on the authorization. Set it in the Rate Card in Business Settings.';
+    } else {
+      tmMatTermOut.textContent = 'Receipts tallied on the final bill';
+      tmMatTermNote.textContent = 'Fill in the Rate Card in Business Settings to print a materials term on the authorization.';
+    }
+    if (num(TM.feePct) > 0) {
+      tmFeeWrap.classList.remove('hidden');
+      tmFeeOut.textContent = TM.feeLabel + ': ' + TM.feePct + '% of total' + (TM.feeWaived ? ' — waived on this CO' : '');
+      tmFeeWaiveBtn.textContent = TM.feeWaived ? 'INCLUDE' : 'WAIVE';
+    } else {
+      tmFeeWrap.classList.add('hidden');
+    }
+  }
+  tmFeeWaiveBtn.addEventListener('click', function () {
+    TM.feeWaived = !TM.feeWaived;
+    renderTMTerms(); recalcTM();
+  });
+  function renderTMEst() {
+    tmEstModeEstimate.checked = TM.estMode !== 'nte';
+    tmEstModeNte.checked = TM.estMode === 'nte';
+  }
+  tmEstModeEstimate.addEventListener('change', function () { if (tmEstModeEstimate.checked) TM.estMode = 'estimate'; });
+  tmEstModeNte.addEventListener('change', function () { if (tmEstModeNte.checked) TM.estMode = 'nte'; });
+
+  /* ── T&M final-bill entry grid ── */
+  function includedTiers() {
+    var out = [];
+    TM.tiers.forEach(function (t, i) {
+      if (t.included !== false && (t.name || num(t.rate) > 0)) out.push({ idx: i, name: t.name || 'Labor', rate: num(t.rate) });
+    });
+    if (!out.length) TM.tiers.forEach(function (t, i) { out.push({ idx: i, name: t.name || 'Labor', rate: num(t.rate) }); });
+    return out;
+  }
+  function fillTierSelect(sel, wantName) {
+    var opts = includedTiers();
+    sel.innerHTML = '';
+    opts.forEach(function (o) {
+      var op = document.createElement('option');
+      op.value = String(o.idx);
+      op.textContent = o.name + (o.rate > 0 ? ' — ' + fmt(o.rate) + '/hr' : '');
+      sel.appendChild(op);
+    });
+    if (wantName) {
+      for (var i = 0; i < sel.options.length; i++) {
+        var oi = parseInt(sel.options[i].value, 10);
+        if (TM.tiers[oi] && TM.tiers[oi].name === wantName) { sel.selectedIndex = i; break; }
+      }
+    }
+  }
+  function refreshTMLaborSelects() {
+    var sels = tmLaborRowsEl.querySelectorAll('[data-field="tier"]');
+    for (var i = 0; i < sels.length; i++) {
+      var cur = parseInt(sels[i].value, 10);
+      var curName = (TM.tiers[cur] && TM.tiers[cur].name) || null;
+      fillTierSelect(sels[i], curName);
+    }
+    recalcTM();
+  }
+  function addTMLaborRow(tierName, hours, note) {
+    var row = document.createElement('div');
+    row.className = 'tmLaborRow bg-ink rounded-xl border-2 border-slateline p-3';
+    row.innerHTML =
+      '<div style="display:flex;gap:8px;align-items:center;">' +
+        '<select data-field="tier" style="flex:1;min-width:0;" ' +
+          'class="h-12 px-3 text-base font-semibold rounded-lg bg-slatecard border-2 border-slateline text-white"></select>' +
+        '<button type="button" data-action="del" aria-label="Remove labor row" style="flex:none;width:48px;height:48px;" ' +
+          'class="rounded-lg border-2 border-slateline text-slate-400 text-xl font-extrabold active:border-red-500 active:text-red-400">✕</button>' +
+      '</div>' +
+      '<input type="text" data-field="note" placeholder="Task (e.g., demo and reframe)" ' +
+        'class="w-full h-12 px-3 mt-2 text-base font-semibold rounded-lg bg-slatecard border-2 border-slateline text-white" />' +
+      '<div class="grid grid-cols-3 gap-2 mt-2 items-end">' +
+        '<div>' +
+          '<label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">Hours</label>' +
+          '<input type="number" data-field="hours" inputmode="decimal" min="0" step="any" placeholder="0" ' +
+            'class="w-full h-14 px-3 text-lg font-extrabold rounded-lg bg-slatecard border-2 border-slateline text-white text-center" />' +
+        '</div>' +
+        '<div class="text-center pb-1">' +
+          '<span class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">Rate</span>' +
+          '<span data-field="rateOut" class="text-base font-extrabold text-slate-300 tabular-nums">—</span>' +
+        '</div>' +
+        '<div class="text-right pb-1">' +
+          '<span class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">Amount</span>' +
+          '<span data-field="amt" class="text-xl font-black text-blueprintsoft tabular-nums">$0.00</span>' +
+        '</div>' +
+      '</div>';
+    tmLaborRowsEl.appendChild(row);
+    fillTierSelect(row.querySelector('[data-field="tier"]'), typeof tierName === 'string' ? tierName : null);
+    if (typeof note === 'string') row.querySelector('[data-field="note"]').value = note;
+    if (hours !== undefined && hours !== null && hours !== '') row.querySelector('[data-field="hours"]').value = hours;
+    recalcTM();
+  }
+  function addTMMatRow(desc, amount) {
+    var row = document.createElement('div');
+    row.className = 'tmMatRow bg-ink rounded-xl border-2 border-slateline p-3';
+    row.innerHTML =
+      '<div style="display:flex;gap:8px;align-items:center;">' +
+        '<input type="text" data-field="desc" placeholder="Receipt (e.g., Lumber — supply house)" style="flex:1;min-width:0;" ' +
+          'class="h-12 px-3 text-base font-semibold rounded-lg bg-slatecard border-2 border-slateline text-white" />' +
+        '<div class="relative" style="flex:none;width:118px;">' +
+          '<span class="absolute left-2 top-1/2 -translate-y-1/2 text-slate-400 text-sm font-bold">$</span>' +
+          '<input type="number" data-field="amount" inputmode="decimal" min="0" step="any" placeholder="0.00" ' +
+            'class="w-full h-12 pl-6 pr-2 text-base font-extrabold rounded-lg bg-slatecard border-2 border-slateline text-white text-right" />' +
+        '</div>' +
+        '<button type="button" data-action="del" aria-label="Remove receipt row" style="flex:none;width:48px;height:48px;" ' +
+          'class="rounded-lg border-2 border-slateline text-slate-400 text-xl font-extrabold active:border-red-500 active:text-red-400">✕</button>' +
+      '</div>';
+    tmMatRowsEl.appendChild(row);
+    if (typeof desc === 'string') row.querySelector('[data-field="desc"]').value = desc;
+    if (amount !== undefined && amount !== null && amount !== '' && num(amount) > 0) row.querySelector('[data-field="amount"]').value = amount;
+    recalcTM();
+  }
+  document.getElementById('tmAddLaborBtn').addEventListener('click', function () {
+    addTMLaborRow();
+    var rows = tmLaborRowsEl.querySelectorAll('.tmLaborRow');
+    if (rows.length) rows[rows.length - 1].querySelector('[data-field="hours"]').focus();
+  });
+  document.getElementById('tmAddMatBtn').addEventListener('click', function () {
+    addTMMatRow();
+    var rows = tmMatRowsEl.querySelectorAll('.tmMatRow');
+    if (rows.length) rows[rows.length - 1].querySelector('[data-field="desc"]').focus();
+  });
+  tmLaborRowsEl.addEventListener('input', recalcTM);
+  tmLaborRowsEl.addEventListener('change', recalcTM);
+  tmLaborRowsEl.addEventListener('click', function (e) {
+    var del = e.target.closest('[data-action="del"]');
+    if (del) { del.closest('.tmLaborRow').remove(); recalcTM(); }
+  });
+  tmMatRowsEl.addEventListener('input', recalcTM);
+  tmMatRowsEl.addEventListener('click', function (e) {
+    var del = e.target.closest('[data-action="del"]');
+    if (del) { del.closest('.tmMatRow').remove(); recalcTM(); }
+  });
+
+  /* ── T&M math — exact to the penny at every step ── */
+  function computeTMBill() {
+    var laborRows = [];
+    var rows = tmLaborRowsEl.querySelectorAll('.tmLaborRow');
+    for (var i = 0; i < rows.length; i++) {
+      var row = rows[i];
+      var sel = row.querySelector('[data-field="tier"]');
+      var idx = parseInt(sel.value, 10);
+      var tier = (isFinite(idx) && TM.tiers[idx]) ? TM.tiers[idx] : { name: 'Labor', rate: 0 };
+      var hours = num(row.querySelector('[data-field="hours"]').value);
+      var rate = num(tier.rate);
+      var amount = r2(hours * rate);
+      row.querySelector('[data-field="rateOut"]').textContent = rate > 0 ? fmt(rate) + '/hr' : '—';
+      row.querySelector('[data-field="amt"]').textContent = fmt(amount);
+      laborRows.push({ tier: tier.name || 'Labor', rate: rate, hours: hours, note: row.querySelector('[data-field="note"]').value.trim(), amount: amount });
+    }
+    var laborTotal = r2(laborRows.reduce(function (s, l) { return s + l.amount; }, 0));
+    var matRows = [];
+    var mrows = tmMatRowsEl.querySelectorAll('.tmMatRow');
+    for (var j = 0; j < mrows.length; j++) {
+      var mr = mrows[j];
+      matRows.push({
+        desc: mr.querySelector('[data-field="desc"]').value.trim(),
+        amount: r2(num(mr.querySelector('[data-field="amount"]').value))
+      });
+    }
+    var matBase = r2(matRows.reduce(function (s, m) { return s + m.amount; }, 0));
+    var matPct = (TM.matTermOn && TM.matMode === 'plus') ? num(TM.matPct) : 0;
+    var matMarkup = r2(matBase * matPct / 100);
+    var subtotal = r2(laborTotal + matBase + matMarkup);
+    var feePct = (!TM.feeWaived && num(TM.feePct) > 0) ? num(TM.feePct) : 0;
+    var fee = r2(subtotal * feePct / 100);
+    var taxPct = Math.max(0, num(TM.taxPct));
+    var tax = r2((subtotal + fee) * taxPct / 100);
+    var total = r2(subtotal + fee + tax);
+    return { laborRows: laborRows, laborTotal: laborTotal, matRows: matRows, matBase: matBase, matPct: matPct, matMarkup: matMarkup, subtotal: subtotal, feePct: feePct, fee: fee, taxPct: taxPct, tax: tax, total: total };
+  }
+  function recalcTM() {
+    var b = computeTMBill();
+    tmLaborOut.textContent = fmt(b.laborTotal);
+    tmMatOut.textContent = fmt(b.matBase);
+    if (b.matPct > 0) {
+      tmMatMarkupRow.style.display = '';
+      tmMatMarkupLabel.textContent = 'Materials + ' + b.matPct + '%';
+      tmMatMarkupOut.textContent = fmt(b.matMarkup);
+    } else { tmMatMarkupRow.style.display = 'none'; }
+    tmSubtotalOut.textContent = fmt(b.subtotal);
+    if (b.feePct > 0) {
+      tmFeeRow.style.display = '';
+      tmFeeRowLabel.textContent = TM.feeLabel + ' (' + b.feePct + '%)';
+      tmFeeAmtOut.textContent = fmt(b.fee);
+    } else { tmFeeRow.style.display = 'none'; }
+    tmTaxRowLabel.textContent = 'Tax (' + b.taxPct + '%)';
+    tmTaxOut.textContent = fmt(b.tax);
+    tmGrandOut.textContent = fmt(b.total);
+    return b;
+  }
+
+  /* ── Flow visibility + status pill ── */
+  function typeBtnClass(on) {
+    return on
+      ? 'h-16 rounded-xl bg-safety text-ink font-extrabold text-sm tracking-wide leading-tight border-2 border-safety'
+      : 'h-16 rounded-xl bg-ink border-2 border-slateline text-slate-300 font-extrabold text-sm tracking-wide leading-tight active:border-safety active:text-safety';
+  }
+  function setStatusTM() {
+    var signedNow = !clientPad.isEmpty();
+    var label, cls;
+    if (TM.mode === 'bill') {
+      label = signedNow ? 'BILLED' : 'FINAL BILL';
+      cls = signedNow
+        ? 'shrink-0 px-4 py-2 rounded-full text-sm font-extrabold tracking-wide bg-green-500/20 text-green-400 border-2 border-green-400'
+        : 'shrink-0 px-4 py-2 rounded-full text-sm font-extrabold tracking-wide bg-safety/20 text-safety border-2 border-safety';
+    } else {
+      label = signedNow ? 'AUTHORIZED' : 'DRAFT';
+      cls = signedNow
+        ? 'shrink-0 px-4 py-2 rounded-full text-sm font-extrabold tracking-wide bg-green-500/20 text-green-400 border-2 border-green-400'
+        : 'shrink-0 px-4 py-2 rounded-full text-sm font-extrabold tracking-wide bg-safety/20 text-safety border-2 border-safety';
+    }
+    statusPill.textContent = label;
+    statusPill.className = cls;
+  }
+  function updateFlowVisibility() {
+    var tm = coType === 'tm';
+    var bill = tm && TM.mode === 'bill';
+    typeFixedBtn.className = typeBtnClass(!tm);
+    typeTMBtn.className = typeBtnClass(tm);
+    fixedPricingEl.classList.toggle('hidden', tm);
+    tmAuthSection.classList.toggle('hidden', !tm);
+    tmBillSection.classList.toggle('hidden', !bill);
+    tmBillOffer.classList.toggle('hidden', !(tm && TM.mode === 'auth' && TM.offer));
+    daysRowEl.style.display = tm ? 'none' : '';
+    daysNoteEl.style.display = tm ? 'none' : '';
+    workDaysWrapEl.classList.toggle('hidden', !tm);
+    tmSigNoteEl.classList.toggle('hidden', !bill);
+    ackTextEl.textContent = tm ? (bill ? TM_ACK_BILL : TM_ACK_AUTH) : FIXED_ACK_TEXT;
+    tmPdfBtn.innerHTML = tm
+      ? (bill ? 'GENERATE PDF<br>FINAL BILL' : 'GENERATE PDF<br>AUTHORIZATION')
+      : PDF_BTN_FIXED_HTML;
+    syncStatus();
+  }
+  function setCoType(t) {
+    if (coType === t) { updateFlowVisibility(); return; }
+    coType = t;
+    if (t === 'tm' && !TM.seeded) {
+      seedTMFromRateCard(); TM.seeded = true;
+      renderTMTiers(); renderTMTerms(); renderTMEst(); recalcTM();
+    }
+    updateFlowVisibility();
+  }
+  typeFixedBtn.addEventListener('click', function () { setCoType('fixed'); });
+  typeTMBtn.addEventListener('click', function () { setCoType('tm'); });
+
+  /* ── Stage 2 entry ── */
+  function enterBillMode() {
+    TM.authSig = { signed: !clientPad.isEmpty(), client: clientPad.exportStrokes(), contractor: contractorPad.exportStrokes() };
+    TM.mode = 'bill';
+    TM.offer = false;
+    clientPad.clear(); contractorPad.clear();
+    if (!tmLaborRowsEl.children.length) addTMLaborRow();
+    updateFlowVisibility(); recalcTM();
+    tmBillSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+  document.getElementById('tmCompleteBillBtn').addEventListener('click', enterBillMode);
+
+  /* ── T&M records: snapshot / load ── */
+  function snapshotTM() {
+    var b = computeTMBill();
+    var authSigClient, authSigContractor, authSigned;
+    if (TM.mode === 'bill') {
+      authSigClient = TM.authSig ? TM.authSig.client : [];
+      authSigContractor = TM.authSig ? TM.authSig.contractor : [];
+      authSigned = TM.authSig ? !!TM.authSig.signed : false;
+    } else {
+      authSigClient = clientPad.exportStrokes();
+      authSigContractor = contractorPad.exportStrokes();
+      authSigned = !clientPad.isEmpty();
+    }
+    var est = num(tmEstAmount.value);
+    var stage = TM.mode === 'bill' ? 'billed' : 'auth';
+    return {
+      type: 'tm', tmStage: stage,
+      coNumber: currentCONumber(), datePretty: currentCODatePretty(),
+      savedAt: new Date().toISOString(),
+      client: document.getElementById('clientName').value.trim(),
+      jobAddress: document.getElementById('jobAddress').value.trim(),
+      description: descBox.value,
+      tiers: TM.tiers.map(function (t) { return { name: t.name, rate: t.rate, included: t.included !== false }; }),
+      matTermOn: TM.matTermOn, matMode: TM.matMode, matPct: num(TM.matPct),
+      feePct: num(TM.feePct), feeLabel: TM.feeLabel, feeWaived: !!TM.feeWaived,
+      estAmount: est, estMode: TM.estMode,
+      workDays: num(workDaysInput.value), taxPct: num(TM.taxPct),
+      signed: authSigned, sigClient: authSigClient, sigContractor: authSigContractor,
+      labor: b.laborRows.map(function (l) { return { tier: l.tier, rate: l.rate, hours: l.hours, note: l.note }; }),
+      materials: b.matRows.map(function (m) { return { desc: m.desc, amount: m.amount }; }),
+      billSigned: TM.mode === 'bill' ? !clientPad.isEmpty() : false,
+      sigBillClient: TM.mode === 'bill' ? clientPad.exportStrokes() : [],
+      sigBillContractor: TM.mode === 'bill' ? contractorPad.exportStrokes() : [],
+      grand: stage === 'billed' ? b.total : est
+    };
+  }
+  function loadTMFromLog(rec, asDuplicate) {
+    coType = 'tm'; TM.seeded = true;
+    document.getElementById('clientName').value = rec.client || '';
+    document.getElementById('jobAddress').value = rec.jobAddress || '';
+    descBox.value = rec.description || '';
+    TM.tiers = (Array.isArray(rec.tiers) && rec.tiers.length ? rec.tiers : RC_DEFAULT_TIERS).map(function (t) {
+      return {
+        name: (t && typeof t.name === 'string') ? t.name : '',
+        rate: (t && t.rate !== '' && t.rate !== null && t.rate !== undefined && isFinite(parseFloat(t.rate))) ? num(t.rate) : '',
+        included: !t || t.included !== false
+      };
+    });
+    TM.matTermOn = !!rec.matTermOn;
+    TM.matMode = rec.matMode === 'plus' ? 'plus' : 'cost';
+    TM.matPct = num(rec.matPct);
+    TM.feePct = num(rec.feePct);
+    TM.feeLabel = rec.feeLabel || 'Contractor Fee';
+    TM.feeWaived = asDuplicate ? false : !!rec.feeWaived;
+    TM.estMode = rec.estMode === 'nte' ? 'nte' : 'estimate';
+    tmEstAmount.value = (isFinite(rec.estAmount) && rec.estAmount > 0) ? rec.estAmount : '';
+    workDaysInput.value = (isFinite(rec.workDays) && rec.workDays > 0) ? rec.workDays : '';
+    TM.taxPct = isFinite(rec.taxPct) ? rec.taxPct : (settings.taxRate || 0);
+    tmLaborRowsEl.innerHTML = ''; tmMatRowsEl.innerHTML = '';
+    TM.authSig = null; TM.offer = false;
+    renderTMTiers();
+    if (asDuplicate) {
+      coOverride = null; TM.mode = 'auth'; TM.stage = 'auth';
+      clientPad.clear(); contractorPad.clear();
+    } else {
+      coOverride = { number: rec.coNumber, datePretty: rec.datePretty || todayPretty() };
+      if (rec.tmStage === 'billed') {
+        TM.mode = 'bill'; TM.stage = 'billed';
+        TM.authSig = { signed: !!rec.signed, client: rec.sigClient || [], contractor: rec.sigContractor || [] };
+        (Array.isArray(rec.labor) ? rec.labor : []).forEach(function (l) { addTMLaborRow(l.tier, l.hours, l.note); });
+        (Array.isArray(rec.materials) ? rec.materials : []).forEach(function (m) { addTMMatRow(m.desc, m.amount); });
+        clientPad.loadStrokes(rec.sigBillClient || []);
+        contractorPad.loadStrokes(rec.sigBillContractor || []);
+      } else {
+        TM.mode = 'auth'; TM.stage = 'auth';
+        clientPad.loadStrokes(rec.sigClient || []);
+        contractorPad.loadStrokes(rec.sigContractor || []);
+        TM.offer = !!rec.signed;
+      }
+    }
+    renderTMTerms(); renderTMEst(); recalcTM();
+    refreshHeader(); updateFlowVisibility();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  /* ── T&M PDFs ── */
+  function fitTitleSize(doc, text, maxW, startSize, minSize) {
+    var s = startSize; doc.setFontSize(s);
+    while (s > minSize && doc.getTextWidth(text) > maxW) { s -= 0.5; doc.setFontSize(s); }
+    return s;
+  }
+  function tmDocStart(jsPDFCtor, titleFull, shortTitle, stageLabel, statusText) {
+    var doc = new jsPDFCtor({ unit: 'pt', format: 'letter' });
+    var pageW = doc.internal.pageSize.getWidth();
+    var pageH = doc.internal.pageSize.getHeight();
+    var margin = 48, contentW = pageW - margin * 2, y = 0;
+    var C = { INK: [15,23,42], GRAY: [100,116,139], LIGHT: [241,245,249], BLUE: [30,58,138], ORANGE: [234,88,12], LINE: [203,213,225] };
+    var brand = activeBrandStyle();
+    var companyName = settings.companyName || 'Contractor';
+    var contactBits = [];
+    if (settings.phone) contactBits.push(settings.phone);
+    if (settings.email) contactBits.push(settings.email);
+    if (brand) {
+      y = drawBrandHeader(doc, pageW, margin, brand, {
+        companyName: companyName,
+        contactLine: contactBits.length ? contactBits.join('   ·   ') : '',
+        docTitle: shortTitle,
+        docNumber: currentCONumber(),
+        metaLines: [currentCODatePretty(), stageLabel, 'Status: ' + statusText],
+        logo: (settings.logo && settings.logo.dataUrl) ? settings.logo : null
+      });
+      doc.setFont('helvetica','bold');
+      fitTitleSize(doc, titleFull, contentW, 11, 8);
+      doc.setTextColor(brand.accWhite[0], brand.accWhite[1], brand.accWhite[2]);
+      doc.text(titleFull, margin, y);
+      y += 18;
+    } else {
+      doc.setFillColor(C.INK[0],C.INK[1],C.INK[2]); doc.rect(0, 0, pageW, 96, 'F');
+      doc.setFillColor(C.ORANGE[0],C.ORANGE[1],C.ORANGE[2]); doc.rect(0, 96, pageW, 4, 'F');
+      var textX = margin;
+      if (isPro() && settings.logo && settings.logo.dataUrl) {
+        var maxLogoH = 56, maxLogoW = 120;
+        var ratio = settings.logo.w / settings.logo.h;
+        var lh = maxLogoH, lw = lh * ratio;
+        if (lw > maxLogoW) { lw = maxLogoW; lh = lw / ratio; }
+        var chipPad = 6;
+        doc.setFillColor(255,255,255);
+        if (typeof doc.roundedRect === 'function') { doc.roundedRect(margin, 48-lh/2-chipPad, lw+chipPad*2, lh+chipPad*2, 6, 6, 'F'); }
+        else { doc.rect(margin, 48-lh/2-chipPad, lw+chipPad*2, lh+chipPad*2, 'F'); }
+        try { doc.addImage(settings.logo.dataUrl, 'PNG', margin+chipPad, 48-lh/2, lw, lh); } catch (imgErr) {}
+        textX = margin + lw + chipPad*2 + 16;
+      }
+      doc.setTextColor(255,255,255); doc.setFont('helvetica','bold');
+      fitTitleSize(doc, titleFull, pageW - textX - margin - 150, 15, 9);
+      doc.text(titleFull, textX, 38);
+      doc.setFontSize(10); doc.setTextColor(147,197,253);
+      doc.text(companyName.toUpperCase(), textX, 56);
+      if (contactBits.length) { doc.setTextColor(203,213,225); doc.setFont('helvetica','normal'); doc.text(contactBits.join('   ·   '), textX, 71); }
+      doc.setFont('helvetica','bold'); doc.setFontSize(13); doc.setTextColor(249,115,22);
+      doc.text(currentCONumber(), pageW-margin, 38, { align: 'right' });
+      doc.setFont('helvetica','normal'); doc.setFontSize(10); doc.setTextColor(203,213,225);
+      doc.text(currentCODatePretty(), pageW-margin, 54, { align: 'right' });
+      doc.text('Status: ' + statusText, pageW-margin, 68, { align: 'right' });
+      y = 124;
+    }
+    return { doc: doc, pageW: pageW, pageH: pageH, margin: margin, contentW: contentW, y: y, C: C, brand: brand, companyName: companyName };
+  }
+  function tmFooterAndWatermark(doc, pageW, pageH, margin, GRAY, showDraft) {
+    if (showDraft) {
+      var wmPages = doc.internal.getNumberOfPages();
+      for (var wp = 1; wp <= wmPages; wp++) {
+        doc.setPage(wp); doc.setFont('helvetica','bold'); doc.setFontSize(54); doc.setTextColor(226,232,240);
+        doc.text('DRAFT — NOT EXECUTED', pageW/2, pageH/2, { align: 'center', angle: 35 });
+      }
+    }
+    var totalPages = doc.internal.getNumberOfPages();
+    var footerBrand = settings.companyName || 'Digital Foreman Suite';
+    var pro = isPro();
+    for (var pg = 1; pg <= totalPages; pg++) {
+      doc.setPage(pg); doc.setFont('helvetica','normal'); doc.setFontSize(8); doc.setTextColor(GRAY[0],GRAY[1],GRAY[2]);
+      doc.text(currentCONumber() + '  ·  ' + footerBrand, margin, pageH-24);
+      if (!pro) { doc.text('Created with the free change order app for contractors · digitalforemansuite.com', margin, pageH-13); }
+      doc.text('Page ' + pg + ' of ' + totalPages, pageW-margin, pageH-24, { align: 'right' });
+    }
+  }
+  function buildTMAuthPdf(jsPDFCtor) {
+    var authSigned = !clientPad.isEmpty();
+    var s = tmDocStart(jsPDFCtor, 'TIME & MATERIALS CHANGE ORDER — AUTHORIZATION', 'T&M CHANGE ORDER', 'Authorization', authSigned ? 'AUTHORIZED' : 'DRAFT');
+    var doc = s.doc, pageW = s.pageW, pageH = s.pageH, margin = s.margin, contentW = s.contentW, y = s.y, C = s.C, brand = s.brand;
+    function newPage() { doc.addPage(); y = margin; }
+    function ensureSpace(need) { if (y + need > pageH - margin - 20) newPage(); }
+    function hrLine() { doc.setDrawColor(C.LINE[0],C.LINE[1],C.LINE[2]); doc.setLineWidth(0.75); doc.line(margin, y, pageW-margin, y); }
+    var SECT = brand ? brand.accWhite : C.BLUE;
+    var clientName = document.getElementById('clientName').value.trim() || 'Client';
+    var jobAddress = document.getElementById('jobAddress').value.trim();
+
+    /* Parties */
+    var colW = contentW/2 - 10;
+    doc.setFont('helvetica','bold'); doc.setFontSize(8.5); doc.setTextColor(C.GRAY[0],C.GRAY[1],C.GRAY[2]);
+    doc.text('CLIENT', margin, y); doc.text('JOB SITE', margin+colW+20, y); y += 14;
+    doc.setFont('helvetica','bold'); doc.setFontSize(11); doc.setTextColor(C.INK[0],C.INK[1],C.INK[2]);
+    doc.text(clientName, margin, y);
+    var addrLines = doc.splitTextToSize(jobAddress || '—', colW);
+    doc.setFont('helvetica','normal'); doc.text(addrLines, margin+colW+20, y);
+    y += Math.max(16, addrLines.length*13+4); y += 8; hrLine(); y += 22;
+
+    /* Scope */
+    doc.setFont('helvetica','bold'); doc.setFontSize(8.5); doc.setTextColor(SECT[0],SECT[1],SECT[2]);
+    doc.text('DESCRIPTION OF WORK', margin, y); y += 14;
+    doc.setFont('helvetica','normal'); doc.setFontSize(10); doc.setTextColor(C.INK[0],C.INK[1],C.INK[2]);
+    var descLines = doc.splitTextToSize(descBox.value.trim() || 'No description provided.', contentW);
+    for (var d = 0; d < descLines.length; d++) { ensureSpace(14); doc.text(descLines[d], margin, y); y += 13; }
+    y += 14;
+
+    /* Rate sheet */
+    ensureSpace(48);
+    doc.setFont('helvetica','bold'); doc.setFontSize(8.5); doc.setTextColor(SECT[0],SECT[1],SECT[2]);
+    doc.text('RATE SHEET — SIGNED FOR THIS CHANGE ORDER', margin, y); y += 12;
+    doc.setFillColor(C.INK[0],C.INK[1],C.INK[2]); doc.rect(margin, y, contentW, 22, 'F');
+    doc.setFont('helvetica','bold'); doc.setFontSize(8.5); doc.setTextColor(255,255,255);
+    doc.text('LABOR TIER', margin+8, y+14.5);
+    doc.text('HOURLY RATE', margin+contentW-8, y+14.5, { align: 'right' });
+    y += 22;
+    doc.setFont('helvetica','normal'); doc.setFontSize(9.5); doc.setTextColor(C.INK[0],C.INK[1],C.INK[2]);
+    var sheet = includedTiers();
+    if (!sheet.length) {
+      ensureSpace(22); doc.setTextColor(C.GRAY[0],C.GRAY[1],C.GRAY[2]); doc.text('No labor tiers entered.', margin+8, y+14); y += 22;
+    } else {
+      sheet.forEach(function (t, idx) {
+        ensureSpace(22);
+        if (idx % 2 === 1) { doc.setFillColor(C.LIGHT[0],C.LIGHT[1],C.LIGHT[2]); doc.rect(margin, y, contentW, 22, 'F'); }
+        doc.setTextColor(C.INK[0],C.INK[1],C.INK[2]);
+        doc.text(t.name, margin+8, y+14);
+        doc.setFont('helvetica','bold');
+        doc.text(t.rate > 0 ? fmt(t.rate) + ' per hour' : '$ __________ per hour', margin+contentW-8, y+14, { align: 'right' });
+        doc.setFont('helvetica','normal');
+        y += 22;
+        doc.setDrawColor(C.LINE[0],C.LINE[1],C.LINE[2]); doc.setLineWidth(0.5); doc.line(margin, y, pageW-margin, y);
+      });
+    }
+    y += 18;
+
+    /* Terms */
+    var termLines = [];
+    if (TM.matTermOn) {
+      termLines.push(TM.matMode === 'plus'
+        ? 'Materials: cost + ' + TM.matPct + '%, receipts provided'
+        : 'Materials: at cost, receipts provided');
+    }
+    if (num(TM.feePct) > 0 && !TM.feeWaived) {
+      termLines.push(TM.feeLabel + ': ' + TM.feePct + '% of total, shown as its own line on the final bill');
+    }
+    termLines.push('Hours and materials are tallied on the final bill for this change order.');
+    var est = num(tmEstAmount.value);
+    if (est > 0) {
+      termLines.push(TM.estMode === 'nte'
+        ? 'Not to exceed: ' + fmt(est)
+        : 'Estimated total: ' + fmt(est) + ' (estimate only — final bill from actual hours and receipts)');
+    }
+    ensureSpace(20 + termLines.length * 14);
+    doc.setFont('helvetica','bold'); doc.setFontSize(8.5); doc.setTextColor(SECT[0],SECT[1],SECT[2]);
+    doc.text('TERMS', margin, y); y += 14;
+    doc.setFont('helvetica','normal'); doc.setFontSize(10); doc.setTextColor(C.INK[0],C.INK[1],C.INK[2]);
+    termLines.forEach(function (tl) {
+      var tls = doc.splitTextToSize('•  ' + tl, contentW);
+      for (var k = 0; k < tls.length; k++) { ensureSpace(14); doc.text(tls[k], margin, y); y += 13; }
+      y += 2;
+    });
+    y += 10;
+
+    /* Schedule */
+    var wd = num(workDaysInput.value);
+    if (wd > 0) {
+      ensureSpace(16);
+      doc.setFont('helvetica','normal'); doc.setFontSize(10); doc.setTextColor(C.INK[0],C.INK[1],C.INK[2]);
+      doc.text('Adds ' + wd + ' working day' + (wd===1?'':'s') + ' to the schedule.', margin, y);
+      y += 18;
+    }
+
+    /* Signatures */
+    ensureSpace(170); hrLine(); y += 18;
+    doc.setFont('helvetica','normal'); doc.setFontSize(8.5); doc.setTextColor(C.GRAY[0],C.GRAY[1],C.GRAY[2]);
+    var ackLines = doc.splitTextToSize(TM_ACK_AUTH, contentW);
+    doc.text(ackLines, margin, y); y += ackLines.length*11 + 16;
+    ensureSpace(120);
+    var sigW = contentW/2 - 16, sigH = 56, sigDate = new Date().toLocaleDateString('en-US');
+    function placeSig(pad, x, label, name) {
+      var exp = pad.exportForPDF();
+      if (exp) { var w=sigW, h=w/exp.ratio; if (h>sigH){h=sigH;w=h*exp.ratio;} doc.addImage(exp.dataUrl,'JPEG',x,y+(sigH-h),w,h); }
+      doc.setDrawColor(C.INK[0],C.INK[1],C.INK[2]); doc.setLineWidth(0.75); doc.line(x, y+sigH+6, x+sigW, y+sigH+6);
+      doc.setFont('helvetica','bold'); doc.setFontSize(8.5); doc.setTextColor(C.INK[0],C.INK[1],C.INK[2]); doc.text(label, x, y+sigH+18);
+      doc.setFont('helvetica','normal'); doc.setTextColor(C.GRAY[0],C.GRAY[1],C.GRAY[2]);
+      doc.text(name + (exp ? '  ·  Signed ' + sigDate : '  ·  Not signed'), x, y+sigH+29);
+    }
+    placeSig(clientPad,     margin,         'CLIENT SIGNATURE',     clientName);
+    placeSig(contractorPad, margin+sigW+32, 'CONTRACTOR SIGNATURE', s.companyName);
+    y += sigH + 44;
+
+    tmFooterAndWatermark(doc, pageW, pageH, margin, C.GRAY, !authSigned);
+    return doc;
+  }
+  function buildTMBillPdf(jsPDFCtor) {
+    var b = computeTMBill();
+    var billSigned = !clientPad.isEmpty();
+    var s = tmDocStart(jsPDFCtor, 'TIME & MATERIALS CHANGE ORDER — FINAL BILL', 'T&M CHANGE ORDER', 'Final Bill', billSigned ? 'BILLED' : 'DRAFT');
+    var doc = s.doc, pageW = s.pageW, pageH = s.pageH, margin = s.margin, contentW = s.contentW, y = s.y, C = s.C, brand = s.brand;
+    function newPage() { doc.addPage(); y = margin; }
+    function ensureSpace(need) { if (y + need > pageH - margin - 20) newPage(); }
+    function hrLine() { doc.setDrawColor(C.LINE[0],C.LINE[1],C.LINE[2]); doc.setLineWidth(0.75); doc.line(margin, y, pageW-margin, y); }
+    var SECT = brand ? brand.accWhite : C.BLUE;
+    var clientName = document.getElementById('clientName').value.trim() || 'Client';
+    var jobAddress = document.getElementById('jobAddress').value.trim();
+
+    /* Parties */
+    var colW = contentW/2 - 10;
+    doc.setFont('helvetica','bold'); doc.setFontSize(8.5); doc.setTextColor(C.GRAY[0],C.GRAY[1],C.GRAY[2]);
+    doc.text('CLIENT', margin, y); doc.text('JOB SITE', margin+colW+20, y); y += 14;
+    doc.setFont('helvetica','bold'); doc.setFontSize(11); doc.setTextColor(C.INK[0],C.INK[1],C.INK[2]);
+    doc.text(clientName, margin, y);
+    var addrLines = doc.splitTextToSize(jobAddress || '—', colW);
+    doc.setFont('helvetica','normal'); doc.text(addrLines, margin+colW+20, y);
+    y += Math.max(16, addrLines.length*13+4); y += 8; hrLine(); y += 22;
+
+    /* Scope reference */
+    doc.setFont('helvetica','bold'); doc.setFontSize(8.5); doc.setTextColor(SECT[0],SECT[1],SECT[2]);
+    doc.text('WORK PERFORMED (PER SIGNED AUTHORIZATION ' + currentCONumber() + ')', margin, y); y += 14;
+    doc.setFont('helvetica','normal'); doc.setFontSize(10); doc.setTextColor(C.INK[0],C.INK[1],C.INK[2]);
+    var descLines = doc.splitTextToSize(descBox.value.trim() || 'No description provided.', contentW);
+    for (var d = 0; d < descLines.length; d++) { ensureSpace(14); doc.text(descLines[d], margin, y); y += 13; }
+    y += 14;
+
+    /* Labor — grouped by tier, task notes per row */
+    var colTaskW = contentW*0.52, colHrsW = contentW*0.14, colRateW = contentW*0.16;
+    var xTask = margin+8, xHrs = margin+colTaskW+colHrsW, xRate = margin+colTaskW+colHrsW+colRateW, xAmt = margin+contentW-8;
+    function laborHeader() {
+      ensureSpace(38);
+      doc.setFont('helvetica','bold'); doc.setFontSize(8.5); doc.setTextColor(SECT[0],SECT[1],SECT[2]);
+      doc.text('LABOR — BY TIER AND TASK', margin, y); y += 12;
+      doc.setFillColor(C.INK[0],C.INK[1],C.INK[2]); doc.rect(margin, y, contentW, 22, 'F');
+      doc.setTextColor(255,255,255);
+      doc.text('TIER / TASK', xTask, y+14.5);
+      doc.text('HOURS', xHrs-8, y+14.5, { align: 'right' });
+      doc.text('RATE', xRate-8, y+14.5, { align: 'right' });
+      doc.text('AMOUNT', xAmt, y+14.5, { align: 'right' });
+      y += 22;
+    }
+    laborHeader();
+    var groups = [], order = {};
+    b.laborRows.forEach(function (l) {
+      if (!(l.hours > 0 || l.note)) return;
+      var k = l.tier + '@' + l.rate;
+      if (!(k in order)) { order[k] = groups.length; groups.push({ tier: l.tier, rate: l.rate, rows: [], hours: 0, amount: 0 }); }
+      var g = groups[order[k]];
+      g.rows.push(l); g.hours = g.hours + l.hours; g.amount = r2(g.amount + l.amount);
+    });
+    doc.setFontSize(9.5);
+    if (!groups.length) {
+      ensureSpace(22); doc.setFont('helvetica','normal'); doc.setTextColor(C.GRAY[0],C.GRAY[1],C.GRAY[2]);
+      doc.text('No labor entered.', xTask, y+14); y += 22;
+    } else {
+      groups.forEach(function (g) {
+        ensureSpace(20);
+        doc.setFont('helvetica','bold'); doc.setTextColor(C.INK[0],C.INK[1],C.INK[2]);
+        doc.text(g.tier + (g.rate > 0 ? '  —  ' + fmt(g.rate) + ' / hour' : ''), xTask, y+13);
+        y += 18;
+        g.rows.forEach(function (l, ri) {
+          var noteLines = doc.splitTextToSize(l.note || 'Work performed', colTaskW - 26);
+          var rowH = Math.max(20, noteLines.length*12 + 8);
+          if (y + rowH > pageH - margin - 20) { newPage(); laborHeader(); doc.setFontSize(9.5); }
+          if (ri % 2 === 1) { doc.setFillColor(C.LIGHT[0],C.LIGHT[1],C.LIGHT[2]); doc.rect(margin, y, contentW, rowH, 'F'); }
+          doc.setFont('helvetica','normal'); doc.setTextColor(C.INK[0],C.INK[1],C.INK[2]);
+          doc.text(noteLines, xTask+10, y+13);
+          doc.text(String(l.hours), xHrs-8, y+13, { align: 'right' });
+          doc.text(l.rate > 0 ? fmt(l.rate) : '—', xRate-8, y+13, { align: 'right' });
+          doc.setFont('helvetica','bold'); doc.text(fmt(l.amount), xAmt, y+13, { align: 'right' }); doc.setFont('helvetica','normal');
+          y += rowH;
+          doc.setDrawColor(C.LINE[0],C.LINE[1],C.LINE[2]); doc.setLineWidth(0.5); doc.line(margin, y, pageW-margin, y);
+        });
+        ensureSpace(18);
+        doc.setFont('helvetica','bold'); doc.setFontSize(8.5); doc.setTextColor(C.GRAY[0],C.GRAY[1],C.GRAY[2]);
+        doc.text(g.tier + ' subtotal — ' + g.hours + ' hr' + (g.hours===1?'':'s'), xRate-8, y+12, { align: 'right' });
+        doc.setTextColor(C.INK[0],C.INK[1],C.INK[2]);
+        doc.text(fmt(g.amount), xAmt, y+12, { align: 'right' });
+        doc.setFontSize(9.5);
+        y += 20;
+      });
+    }
+    y += 8;
+
+    /* Materials — receipts */
+    ensureSpace(38);
+    doc.setFont('helvetica','bold'); doc.setFontSize(8.5); doc.setTextColor(SECT[0],SECT[1],SECT[2]);
+    doc.text('MATERIALS — RECEIPTS', margin, y); y += 12;
+    doc.setFillColor(C.INK[0],C.INK[1],C.INK[2]); doc.rect(margin, y, contentW, 22, 'F');
+    doc.setTextColor(255,255,255);
+    doc.text('RECEIPT', margin+8, y+14.5);
+    doc.text('AMOUNT', xAmt, y+14.5, { align: 'right' });
+    y += 22;
+    doc.setFont('helvetica','normal'); doc.setFontSize(9.5); doc.setTextColor(C.INK[0],C.INK[1],C.INK[2]);
+    var printableMats = b.matRows.filter(function (m) { return m.desc.length > 0 || m.amount > 0; });
+    if (!printableMats.length) {
+      ensureSpace(22); doc.setTextColor(C.GRAY[0],C.GRAY[1],C.GRAY[2]); doc.text('No materials on this change order.', margin+8, y+14); y += 22;
+    } else {
+      printableMats.forEach(function (m, mi) {
+        var mLines = doc.splitTextToSize(m.desc || '—', contentW - 120);
+        var rowH = Math.max(20, mLines.length*12 + 8);
+        ensureSpace(rowH + 2);
+        if (mi % 2 === 1) { doc.setFillColor(C.LIGHT[0],C.LIGHT[1],C.LIGHT[2]); doc.rect(margin, y, contentW, rowH, 'F'); }
+        doc.setTextColor(C.INK[0],C.INK[1],C.INK[2]);
+        doc.text(mLines, margin+8, y+13);
+        doc.setFont('helvetica','bold'); doc.text(fmt(m.amount), xAmt, y+13, { align: 'right' }); doc.setFont('helvetica','normal');
+        y += rowH;
+        doc.setDrawColor(C.LINE[0],C.LINE[1],C.LINE[2]); doc.setLineWidth(0.5); doc.line(margin, y, pageW-margin, y);
+      });
+      ensureSpace(16);
+      doc.setFont('helvetica','normal'); doc.setFontSize(8.5); doc.setTextColor(C.GRAY[0],C.GRAY[1],C.GRAY[2]);
+      doc.text('Receipts provided with this bill.', margin+8, y+12);
+      y += 18;
+    }
+    y += 10;
+
+    /* Totals */
+    ensureSpace(150);
+    var labelX = margin + contentW*0.5;
+    function totalRow(label, value, bold) {
+      ensureSpace(18);
+      doc.setFont('helvetica', bold ? 'bold' : 'normal'); doc.setFontSize(10);
+      doc.setTextColor(bold?C.INK[0]:C.GRAY[0], bold?C.INK[1]:C.GRAY[1], bold?C.INK[2]:C.GRAY[2]);
+      doc.text(label, labelX, y);
+      doc.setTextColor(C.INK[0],C.INK[1],C.INK[2]);
+      doc.text(value, xAmt, y, { align: 'right' }); y += 17;
+    }
+    totalRow('Labor', fmt(b.laborTotal), false);
+    totalRow('Materials (receipts)', fmt(b.matBase), false);
+    if (b.matPct > 0) totalRow('Materials + ' + b.matPct + '% (per signed authorization)', fmt(b.matMarkup), false);
+    totalRow('Subtotal', fmt(b.subtotal), true);
+    if (b.feePct > 0) totalRow(TM.feeLabel + ' (' + b.feePct + '%)', fmt(b.fee), false);
+    totalRow('Tax (' + b.taxPct + '%)', fmt(b.tax), false);
+    y += 2;
+    var totBg = brand ? brand.acc : C.ORANGE, totInk = brand ? brand.ink : [255,255,255];
+    ensureSpace(40);
+    doc.setFillColor(totBg[0],totBg[1],totBg[2]);
+    doc.rect(labelX-10, y-12, (pageW-margin)-(labelX-10), 26, 'F');
+    doc.setFont('helvetica','bold'); doc.setFontSize(12); doc.setTextColor(totInk[0],totInk[1],totInk[2]);
+    doc.text('TOTAL', labelX, y+5); doc.text(fmt(b.total), xAmt, y+5, { align: 'right' }); y += 36;
+
+    /* Schedule */
+    var wd = num(workDaysInput.value);
+    if (wd > 0) {
+      ensureSpace(16);
+      doc.setFont('helvetica','normal'); doc.setFontSize(10); doc.setTextColor(C.INK[0],C.INK[1],C.INK[2]);
+      doc.text('Adds ' + wd + ' working day' + (wd===1?'':'s') + ' to the schedule.', margin, y);
+      y += 18;
+    }
+
+    /* Final acknowledgment */
+    ensureSpace(170); hrLine(); y += 18;
+    doc.setFont('helvetica','normal'); doc.setFontSize(8.5); doc.setTextColor(C.GRAY[0],C.GRAY[1],C.GRAY[2]);
+    var ackLines = doc.splitTextToSize(TM_ACK_BILL, contentW);
+    doc.text(ackLines, margin, y); y += ackLines.length*11 + 16;
+    ensureSpace(120);
+    var sigW = contentW/2 - 16, sigH = 56, sigDate = new Date().toLocaleDateString('en-US');
+    function placeSig(pad, x, label, name) {
+      var exp = pad.exportForPDF();
+      if (exp) { var w=sigW, h=w/exp.ratio; if (h>sigH){h=sigH;w=h*exp.ratio;} doc.addImage(exp.dataUrl,'JPEG',x,y+(sigH-h),w,h); }
+      doc.setDrawColor(C.INK[0],C.INK[1],C.INK[2]); doc.setLineWidth(0.75); doc.line(x, y+sigH+6, x+sigW, y+sigH+6);
+      doc.setFont('helvetica','bold'); doc.setFontSize(8.5); doc.setTextColor(C.INK[0],C.INK[1],C.INK[2]); doc.text(label, x, y+sigH+18);
+      doc.setFont('helvetica','normal'); doc.setTextColor(C.GRAY[0],C.GRAY[1],C.GRAY[2]);
+      doc.text(name + (exp ? '  ·  Signed ' + sigDate : '  ·  Not signed'), x, y+sigH+29);
+    }
+    placeSig(clientPad,     margin,         'CLIENT — FINAL ACKNOWLEDGMENT', clientName);
+    placeSig(contractorPad, margin+sigW+32, 'CONTRACTOR SIGNATURE',          s.companyName);
+    y += sigH + 44;
+
+    tmFooterAndWatermark(doc, pageW, pageH, margin, C.GRAY, !billSigned);
+    return doc;
+  }
+  function outputTMPdf(doc, filename, shareText) {
+    try { doc.setProperties({ title: filename }); } catch (e) {}
+    var isTouchMobile = (navigator.maxTouchPoints > 0) && window.matchMedia('(pointer: coarse)').matches;
+    if (isTouchMobile) {
+      var pdfBlob = doc.output('blob');
+      var shareFile = new File([pdfBlob], filename, { type: 'application/pdf' });
+      if (navigator.canShare && navigator.canShare({ files: [shareFile] })) {
+        navigator.share({ files: [shareFile], title: filename, text: shareText })
+          .catch(function () { doc.save(filename); });
+      } else {
+        doc.save(filename);
+      }
+    } else {
+      try {
+        var u = doc.output('bloburl');
+        var w = window.open(u, '_blank');
+        if (!w) { doc.save(filename); }
+      } catch (e) { doc.save(filename); }
+    }
+  }
+  function generateTMPdf() {
+    var jsPDFCtor = (window.jspdf && window.jspdf.jsPDF) ? window.jspdf.jsPDF : null;
+    if (!jsPDFCtor) { alert('PDF library failed to load. Check your internet connection and reload the page.'); return; }
+    formToSettings();
+    persistSettings();
+    persistRateCard();
+    var billMode = TM.mode === 'bill';
+    var doc = billMode ? buildTMBillPdf(jsPDFCtor) : buildTMAuthPdf(jsPDFCtor);
+    var filename = currentCONumber() + (billMode ? '-final-bill.pdf' : '-authorization.pdf');
+    var rec = snapshotTM();
+    if (billMode) { TM.stage = 'billed'; }
+    else if (rec.signed) { TM.offer = true; }
+    /* Save to the log (localStorage) BEFORE the share sheet can navigate away. */
+    saveToLog(rec);
+    updateFlowVisibility();
+    outputTMPdf(doc, filename, 'Change Order ' + currentCONumber() + (billMode ? ' — final bill' : ' — T&M authorization'));
+    showReviewNudge();
+  }
 
   /* ── BOOT ── */
   var hasSavedSettings = loadSettings();
@@ -2005,6 +3235,13 @@
   loadLog();       renderLog();
   refreshHeader(); addLineItem(); recalc(); setStatus(false);
   renderProSection();
+  /* T&M upgrade boot: load the rate card, draw its panel, and settle the flow
+     into the default fixed-price view (visually identical to before). */
+  loadRateCard();
+  renderRateCardPanel();
+  renderTMTerms();
+  renderTMEst();
+  updateFlowVisibility();
 })();
 </script>
 <script>
