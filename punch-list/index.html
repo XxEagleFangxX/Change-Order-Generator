@@ -1206,26 +1206,29 @@ tailwind.config = { theme: { extend: { colors: {
     if (brand && brand.style === 'letterhead') {
       var lhBiz = bizSettings();
       textX = margin;
+      var plHadLogo = false;
       if (lhBiz.logo && lhBiz.logo.dataUrl && lhBiz.logo.w && lhBiz.logo.h) {
         var lr = lhBiz.logo.w / lhBiz.logo.h, lhh = 42, lhw = lhh * lr;
         if (lhw > 170) { lhw = 170; lhh = lhw / lr; }
-        try { doc.addImage(lhBiz.logo.dataUrl, 'PNG', margin, 12, lhw, lhh); } catch (e) {}
+        try { doc.addImage(lhBiz.logo.dataUrl, 'PNG', margin, 12, lhw, lhh); plHadLogo = true; } catch (e) {}
         textX = margin + lhw + 14;
       }
-      /* Letterhead: the COMPANY NAME is the star (big ink type, shrink-to-fit, never wraps) —
-         matches the CO app's letterhead; the doc title moves small into the right block. */
-      var lhName = (proBrand || 'Contractor').toUpperCase();
-      var nmSize = 17, nmMax = pageW - textX - 215;
-      doc.setTextColor(15, 23, 42); doc.setFont('helvetica', 'bold'); doc.setFontSize(nmSize);
-      while (nmSize > 11 && doc.getTextWidth(lhName) > nmMax) { nmSize -= 1; doc.setFontSize(nmSize); }
-      if (doc.getTextWidth(lhName) > nmMax) {   /* truncate only when it truly can't fit */
-        while (lhName.length > 4 && doc.getTextWidth(lhName + '...') > nmMax) { lhName = lhName.slice(0, -1); }
-        lhName = lhName.replace(/\s+$/, '') + '...';
+      /* Letterhead: the logo carries the company name when present (never print it twice);
+         with no logo, the COMPANY NAME is the star (big ink type, shrink-to-fit, never wraps). */
+      if (!plHadLogo) {
+        var lhName = (proBrand || 'Contractor').toUpperCase();
+        var nmSize = 17, nmMax = pageW - textX - 215;
+        doc.setTextColor(15, 23, 42); doc.setFont('helvetica', 'bold'); doc.setFontSize(nmSize);
+        while (nmSize > 11 && doc.getTextWidth(lhName) > nmMax) { nmSize -= 1; doc.setFontSize(nmSize); }
+        if (doc.getTextWidth(lhName) > nmMax) {   /* truncate only when it truly can't fit */
+          while (lhName.length > 4 && doc.getTextWidth(lhName + '...') > nmMax) { lhName = lhName.slice(0, -1); }
+          lhName = lhName.replace(/\s+$/, '') + '...';
+        }
+        doc.text(lhName, textX, 36);
       }
-      doc.text(lhName, textX, 36);
       doc.setFont('helvetica', 'normal'); doc.setFontSize(10);
       doc.setTextColor(brand.accWhite[0], brand.accWhite[1], brand.accWhite[2]);
-      doc.text(truncToWidth(doc, state.job.name || 'Untitled job', pageW - textX - margin - 110), textX, 52);
+      doc.text(truncToWidth(doc, state.job.name || 'Untitled job', pageW - textX - margin - 110), textX, plHadLogo ? 38 : 52);
       doc.setFont('helvetica', 'bold'); doc.setFontSize(11);
       doc.text(plTitle, pageW - margin, 24, { align: 'right' });
       doc.setFont('helvetica', 'normal'); doc.setFontSize(9);
@@ -1249,7 +1252,7 @@ tailwind.config = { theme: { extend: { colors: {
       doc.setTextColor(metaCol[0], metaCol[1], metaCol[2]);
       doc.text(truncToWidth(doc, plMeta, pageW - margin - textX - doc.getTextWidth(plTitle) * 1.9 - 16), pageW - margin, 34, { align: 'right' });
       doc.text(c.done + ' of ' + c.total + ' items closed', pageW - margin, 52, { align: 'right' });
-      if (isPro() && proBrand) {
+      if (isPro() && proBrand && textX <= margin) { /* logo chip carries the name when drawn */
         var nameCol = brand ? ((brand.style === 'bold') ? brand.ink : brand.accDark) : [147, 197, 253];
         doc.setTextColor(nameCol[0], nameCol[1], nameCol[2]);
         doc.text(proBrand.toUpperCase(), pageW - margin, 16, { align: 'right' });
