@@ -663,8 +663,8 @@
       if (s.style === 'letterhead') {
         return '<div style="background:#fff;padding:' + pad + ';display:flex;align-items:center;justify-content:space-between;gap:4%">' +
           '<div style="display:flex;align-items:center;gap:5%;min-width:0;flex:1">' +
-          (logoImg ? '<img src="' + logoImg + '" style="height:' + logoH + 'px;max-width:38%;object-fit:contain" alt=""/>' : '') +
-          '<p class="st-truncate-1" style="color:#0f172a;font-weight:800;font-size:' + nameSize + 'px;margin:0">' + name + '</p></div>' +
+          (logoImg ? '<img src="' + logoImg + '" style="height:' + logoH + 'px;max-width:52%;object-fit:contain" alt=""/>'
+                   : '<p class="st-truncate-1" style="color:#0f172a;font-weight:800;font-size:' + nameSize + 'px;margin:0">' + name + '</p>') + '</div>' +
           '<div style="text-align:right;flex-shrink:0"><p style="color:' + accWhiteCss + ';font-weight:800;font-size:' + titleSize + 'px;margin:0">CHANGE ORDER</p>' +
           '<p style="color:#0f172a;font-weight:700;font-size:' + numSize + 'px;margin:0">CO-20260803-001</p></div></div>' +
           '<div style="height:' + (forThumb ? 2 : 3) + 'px;background:' + accCss + '"></div>';
@@ -677,7 +677,7 @@
         '<div style="display:flex;align-items:center;gap:5%;min-width:0;flex:1">' +
         (logoImg ? '<span style="background:#fff;border-radius:3px;padding:2px;display:inline-flex;flex-shrink:0"><img src="' + logoImg + '" style="height:' + (logoH - 4) + 'px;max-width:100%;object-fit:contain" alt=""/></span>' : '') +
         '<div style="min-width:0"><p style="color:' + onBandCss + ';font-weight:800;font-size:' + (nameSize - 1) + 'px;margin:0">CHANGE ORDER</p>' +
-        '<p class="st-truncate-1" style="color:' + subCss + ';font-weight:700;font-size:' + titleSize + 'px;margin:0;text-transform:uppercase">' + name + '</p></div></div>' +
+        (logoImg ? '' : '<p class="st-truncate-1" style="color:' + subCss + ';font-weight:700;font-size:' + titleSize + 'px;margin:0;text-transform:uppercase">' + name + '</p>') + '</div></div>' +
         '<div style="text-align:right;flex-shrink:0"><p style="color:' + subCss + ';font-weight:800;font-size:' + numSize + 'px;margin:0">CO-20260803-001</p>' +
         '<p style="color:' + metaCss + ';font-size:' + (numSize - 1) + 'px;margin:0">Status: SIGNED</p></div></div>' +
         '<div style="height:' + (forThumb ? 2 : 3) + 'px;background:' + (s.style === 'bold' ? onBandCss : accCss) + '"></div>';
