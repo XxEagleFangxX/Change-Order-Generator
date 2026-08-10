@@ -913,16 +913,20 @@
         try { doc.addImage(logo.dataUrl, 'PNG', margin, 18, dm.w, dm.h); } catch (e) {}
         textX = margin + dm.w + 18;
       }
-      doc.setTextColor(INK[0],INK[1],INK[2]); doc.setFont('helvetica','bold');
-      /* shrink-to-fit: one clean line, never a wrap into the contact row or the right block */
-      var nm = name.toUpperCase(), nmSize = 19, nmMax = pageW - textX - 170, nmCut = false;
-      doc.setFontSize(nmSize);
-      while (nmSize > 11 && doc.getTextWidth(nm) > nmMax) { nmSize -= 1; doc.setFontSize(nmSize); }
-      if (doc.getTextWidth(nm) > nmMax) {   /* truncate only when it truly can't fit (matches BL/PL) */
-        while (nm.length > 4 && doc.getTextWidth(nm + '...') > nmMax) { nm = nm.slice(0, -1); nmCut = true; }
+      /* When a logo is present it carries the company name — printing the name again
+         doubled it up and got truncated (Raymond, Aug 10). Logo ⇒ no name text. */
+      if (!logo) {
+        doc.setTextColor(INK[0],INK[1],INK[2]); doc.setFont('helvetica','bold');
+        /* shrink-to-fit: one clean line, never a wrap into the contact row or the right block */
+        var nm = name.toUpperCase(), nmSize = 19, nmMax = pageW - textX - 170, nmCut = false;
+        doc.setFontSize(nmSize);
+        while (nmSize > 11 && doc.getTextWidth(nm) > nmMax) { nmSize -= 1; doc.setFontSize(nmSize); }
+        if (doc.getTextWidth(nm) > nmMax) {   /* truncate only when it truly can't fit (matches BL/PL) */
+          while (nm.length > 4 && doc.getTextWidth(nm + '...') > nmMax) { nm = nm.slice(0, -1); nmCut = true; }
+        }
+        doc.text(nmCut ? nm.replace(/\s+$/, '') + '...' : nm, textX, nameY);
       }
-      doc.text(nmCut ? nm.replace(/\s+$/, '') + '...' : nm, textX, nameY);
-      if (ctx.contactLine) { doc.setFont('helvetica','normal'); doc.setFontSize(9); doc.setTextColor(GRAY[0],GRAY[1],GRAY[2]); doc.text(ctx.contactLine, textX, 60); }
+      if (ctx.contactLine) { doc.setFont('helvetica','normal'); doc.setFontSize(9); doc.setTextColor(GRAY[0],GRAY[1],GRAY[2]); doc.text(ctx.contactLine, textX, logo ? 44 : 60); }
       doc.setFont('helvetica','bold'); doc.setFontSize(12); doc.setTextColor(bs.accWhite[0],bs.accWhite[1],bs.accWhite[2]);
       doc.text(ctx.docTitle, pageW - margin, 34, { align:'right' });
       doc.setFontSize(11); doc.setTextColor(INK[0],INK[1],INK[2]);
@@ -951,11 +955,14 @@
     }
     doc.setTextColor(onBand[0],onBand[1],onBand[2]); doc.setFont('helvetica','bold'); doc.setFontSize(22);
     doc.text(ctx.docTitle, tX, 40);
-    doc.setFontSize(10); doc.setTextColor(subOnBand[0],subOnBand[1],subOnBand[2]);
-    doc.text(name.toUpperCase(), tX, 58);
+    if (!logo) { /* logo carries the name — never print it twice */
+      doc.setFontSize(10); doc.setTextColor(subOnBand[0],subOnBand[1],subOnBand[2]);
+      doc.text(name.toUpperCase(), tX, 58);
+    }
     if (ctx.contactLine) {
       var cCol = bs.style === 'bold' ? bs.ink : [203,213,225];
-      doc.setTextColor(cCol[0],cCol[1],cCol[2]); doc.setFont('helvetica','normal'); doc.text(ctx.contactLine, tX, 73);
+      doc.setFontSize(10);
+      doc.setTextColor(cCol[0],cCol[1],cCol[2]); doc.setFont('helvetica','normal'); doc.text(ctx.contactLine, tX, logo ? 58 : 73);
     }
     doc.setFont('helvetica','bold'); doc.setFontSize(13);
     var numCol = bs.style === 'bold' ? bs.ink : bs.accDark;
@@ -1618,8 +1625,8 @@
     if (uiBrand.headerStyle === 'letterhead') {
       h = '<div class="px-4 pt-3 pb-2 bg-white flex items-center justify-between gap-3">' +
           '<div class="flex items-center gap-3 min-w-0">' +
-          (logoImg ? '<img src="' + logoImg + '" class="h-10 max-w-[130px] object-contain" alt="" />' : '') +
-          '<div class="min-w-0"><p class="text-slate-900 font-extrabold text-sm uppercase truncate">' + name + '</p></div></div>' +
+          (logoImg ? '<img src="' + logoImg + '" class="h-10 max-w-[130px] object-contain" alt="" />'
+                   : '<div class="min-w-0"><p class="text-slate-900 font-extrabold text-sm uppercase truncate">' + name + '</p></div>') + '</div>' +
           '<div class="text-right shrink-0"><p class="font-extrabold text-xs" style="color:' + accWhiteCss + '">CHANGE ORDER</p><p class="text-slate-900 font-bold text-[11px]">CO-20260726-001</p></div></div>' +
           '<div style="height:3px;background:' + accCss + '"></div>';
     } else {
@@ -1629,7 +1636,7 @@
       h = '<div class="px-4 py-3 flex items-center justify-between gap-3" style="background:' + bandCss + '">' +
           '<div class="flex items-center gap-3 min-w-0">' +
           (logoImg ? '<span class="bg-white rounded-md p-1 inline-flex shrink-0"><img src="' + logoImg + '" class="h-8 max-w-[110px] object-contain" alt="" /></span>' : '') +
-          '<div class="min-w-0"><p class="font-extrabold text-sm" style="color:' + onBandCss + '">CHANGE ORDER</p><p class="font-bold text-[10px] uppercase truncate" style="color:' + subCss + '">' + name + '</p></div></div>' +
+          '<div class="min-w-0"><p class="font-extrabold text-sm" style="color:' + onBandCss + '">CHANGE ORDER</p>' + (logoImg ? '' : '<p class="font-bold text-[10px] uppercase truncate" style="color:' + subCss + '">' + name + '</p>') + '</div></div>' +
           '<div class="text-right shrink-0"><p class="font-extrabold text-xs" style="color:' + subCss + '">CO-20260726-001</p><p class="text-[10px]" style="color:' + (uiBrand.headerStyle==='bold'?inkCss:'#cbd5e1') + '">Status: SIGNED</p></div></div>' +
           '<div style="height:3px;background:' + (uiBrand.headerStyle === 'bold' ? onBandCss : accCss) + '"></div>';
     }
@@ -1863,11 +1870,12 @@
         textX = margin + lw + chipPad*2 + 16;
       }
 
+      var coHadLogo = textX > margin; /* logo chip drawn ⇒ it carries the name */
       doc.setTextColor(255,255,255); doc.setFont('helvetica','bold'); doc.setFontSize(22);
       doc.text('CHANGE ORDER', textX, 40);
-      doc.setFontSize(10); doc.setTextColor(147,197,253);
-      doc.text(companyName.toUpperCase(), textX, 58);
-      if (contactBits.length) { doc.setTextColor(203,213,225); doc.setFont('helvetica','normal'); doc.text(contactBits.join('   ·   '), textX, 73); }
+      doc.setFontSize(10);
+      if (!coHadLogo) { doc.setTextColor(147,197,253); doc.text(companyName.toUpperCase(), textX, 58); }
+      if (contactBits.length) { doc.setTextColor(203,213,225); doc.setFont('helvetica','normal'); doc.text(contactBits.join('   ·   '), textX, coHadLogo ? 58 : 73); }
 
       doc.setFont('helvetica','bold'); doc.setFontSize(13); doc.setTextColor(249,115,22);
       doc.text(currentCONumber(), pageW-margin, 40, { align:'right' });
@@ -2856,12 +2864,13 @@
         try { doc.addImage(settings.logo.dataUrl, 'PNG', margin+chipPad, 48-lh/2, lw, lh); } catch (imgErr) {}
         textX = margin + lw + chipPad*2 + 16;
       }
+      var coHadLogo2 = textX > margin; /* logo chip drawn ⇒ it carries the name */
       doc.setTextColor(255,255,255); doc.setFont('helvetica','bold');
       fitTitleSize(doc, titleFull, pageW - textX - margin - 150, 15, 9);
       doc.text(titleFull, textX, 38);
-      doc.setFontSize(10); doc.setTextColor(147,197,253);
-      doc.text(companyName.toUpperCase(), textX, 56);
-      if (contactBits.length) { doc.setTextColor(203,213,225); doc.setFont('helvetica','normal'); doc.text(contactBits.join('   ·   '), textX, 71); }
+      doc.setFontSize(10);
+      if (!coHadLogo2) { doc.setTextColor(147,197,253); doc.text(companyName.toUpperCase(), textX, 56); }
+      if (contactBits.length) { doc.setTextColor(203,213,225); doc.setFont('helvetica','normal'); doc.text(contactBits.join('   ·   '), textX, coHadLogo2 ? 56 : 71); }
       doc.setFont('helvetica','bold'); doc.setFontSize(13); doc.setTextColor(249,115,22);
       doc.text(currentCONumber(), pageW-margin, 38, { align: 'right' });
       doc.setFont('helvetica','normal'); doc.setFontSize(10); doc.setTextColor(203,213,225);
