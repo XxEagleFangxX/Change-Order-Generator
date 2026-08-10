@@ -1189,26 +1189,29 @@ tailwind.config = { theme: { extend: { colors: {
     if (brand && brand.style === 'letterhead') {
       var lhBiz = bizSettings();
       textX = margin;
+      var blHadLogo = false;
       if (lhBiz.logo && lhBiz.logo.dataUrl && lhBiz.logo.w && lhBiz.logo.h) {
         var lr = lhBiz.logo.w / lhBiz.logo.h, lhh = 40, lhw = lhh * lr;
         if (lhw > 180) { lhw = 180; lhh = lhw / lr; }
-        try { doc.addImage(lhBiz.logo.dataUrl, 'PNG', margin, 10, lhw, lhh); } catch (e) {}
+        try { doc.addImage(lhBiz.logo.dataUrl, 'PNG', margin, 10, lhw, lhh); blHadLogo = true; } catch (e) {}
         textX = margin + lhw + 14;
       }
-      /* Letterhead: the COMPANY NAME is the star (big ink type, shrink-to-fit, never wraps) —
-         matches the CO app's letterhead; the doc title moves small into the right block. */
-      var lhName = (proBrand || 'Contractor').toUpperCase();
-      var nmSize = 18, nmMax = pageW - textX - 300;
-      doc.setTextColor(15, 23, 42); doc.setFont('helvetica', 'bold'); doc.setFontSize(nmSize);
-      while (nmSize > 11 && doc.getTextWidth(lhName) > nmMax) { nmSize -= 1; doc.setFontSize(nmSize); }
-      if (doc.getTextWidth(lhName) > nmMax) {   /* truncate only when it truly can't fit */
-        while (lhName.length > 4 && doc.getTextWidth(lhName + '...') > nmMax) { lhName = lhName.slice(0, -1); }
-        lhName = lhName.replace(/\s+$/, '') + '...';
+      /* Letterhead: the logo carries the company name when present (never print it twice);
+         with no logo, the COMPANY NAME is the star (big ink type, shrink-to-fit, never wraps). */
+      if (!blHadLogo) {
+        var lhName = (proBrand || 'Contractor').toUpperCase();
+        var nmSize = 18, nmMax = pageW - textX - 300;
+        doc.setTextColor(15, 23, 42); doc.setFont('helvetica', 'bold'); doc.setFontSize(nmSize);
+        while (nmSize > 11 && doc.getTextWidth(lhName) > nmMax) { nmSize -= 1; doc.setFontSize(nmSize); }
+        if (doc.getTextWidth(lhName) > nmMax) {   /* truncate only when it truly can't fit */
+          while (lhName.length > 4 && doc.getTextWidth(lhName + '...') > nmMax) { lhName = lhName.slice(0, -1); }
+          lhName = lhName.replace(/\s+$/, '') + '...';
+        }
+        doc.text(lhName, textX, 34);
       }
-      doc.text(lhName, textX, 34);
       doc.setFont('helvetica', 'normal'); doc.setFontSize(10);
       doc.setTextColor(brand.accWhite[0], brand.accWhite[1], brand.accWhite[2]);
-      doc.text(jobLine, textX, 50);
+      doc.text(jobLine, textX, blHadLogo ? 34 : 50);
       doc.setFont('helvetica', 'bold'); doc.setFontSize(11);
       doc.text('BID LEVELING SHEET', pageW - margin, 26, { align: 'right' });
       doc.setFont('helvetica', 'normal'); doc.setFontSize(9);
