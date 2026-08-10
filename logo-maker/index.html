@@ -307,7 +307,7 @@
             <p class="lm-label">Extra lines <span class="soft">(all optional)</span></p>
             <input id="lmTag" type="text" maxlength="36" placeholder="Tagline — DECKS · FENCES · PORCHES" class="lm-input" autocomplete="off" style="margin-bottom:0.625rem" />
             <div class="lm-row2">
-              <input id="lmEst" type="text" maxlength="4" inputmode="numeric" placeholder="EST. year" class="lm-input" autocomplete="off" />
+              <input id="lmEst" type="text" maxlength="9" inputmode="numeric" placeholder="Year founded" class="lm-input" autocomplete="off" title="Just the year — we add the EST." />
               <input id="lmThird" type="text" maxlength="30" placeholder="License # / phone / town" class="lm-input" autocomplete="off" />
             </div>
           </div>
@@ -1172,7 +1172,7 @@
     /* ── events ── */
     el('lmName').addEventListener('input', function () { st.name = this.value; update(); });
     el('lmTag').addEventListener('input', function () { st.tag = this.value; update(); });
-    el('lmEst').addEventListener('input', function () { st.est = this.value.replace(/[^\d]/g, ''); update(); });
+    el('lmEst').addEventListener('input', function () { st.est = this.value.replace(/[^\d]/g, '').slice(0, 4); update(); });
     el('lmThird').addEventListener('input', function () { st.third = this.value; update(); });
     el('lmTrade').addEventListener('change', function () {
       st.cat = this.value; st.univTab = false;
