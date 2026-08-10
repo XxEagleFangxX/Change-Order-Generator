@@ -1,12 +1,12 @@
 /* ═══════════════════════════════════════════════════════════════════
-   DFS LOGO MAKER v2 — READABLE MARK SOURCE (102 marks, 17 categories)
+   DFS LOGO MAKER v2.1 — READABLE MARK SOURCE (114 marks, 19 categories:
+   17 trades + Animals & Mascots + Nature & Icons + Universal).
    This file is NOT loaded by any page. It is the hand-editable source
-   for the minified LM_MARKS block inlined in /logo-maker/index.html
-   and the per-trade pages. To change a mark: edit here, minify with
-   terser (--compress --mangle), and replace the corresponding block.
-   Contract: 100×100 box · filled silhouettes · one accent layer ·
-   punches via destination-out inside save/restore · ES5 only ·
-   ⛔ NEVER a hexagon (brand guard). Built Session 57, Aug 9 2026.
+   for the minified LM_MARKS block inlined in /logo-maker/index.html.
+   To change a mark: edit here, minify with terser (--compress --mangle),
+   and replace the inlined block. Contract: 100×100 box · filled
+   silhouettes · one accent layer · punches via destination-out inside
+   save/restore · ES5 only · ⛔ NEVER a hexagon. v2.1 built Aug 10 2026.
    ═══════════════════════════════════════════════════════════════════ */
 /* framing — 6 concepts */
 
@@ -3256,6 +3256,542 @@ LM_MARKS.push({
     c.beginPath();
     c.arc(50, 56, 15, Math.PI, 0, false);
     c.closePath(); c.fill();
+    c.restore();
+  }
+});
+/* ANIMALS & MASCOTS category marks */
+
+LM_MARKS.push({
+  id: 'animals-eagle', cat: 'animals', name: 'Eagle Head',
+  draw: function (c, M, A) {
+    c.save();
+    /* head + neck silhouette, facing right, flat fierce crown */
+    var beakPath = function () {
+      c.beginPath();
+      c.moveTo(63, 31);                     /* beak base top, under brow */
+      c.quadraticCurveTo(80, 31, 85, 41);   /* top edge out */
+      c.quadraticCurveTo(85, 52, 73, 61);   /* outer curve to hook tip */
+      c.lineTo(70, 51);                     /* hook underside */
+      c.quadraticCurveTo(67, 44, 62, 41);   /* bottom base */
+      c.closePath();
+    };
+    c.fillStyle = M;
+    c.beginPath();
+    c.moveTo(31, 84);                     /* neck bottom-left */
+    c.lineTo(29, 50);                     /* back of neck */
+    c.quadraticCurveTo(27, 25, 46, 20);   /* back of skull */
+    c.quadraticCurveTo(60, 17, 69, 22);   /* crown, slight dome */
+    c.lineTo(70, 27);                     /* brow ridge tip */
+    c.lineTo(66, 31);                     /* step back under brow */
+    c.lineTo(66, 50);                     /* face front edge */
+    c.quadraticCurveTo(64, 55, 57, 58);   /* chin */
+    c.quadraticCurveTo(55, 70, 56, 84);   /* front of neck */
+    c.closePath(); c.fill();
+    /* punch: eye wedge + neck feather notches + beak clearance window */
+    c.globalCompositeOperation = 'destination-out';
+    c.beginPath();
+    c.moveTo(48, 27); c.lineTo(62, 29.5); c.lineTo(52, 36);
+    c.closePath(); c.fill();
+    c.beginPath();
+    c.moveTo(35, 86); c.lineTo(45, 86); c.lineTo(40, 68); c.closePath(); c.fill();
+    c.beginPath();
+    c.moveTo(49, 86); c.lineTo(59, 86); c.lineTo(54, 68); c.closePath(); c.fill();
+    c.lineWidth = 7; c.strokeStyle = '#000'; c.lineJoin = 'round';
+    beakPath(); c.stroke(); c.fill();
+    c.globalCompositeOperation = 'source-over';
+    /* accent: hooked beak set into the punched window */
+    c.fillStyle = A;
+    beakPath(); c.fill();
+    c.restore();
+  }
+});
+
+LM_MARKS.push({
+  id: 'animals-bull', cat: 'animals', name: 'Bull Head',
+  draw: function (c, M, A) {
+    c.save();
+    var headPath = function () {
+      c.beginPath();
+      c.moveTo(30, 24);
+      c.lineTo(70, 24);
+      c.quadraticCurveTo(77, 28, 74, 42);
+      c.lineTo(61, 72);
+      c.quadraticCurveTo(50, 81, 39, 72);
+      c.lineTo(26, 42);
+      c.quadraticCurveTo(23, 28, 30, 24);
+      c.closePath();
+    };
+    /* horns first (M) */
+    c.fillStyle = M;
+    c.beginPath();                        /* left horn, thick */
+    c.moveTo(40, 46);
+    c.quadraticCurveTo(9, 45, 8, 16);     /* outer sweep to tip */
+    c.lineTo(15, 12);                     /* blunt tip */
+    c.quadraticCurveTo(20, 30, 40, 30);   /* inner edge back */
+    c.closePath(); c.fill();
+    c.beginPath();                        /* right horn */
+    c.moveTo(60, 46);
+    c.quadraticCurveTo(91, 45, 92, 16);
+    c.lineTo(85, 12);
+    c.quadraticCurveTo(80, 30, 60, 30);
+    c.closePath(); c.fill();
+    /* punch a gap along the head outline so horns separate, then fill head */
+    c.globalCompositeOperation = 'destination-out';
+    c.lineWidth = 7; c.strokeStyle = '#000';
+    headPath(); c.stroke();
+    c.globalCompositeOperation = 'source-over';
+    headPath(); c.fill();
+    /* punch: eyes + muzzle clearance window */
+    c.globalCompositeOperation = 'destination-out';
+    c.beginPath(); c.arc(37, 38, 4, 0, Math.PI * 2, false); c.fill();
+    c.beginPath(); c.arc(63, 38, 4, 0, Math.PI * 2, false); c.fill();
+    c.beginPath();
+    c.moveTo(33, 53); c.lineTo(67, 53); c.lineTo(67, 82); c.lineTo(33, 82);
+    c.closePath(); c.fill();
+    c.globalCompositeOperation = 'source-over';
+    /* accent: muzzle band with punched nostrils */
+    c.fillStyle = A;
+    c.beginPath();
+    c.moveTo(40, 56.5);
+    c.lineTo(60, 56.5);
+    c.quadraticCurveTo(65, 62, 60, 72);
+    c.quadraticCurveTo(50, 78.5, 40, 72);
+    c.quadraticCurveTo(35, 62, 40, 56.5);
+    c.closePath(); c.fill();
+    c.globalCompositeOperation = 'destination-out';
+    c.beginPath(); c.arc(44, 66, 3, 0, Math.PI * 2, false); c.fill();
+    c.beginPath(); c.arc(56, 66, 3, 0, Math.PI * 2, false); c.fill();
+    c.globalCompositeOperation = 'source-over';
+    c.restore();
+  }
+});
+
+LM_MARKS.push({
+  id: 'animals-bear', cat: 'animals', name: 'Walking Bear',
+  draw: function (c, M, A) {
+    c.save();
+    c.fillStyle = M;
+    /* body mass, facing left, shoulder hump */
+    c.beginPath();
+    c.moveTo(12, 47);                      /* snout tip */
+    c.quadraticCurveTo(11, 38, 21, 35);    /* nose over forehead */
+    c.lineTo(24, 28);                      /* ear front */
+    c.quadraticCurveTo(29, 26, 30, 31);    /* ear tip */
+    c.quadraticCurveTo(33, 33, 37, 32);    /* dip behind ear */
+    c.quadraticCurveTo(45, 24, 56, 26);    /* shoulder hump */
+    c.quadraticCurveTo(72, 29, 80, 36);    /* back slope down */
+    c.quadraticCurveTo(89, 44, 85, 56);    /* rump */
+    c.quadraticCurveTo(60, 66, 26, 57);    /* belly */
+    c.quadraticCurveTo(17, 54, 14, 50);    /* chest to chin */
+    c.closePath(); c.fill();
+    /* legs: near pair long, far pair shorter; walking offsets */
+    c.beginPath(); c.rect(73, 52, 12, 27); c.rect(69, 74, 16, 5); c.fill();  /* rear near */
+    c.beginPath(); c.rect(59, 52, 9, 24); c.rect(56, 71.5, 12, 4.5); c.fill(); /* rear far */
+    c.beginPath(); c.rect(19, 50, 12, 29); c.rect(15, 74, 16, 5); c.fill();  /* front near */
+    c.beginPath(); c.rect(35, 50, 9, 26); c.rect(33, 71.5, 11, 4.5); c.fill(); /* front far */
+    /* punch: eye + mouth notch */
+    c.globalCompositeOperation = 'destination-out';
+    c.beginPath(); c.arc(20, 41, 2.5, 0, Math.PI * 2, false); c.fill();
+    c.beginPath();
+    c.moveTo(10, 48.5); c.lineTo(19, 49.5); c.lineTo(10, 52);
+    c.closePath(); c.fill();
+    c.globalCompositeOperation = 'source-over';
+    /* accent: ground bar under the bear */
+    c.fillStyle = A;
+    c.beginPath();
+    c.moveTo(15, 84); c.lineTo(87, 84);
+    c.arc(87, 87, 3, -Math.PI / 2, Math.PI / 2, false);
+    c.lineTo(15, 90);
+    c.arc(15, 87, 3, Math.PI / 2, -Math.PI / 2, false);
+    c.closePath(); c.fill();
+    c.restore();
+  }
+});
+
+LM_MARKS.push({
+  id: 'animals-wolf', cat: 'animals', name: 'Howling Wolf',
+  draw: function (c, M, A) {
+    c.save();
+    var wolfPath = function () {
+      c.beginPath();
+      c.moveTo(25, 10);                     /* nose top tip, raised high */
+      c.lineTo(37, 21);                     /* top of muzzle */
+      c.quadraticCurveTo(43, 26, 46, 33);   /* forehead */
+      c.lineTo(55, 25);                     /* ear tip, swept back */
+      c.lineTo(57, 41);                     /* back of ear into neck */
+      c.quadraticCurveTo(69, 54, 71, 83);   /* back curve down */
+      c.lineTo(33, 83);                     /* base */
+      c.quadraticCurveTo(36, 62, 29, 46);   /* chest */
+      c.lineTo(18, 29);                     /* throat to lower jaw tip */
+      c.lineTo(27, 25);                     /* open-mouth corner */
+      c.closePath();
+    };
+    /* accent moon disc first, then punch a halo along the wolf */
+    c.fillStyle = A;
+    c.beginPath(); c.arc(61, 33, 20, 0, Math.PI * 2, false); c.fill();
+    c.globalCompositeOperation = 'destination-out';
+    c.lineWidth = 7; c.strokeStyle = '#000'; c.lineJoin = 'round';
+    wolfPath(); c.stroke(); c.fill();
+    c.globalCompositeOperation = 'source-over';
+    /* wolf silhouette */
+    c.fillStyle = M;
+    wolfPath(); c.fill();
+    /* punch: eye slit */
+    c.globalCompositeOperation = 'destination-out';
+    c.save();
+    c.translate(38, 29);
+    c.rotate(Math.PI / 4.2);
+    c.fillRect(-4.2, -1.6, 8.4, 3.2);
+    c.restore();
+    c.globalCompositeOperation = 'source-over';
+    c.restore();
+  }
+});
+
+LM_MARKS.push({
+  id: 'animals-stag', cat: 'animals', name: 'Stag Head',
+  draw: function (c, M, A) {
+    c.save();
+    var headPath = function () {
+      c.beginPath();
+      c.moveTo(40, 40);
+      c.lineTo(60, 40);
+      c.quadraticCurveTo(64, 42, 62, 52);
+      c.quadraticCurveTo(58, 66, 55, 76);
+      c.quadraticCurveTo(50, 83, 45, 76);
+      c.quadraticCurveTo(42, 66, 38, 52);
+      c.quadraticCurveTo(36, 42, 40, 40);
+      c.closePath();
+    };
+    var antler = function (s) {
+      c.save();
+      c.translate(50, 0); c.scale(s, 1); c.translate(-50, 0);
+      /* main beam: thick curve sweeping out then up */
+      c.beginPath();
+      c.moveTo(54, 47);                     /* base inner-bottom */
+      c.quadraticCurveTo(80, 44, 85, 19);   /* outer edge to beam tip */
+      c.lineTo(78, 15);                     /* beam tip width */
+      c.quadraticCurveTo(73, 33, 52, 39);   /* inner edge back to base */
+      c.closePath(); c.fill();
+      /* tine 1: lower, long, points up-inward */
+      c.beginPath();
+      c.moveTo(61, 38); c.lineTo(68, 34); c.lineTo(63, 8); c.lineTo(56, 10);
+      c.closePath(); c.fill();
+      /* tine 2: upper, shorter */
+      c.beginPath();
+      c.moveTo(72, 28); c.lineTo(78, 23); c.lineTo(77, 4); c.lineTo(71, 5);
+      c.closePath(); c.fill();
+      /* ear below antler */
+      c.beginPath();
+      c.moveTo(59, 45); c.lineTo(75, 42); c.lineTo(63, 55);
+      c.closePath(); c.fill();
+      c.restore();
+    };
+    c.fillStyle = M;
+    antler(1); antler(-1);
+    /* punch head outline gap, then fill head */
+    c.globalCompositeOperation = 'destination-out';
+    c.lineWidth = 7; c.strokeStyle = '#000';
+    headPath(); c.stroke();
+    c.globalCompositeOperation = 'source-over';
+    headPath(); c.fill();
+    /* punch: eyes + nose clearance */
+    c.globalCompositeOperation = 'destination-out';
+    c.beginPath(); c.arc(44.5, 48, 2.7, 0, Math.PI * 2, false); c.fill();
+    c.beginPath(); c.arc(55.5, 48, 2.7, 0, Math.PI * 2, false); c.fill();
+    c.beginPath(); c.arc(50, 73, 9.5, 0, Math.PI * 2, false); c.fill();
+    c.globalCompositeOperation = 'source-over';
+    /* accent: nose */
+    c.fillStyle = A;
+    c.beginPath();
+    c.moveTo(44.5, 70.5);
+    c.lineTo(55.5, 70.5);
+    c.quadraticCurveTo(55, 76.5, 50, 78.5);
+    c.quadraticCurveTo(45, 76.5, 44.5, 70.5);
+    c.closePath(); c.fill();
+    c.restore();
+  }
+});
+
+LM_MARKS.push({
+  id: 'animals-hawk', cat: 'animals', name: 'Spread-Wing Hawk',
+  draw: function (c, M, A) {
+    c.save();
+    c.fillStyle = M;
+    var wing = function (s) {
+      c.save();
+      c.translate(50, 0); c.scale(s, 1); c.translate(-50, 0);
+      c.beginPath();
+      c.moveTo(54, 34);                     /* shoulder */
+      c.quadraticCurveTo(70, 24, 93, 12);   /* upper edge, up-swept to tip */
+      c.lineTo(89, 22);                     /* tip underside */
+      c.lineTo(78, 26); c.lineTo(81, 34);   /* feather step 1 */
+      c.lineTo(68, 37); c.lineTo(70, 45);   /* feather step 2 */
+      c.lineTo(56, 47);                     /* inner underside at body */
+      c.closePath(); c.fill();
+      /* punch a feather slot along the wing axis */
+      c.globalCompositeOperation = 'destination-out';
+      c.save();
+      c.translate(72, 31); c.rotate(-0.48);
+      c.fillRect(-11, -1.6, 22, 3.2);
+      c.restore();
+      c.globalCompositeOperation = 'source-over';
+      c.restore();
+    };
+    /* body + head + beak + tail, one mass */
+    c.beginPath(); c.arc(50, 17, 6.2, 0, Math.PI * 2, false); c.fill();
+    c.beginPath();
+    c.moveTo(55, 13.5); c.lineTo(62, 17.5); c.lineTo(55, 21.5);
+    c.closePath(); c.fill();
+    c.beginPath(); c.rect(43.5, 20, 13, 36); c.fill();
+    c.beginPath();
+    c.moveTo(42.5, 52); c.lineTo(57.5, 52); c.lineTo(61.5, 84); c.lineTo(38.5, 84);
+    c.closePath(); c.fill();
+    wing(1); wing(-1);
+    /* punch: eye + tail notches + chest shield window */
+    c.globalCompositeOperation = 'destination-out';
+    c.beginPath(); c.arc(52, 15.5, 1.8, 0, Math.PI * 2, false); c.fill();
+    c.beginPath();
+    c.moveTo(43.5, 86); c.lineTo(48.5, 86); c.lineTo(46, 70); c.closePath(); c.fill();
+    c.beginPath();
+    c.moveTo(51.5, 86); c.lineTo(56.5, 86); c.lineTo(54, 70); c.closePath(); c.fill();
+    c.beginPath(); c.arc(50, 42, 10, 0, Math.PI * 2, false); c.fill();
+    c.globalCompositeOperation = 'source-over';
+    /* accent: chest shield */
+    c.fillStyle = A;
+    c.beginPath();
+    c.moveTo(43.8, 36.5);
+    c.lineTo(56.2, 36.5);
+    c.lineTo(56.2, 42);
+    c.quadraticCurveTo(56.2, 46.5, 50, 48.8);
+    c.quadraticCurveTo(43.8, 46.5, 43.8, 42);
+    c.closePath(); c.fill();
+    c.restore();
+  }
+});
+/* NATURE & ICONS category marks */
+
+LM_MARKS.push({
+  id: 'nature-mountain', cat: 'nature', name: 'Mountain Range',
+  draw: function (c, M, A) {
+    c.save();
+    var mainPeak = function () {
+      c.beginPath();
+      c.moveTo(8, 78); c.lineTo(41, 18); c.lineTo(74, 78);
+      c.closePath();
+    };
+    c.fillStyle = M;
+    /* secondary peak behind-right */
+    c.beginPath();
+    c.moveTo(48, 78); c.lineTo(70, 36); c.lineTo(92, 78);
+    c.closePath(); c.fill();
+    /* punch gap along the main peak, then fill it in front */
+    c.globalCompositeOperation = 'destination-out';
+    c.lineWidth = 7; c.strokeStyle = '#000'; c.lineJoin = 'round';
+    mainPeak(); c.stroke();
+    c.globalCompositeOperation = 'source-over';
+    mainPeak(); c.fill();
+    /* punch: zigzag snowcap lines on both peaks */
+    c.globalCompositeOperation = 'destination-out';
+    c.lineWidth = 4; c.lineJoin = 'miter';
+    c.beginPath();
+    c.moveTo(28, 40); c.lineTo(33, 33); c.lineTo(38, 40);
+    c.lineTo(43, 33); c.lineTo(48, 40); c.lineTo(53, 36);
+    c.stroke();
+    c.beginPath();
+    c.moveTo(61, 51); c.lineTo(66, 46); c.lineTo(71, 51); c.lineTo(76, 46);
+    c.stroke();
+    c.globalCompositeOperation = 'source-over';
+    /* accent: baseline ground bar */
+    c.fillStyle = A;
+    c.beginPath();
+    c.moveTo(13, 84); c.lineTo(87, 84);
+    c.arc(87, 87, 3, -Math.PI / 2, Math.PI / 2, false);
+    c.lineTo(13, 90);
+    c.arc(13, 87, 3, Math.PI / 2, -Math.PI / 2, false);
+    c.closePath(); c.fill();
+    c.restore();
+  }
+});
+
+LM_MARKS.push({
+  id: 'nature-pine', cat: 'nature', name: 'Pine Tree',
+  draw: function (c, M, A) {
+    c.save();
+    c.fillStyle = M;
+    /* three bough tiers */
+    c.beginPath();
+    c.moveTo(50, 8); c.lineTo(68, 34); c.lineTo(32, 34);
+    c.closePath(); c.fill();
+    c.beginPath();
+    c.moveTo(50, 22); c.lineTo(76, 53); c.lineTo(24, 53);
+    c.closePath(); c.fill();
+    c.beginPath();
+    c.moveTo(50, 40); c.lineTo(84, 76); c.lineTo(16, 76);
+    c.closePath(); c.fill();
+    /* punch: separation bands between tiers */
+    c.globalCompositeOperation = 'destination-out';
+    c.fillRect(12, 34, 76, 3.6);
+    c.fillRect(12, 53, 76, 3.6);
+    c.globalCompositeOperation = 'source-over';
+    /* accent: trunk, clear gap below the bottom tier */
+    c.fillStyle = A;
+    c.fillRect(44.5, 80, 11, 12);
+    c.restore();
+  }
+});
+
+LM_MARKS.push({
+  id: 'nature-compass', cat: 'nature', name: 'Compass Rose',
+  draw: function (c, M, A) {
+    c.save();
+    var i;
+    var star = function (r, hw) {
+      /* 4-point cardinal star */
+      c.beginPath();
+      for (i = 0; i < 4; i++) {
+        c.save();
+        c.translate(50, 50); c.rotate(i * Math.PI / 2);
+        c.moveTo(0, -r); c.lineTo(hw, -2); c.lineTo(0, 6.5); c.lineTo(-hw, -2);
+        c.closePath();
+        c.restore();
+      }
+    };
+    /* outer ring */
+    c.fillStyle = M;
+    c.beginPath(); c.arc(50, 50, 40, 0, Math.PI * 2, false); c.fill();
+    c.globalCompositeOperation = 'destination-out';
+    c.beginPath(); c.arc(50, 50, 33, 0, Math.PI * 2, false); c.fill();
+    c.globalCompositeOperation = 'source-over';
+    /* accent: intercardinal short points (behind the star) */
+    c.fillStyle = A;
+    for (i = 0; i < 4; i++) {
+      c.save();
+      c.translate(50, 50); c.rotate(Math.PI / 4 + i * Math.PI / 2);
+      c.beginPath();
+      c.moveTo(0, -24); c.lineTo(5, -5); c.lineTo(0, 0); c.lineTo(-5, -5);
+      c.closePath(); c.fill();
+      c.restore();
+    }
+    /* punch halo around the cardinal star, then fill it */
+    c.globalCompositeOperation = 'destination-out';
+    c.lineWidth = 6.5; c.strokeStyle = '#000'; c.lineJoin = 'round';
+    star(29, 6.5); c.stroke(); c.fill();
+    c.globalCompositeOperation = 'source-over';
+    c.fillStyle = M;
+    star(29, 6.5); c.fill();
+    /* punch center dot */
+    c.globalCompositeOperation = 'destination-out';
+    c.beginPath(); c.arc(50, 50, 2.6, 0, Math.PI * 2, false); c.fill();
+    c.globalCompositeOperation = 'source-over';
+    c.restore();
+  }
+});
+
+LM_MARKS.push({
+  id: 'nature-sunrise', cat: 'nature', name: 'Rising Sun',
+  draw: function (c, M, A) {
+    c.save();
+    var i, a, n = 7, r1 = 22, r2 = 39, w1 = 0.12, w2 = 0.09, cx = 50, cy = 64;
+    /* rays */
+    c.fillStyle = M;
+    for (i = 0; i < n; i++) {
+      a = Math.PI * (0.075 + 0.85 * i / (n - 1));
+      c.beginPath();
+      c.moveTo(cx + Math.cos(a - w1) * r1, cy - Math.sin(a - w1) * r1);
+      c.lineTo(cx + Math.cos(a + w1) * r1, cy - Math.sin(a + w1) * r1);
+      c.lineTo(cx + Math.cos(a + w2) * r2, cy - Math.sin(a + w2) * r2);
+      c.lineTo(cx + Math.cos(a - w2) * r2, cy - Math.sin(a - w2) * r2);
+      c.closePath(); c.fill();
+    }
+    /* horizon block */
+    c.beginPath(); c.rect(12, 70, 76, 14); c.fill();
+    /* punch: split horizon into two stepped bars */
+    c.globalCompositeOperation = 'destination-out';
+    c.fillRect(10, 75.5, 80, 3.5);
+    c.fillRect(10, 79, 10, 6);
+    c.fillRect(80, 79, 10, 6);
+    c.globalCompositeOperation = 'source-over';
+    /* accent: half sun disc on the horizon */
+    c.fillStyle = A;
+    c.beginPath();
+    c.arc(50, 64, 15, Math.PI, Math.PI * 2, false);
+    c.closePath(); c.fill();
+    c.restore();
+  }
+});
+
+LM_MARKS.push({
+  id: 'nature-arrowhead', cat: 'nature', name: 'Arrowhead',
+  draw: function (c, M, A) {
+    c.save();
+    c.fillStyle = M;
+    /* broad knapped point, tip down */
+    c.beginPath();
+    c.moveTo(26, 16);
+    c.quadraticCurveTo(50, 8, 74, 16);    /* poll (top) */
+    c.quadraticCurveTo(78, 44, 56, 78);   /* right edge curving to tip */
+    c.quadraticCurveTo(52, 84, 50, 86);
+    c.quadraticCurveTo(48, 84, 44, 78);
+    c.quadraticCurveTo(22, 44, 26, 16);   /* left edge */
+    c.closePath(); c.fill();
+    /* punch: knapped flake notches along the edges + lashing clearance */
+    c.globalCompositeOperation = 'destination-out';
+    c.beginPath();
+    c.moveTo(73, 40); c.lineTo(74, 49); c.lineTo(65, 44); c.closePath(); c.fill();
+    c.beginPath();
+    c.moveTo(26, 48); c.lineTo(28, 57); c.lineTo(35, 51); c.closePath(); c.fill();
+    c.beginPath();
+    c.moveTo(67, 61); c.lineTo(63, 71); c.lineTo(57, 64); c.closePath(); c.fill();
+    c.fillRect(16, 26, 68, 13.5);
+    c.globalCompositeOperation = 'source-over';
+    /* accent: lashing band across the poll */
+    c.fillStyle = A;
+    c.fillRect(21, 29.5, 58, 6.5);
+    c.restore();
+  }
+});
+
+LM_MARKS.push({
+  id: 'nature-crown', cat: 'nature', name: 'Crown',
+  draw: function (c, M, A) {
+    c.save();
+    c.fillStyle = M;
+    /* three-point crown body */
+    c.beginPath();
+    c.moveTo(24, 70);
+    c.lineTo(22, 32);
+    c.lineTo(38, 50);
+    c.lineTo(50, 24);
+    c.lineTo(62, 50);
+    c.lineTo(78, 32);
+    c.lineTo(76, 70);
+    c.closePath(); c.fill();
+    /* ball finials on the points */
+    c.beginPath(); c.arc(22, 25, 5, 0, Math.PI * 2, false); c.fill();
+    c.beginPath(); c.arc(50, 17, 5, 0, Math.PI * 2, false); c.fill();
+    c.beginPath(); c.arc(78, 25, 5, 0, Math.PI * 2, false); c.fill();
+    /* punch: jewels */
+    c.globalCompositeOperation = 'destination-out';
+    c.beginPath();
+    c.moveTo(50, 50); c.lineTo(55, 57); c.lineTo(50, 64); c.lineTo(45, 57);
+    c.closePath(); c.fill();
+    c.beginPath(); c.arc(34, 60, 3, 0, Math.PI * 2, false); c.fill();
+    c.beginPath(); c.arc(66, 60, 3, 0, Math.PI * 2, false); c.fill();
+    c.globalCompositeOperation = 'source-over';
+    /* accent: base band with punched dots */
+    c.fillStyle = A;
+    c.beginPath();
+    c.moveTo(27, 76); c.lineTo(73, 76);
+    c.arc(73, 81.5, 5.5, -Math.PI / 2, Math.PI / 2, false);
+    c.lineTo(27, 87);
+    c.arc(27, 81.5, 5.5, Math.PI / 2, -Math.PI / 2, false);
+    c.closePath(); c.fill();
+    c.globalCompositeOperation = 'destination-out';
+    c.beginPath(); c.arc(38, 81.5, 2.4, 0, Math.PI * 2, false); c.fill();
+    c.beginPath(); c.arc(50, 81.5, 2.4, 0, Math.PI * 2, false); c.fill();
+    c.beginPath(); c.arc(62, 81.5, 2.4, 0, Math.PI * 2, false); c.fill();
+    c.globalCompositeOperation = 'source-over';
     c.restore();
   }
 });
